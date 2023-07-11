@@ -1,6 +1,6 @@
 import {Circle, Line, Ray, makeScene2D} from '@motion-canvas/2d';
 import {all, createRef, createSignal} from '@motion-canvas/core';
-import { Curve2f, Ray2f, Vector2f, curve2f_eval, curve2f_intersect, curve2f_normal, mat33f_multiply, ray2f_evaluate, vec2f, vec2f_add, vec2f_multiply, vec2f_normalized, vec3f, vec3f_homogeneous_project } from '../rt/math';
+import { Curve2f, Ray2f, Vector2f, curve2f_eval, curve2f_intersect, curve2f_normal, mat33f_multiply, ray2f_evaluate, vec2f, vec2f_add, vec2f_multiply, vec2f_normalized, vec2f_refract, vec3f, vec3f_homogeneous_project } from '../rt/math';
 
 /*import { PerspectiveCamera3f, Scene3f, quad3f_box, vec3f } from 'rt/math';
 
@@ -63,8 +63,7 @@ export default makeScene2D(function* (view) {
     ray2f_evaluate(ray(), isect().t))
 
   const normal = createSignal<Vector2f>(() => 
-    curve2f_normal(curve, isect().x)
-  )
+    curve2f_normal(curve, isect().x))
 
   view.add(
     <Ray
@@ -82,6 +81,18 @@ export default makeScene2D(function* (view) {
       to={() => vec2f_add(hitpoint(), vec2f_multiply(normal(), 150))}
       endArrow
       stroke="#ff0000"
+      lineWidth={4}
+    />
+  )
+
+  view.add(
+    <Ray
+      from={() => hitpoint()}
+      to={() => vec2f_add(hitpoint(), vec2f_multiply(
+        vec2f_refract(normal(), ray().d, 0.1)
+      , 150))}
+      endArrow
+      stroke="#00ff00"
       lineWidth={4}
     />
   )

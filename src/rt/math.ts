@@ -175,6 +175,17 @@ export function mat44f_multiply(a: Matrix44f, b: Vector4f): Vector4f {
     }
 }
 
+export function vec2f_refract(n: Vector2f, w: Vector2f, eta: number): Vector2f {
+    const nDotW = vec2f_dot(n, w)
+    const k = 1 - eta * eta * (1 - nDotW * nDotW)
+    if (k < 0) return vec2f(0, 0)
+
+    return vec2f_add(
+        vec2f_multiply(w, eta),
+        vec2f_multiply(n, -(eta * nDotW + Math.sqrt(k)))
+    )
+}
+
 export interface Ray2f {
     o: Vector2f
     d: Vector2f
