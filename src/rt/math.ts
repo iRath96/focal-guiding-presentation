@@ -246,16 +246,25 @@ export function curve2f_eval(curve: Curve2f, x: number) {
     return curve.c0 + curve.c2 * x2 + curve.c4 * x4
 }
 
+export function curve2f_normal(curve: Curve2f, x: number): Vector2f {
+    const dy = 4 * curve.c4 * Math.pow(x, 3) + 2 * curve.c2 * x
+    return vec2f_normalized(vec2f(-dy, 1))
+}
+
 export function curve2f_intersect(curve: Curve2f, ray: Ray2f) {
     const tinv = mat33f_inverse(curve.t)
     ray = ray2f_transform(ray, tinv)
 
     if (Math.abs(ray.d.x) < eps * Math.abs(ray.d.y)) {
-        if (ray.o.x < -1 || ray.o.x > +1) return Infinity
-        const y = curve2f_eval(curve, ray.o.x)
-        const t = (y - ray.o.y) / ray.d.y
-        if (t > eps) return t
-        return Infinity
+        const x = ray.o.x
+        if (x >= -1 && x <= +1) {
+            const y = curve2f_eval(curve, x)
+            const t = (y - ray.o.y) / ray.d.y
+            if (t > eps) {
+                return { t, x }
+            }
+        }
+        return { t: Infinity, x }
     }
 
     // ray
@@ -278,9 +287,11 @@ export function curve2f_intersect(curve: Curve2f, ray: Ray2f) {
         if (x < -1 || x > +1) continue
         const y = curve2f_eval(curve, x)
         const t = (y - ray.o.y) / ray.d.y
-        if (t > eps) return t
+        if (t > eps) {
+            return { t, x }
+        }
     }
-    return Infinity
+    return { t: Infinity, x: ray.o.x }
 }
 
 export function scene3f_intersect(ray: Ray3f, scene: Scene3f) {
