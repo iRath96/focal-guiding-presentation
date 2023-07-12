@@ -33,6 +33,15 @@ export interface Matrix44f {
     w: Vector4f
 }
 
+export interface Bounds2f {
+    min: Vector2f
+    max: Vector2f
+}
+
+export function bounds2f_center(bounds: Bounds2f) {
+    return vec2f_multiply(vec2f_add(bounds.min, bounds.max), 0.5)
+}
+
 export function vec2f(x: number, y: number): Vector2f {
     return { x, y }
 }
@@ -76,10 +85,24 @@ export function vec3f_multiply(a: Vector3f, b: number): Vector3f {
     }
 }
 
+export function vec2f_copy(a: Vector2f): Vector2f {
+    return {
+        x: a.x,
+        y: a.y,
+    }
+}
+
 export function vec2f_add(a: Vector2f, b: Vector2f): Vector2f {
     return {
         x: a.x + b.x,
         y: a.y + b.y,
+    }
+}
+
+export function vec2f_sub(a: Vector2f, b: Vector2f): Vector2f {
+    return {
+        x: a.x - b.x,
+        y: a.y - b.y,
     }
 }
 

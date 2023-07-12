@@ -1,4 +1,4 @@
-import {Circle, Line, Ray, makeScene2D} from '@motion-canvas/2d';
+import {Circle, Latex, Line, Ray, makeScene2D} from '@motion-canvas/2d';
 import {all, createRef, createSignal} from '@motion-canvas/core';
 import { Curve2f, Ray2f, Vector2f, curve2f_eval, curve2f_intersect, curve2f_normal, mat33f_multiply, ray2f_evaluate, vec2f, vec2f_add, vec2f_multiply, vec2f_normalized, vec2f_refract, vec3f, vec3f_homogeneous_project } from '../rt/math';
 
@@ -35,9 +35,9 @@ export default makeScene2D(function* (view) {
       y: vec3f(0,500,10),
       z: vec3f(0,0,1),
     },
-    c0: -0.8,
-    c2: -0.2,
-    c4: 0.5,
+    c0: -0.1,
+    c2: -0.1,
+    c4: -0.3,
   }
 
   view.add(
@@ -89,7 +89,7 @@ export default makeScene2D(function* (view) {
     <Ray
       from={() => hitpoint()}
       to={() => vec2f_add(hitpoint(), vec2f_multiply(
-        vec2f_refract(normal(), ray().d, 0.1)
+        vec2f_refract(normal(), ray().d, 0.7)
       , 150))}
       endArrow
       stroke="#00ff00"
@@ -97,5 +97,5 @@ export default makeScene2D(function* (view) {
     />
   )
 
-  yield* d(-0.9, 0).to(0.9, 3).to(-0.9, 3)
+  yield* d(-0.9, 0).to(0.9, 5).to(-0.9, 5)
 });
