@@ -213,6 +213,10 @@ export function vec2f_reflect(n: Vector2f, w: Vector2f): Vector2f {
     return vec2f_sub(vec2f_multiply(n, 2 * vec2f_dot(w, n)), w)
 }
 
+export function vec2f_polar(angle: number, radius: number = 1): Vector2f {
+    return vec2f(radius * Math.cos(angle), radius * Math.sin(angle))
+}
+
 export interface Ray2f {
     o: Vector2f
     d: Vector2f
