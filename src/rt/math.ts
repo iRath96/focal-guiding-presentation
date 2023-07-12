@@ -209,6 +209,10 @@ export function vec2f_refract(n: Vector2f, w: Vector2f, eta: number): Vector2f {
     )
 }
 
+export function vec2f_reflect(n: Vector2f, w: Vector2f): Vector2f {
+    return vec2f_sub(vec2f_multiply(n, 2 * vec2f_dot(w, n)), w)
+}
+
 export interface Ray2f {
     o: Vector2f
     d: Vector2f
