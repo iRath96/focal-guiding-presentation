@@ -87,9 +87,8 @@ class QuadTree {
 
 function easeOutBack(x: number): number {
     const c1 = 2
-    const c3 = c1 + 1;
-    
-    return 1 + c3 * Math.pow(x - 1, 3) + c1 * Math.pow(x - 1, 2);
+    const c3 = c1 + 1
+    return 1 + c3 * Math.pow(x - 1, 3) + c1 * Math.pow(x - 1, 2)
 }
 
 export default makeScene2D(function* (view) {
@@ -104,7 +103,7 @@ export default makeScene2D(function* (view) {
         const center = bounds2f_center(patch.bounds)
         const startT = (center.x - center.y + 900) / 2100
         const u = () => {
-            const u = (t() - startT) * 5
+            const u = (t() - startT) * 10
             return Math.min(Math.max(u, 0), 1)
         }
         view.add(
@@ -114,9 +113,8 @@ export default makeScene2D(function* (view) {
                     easeOutBack(u())
                 )}
                 opacity={() => 0.5*u()}
-                //rotation={() => 10*(1-u())}
                 stroke="#ffffff"
-                lineWidth={2}
+                lineWidth={3}
             />
         )
     }
