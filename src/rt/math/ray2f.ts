@@ -107,13 +107,16 @@ export function curve2f_intersect(curve: Curve2f, ray: Ray2f) {
         -ray.d.y / ray.d.x,
         curve.c0 + -ray.o.y + ray.o.x * ray.d.y / ray.d.x
     ])
-    for (const xcomplex of xs) {
+    for (let i = 0; i < 4; i++) {
+        const xcomplex = xs[i]
+        if (curve.c2 == 0 && i == 1) continue
+        if (curve.c4 == 0 && (i == 2 || i == 3)) continue
         if (xcomplex.im != 0) continue
         const x = xcomplex.re
         if (x < -1 || x > +1) continue
         const y = curve2f_eval(curve, x)
         const t = (y - ray.o.y) / ray.d.y
-        if (t > eps) {
+        if (t >= 0) {
             return { t, x }
         }
     }
