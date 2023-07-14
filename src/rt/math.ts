@@ -239,6 +239,26 @@ export interface Curve2f {
     c4: number
 }
 
+export interface Line2f {
+    from: Vector2f
+    to: Vector2f
+}
+
+export function line2f_intersect(line: Line2f, ray: Ray2f) {
+    const d = vec2f_sub(line.to, line.from)
+    const r = vec2f_sub(ray.o, line.from)
+
+    const denom = ray.d.x * d.y - ray.d.y * d.x
+    console.log(denom)
+    if (denom == 0) return Infinity
+
+    const u = (ray.d.x * r.y - ray.d.y * r.x) / denom
+    const t = (d.x * r.y - d.y * r.x) / denom
+    if (u < 0 || u > 1) return Infinity
+
+    return t
+}
+
 export interface Ray3f {
     o: Vector3f
     d: Vector3f

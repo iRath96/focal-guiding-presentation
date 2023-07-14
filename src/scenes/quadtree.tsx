@@ -1,5 +1,5 @@
-import {Ray, Rect, makeScene2D} from '@motion-canvas/2d'
-import { Bounds2f, Ray2f, Vector2f, bounds2f_center, bounds2f_copy, vec2f, vec2f_add, vec2f_copy, vec2f_multiply, vec2f_normalized, vec2f_sub } from '../rt/math';
+import {Line, Ray, Rect, makeScene2D} from '@motion-canvas/2d'
+import { Bounds2f, Line2f, Ray2f, Vector2f, bounds2f_center, bounds2f_copy, line2f_intersect, vec2f, vec2f_add, vec2f_copy, vec2f_multiply, vec2f_normalized, vec2f_sub } from '../rt/math';
 import { createSignal } from '@motion-canvas/core';
 
 interface QuadTreeNode {
@@ -174,9 +174,6 @@ class QuadTree {
             (this.bounds.max.y - ray.o.y) / ray.d.y,
         )
 
-        console.log("start")
-        console.log(a, tNear, tFar)
-
         if (Math.max(tNear.x, tNear.y) < Math.min(tFar.x, tFar.y)) {
             yield *this.traverseNode(
                 this.bounds, this.root, { min: tNear, max: tFar }, a)
@@ -200,14 +197,18 @@ export default makeScene2D(function* (view) {
         o: vec2f(-180, 80),
         d: vec2f_normalized(vec2f(0.8, -0.2)),
     }
+    const line: Line2f = {
+        from: vec2f(500, -400),
+        to: vec2f(500, 400)
+    }
+
     const hit = new Set<number>()
-    console.log(ray)
+    const endT = line2f_intersect(line, ray)
     for (const t of quadtree.traverse(ray)) {
-        console.log(t)
+        //console.log(t)
         if (t.t1 < 0) continue
         hit.add(t.patch.id)
     }
-    console.log(hit)
 
     const t = createSignal(0)
 
@@ -232,9 +233,17 @@ export default makeScene2D(function* (view) {
     }
 
     view.add(
+        <Line
+            points={[ line.from, line.to ]}
+            stroke="#ffffff"
+            lineWidth={4}
+        />
+    )
+
+    view.add(
         <Ray
             from={ray.o}
-            to={vec2f_add(ray.o, vec2f_multiply(ray.d, 1000))}
+            to={vec2f_add(ray.o, vec2f_multiply(ray.d, endT))}
             stroke="#ffffff"
             lineWidth={8}
             endArrow
