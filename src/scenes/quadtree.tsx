@@ -10,7 +10,7 @@ interface QuadTreeNode {
 }
 
 interface QuadTreePatch {
-    id: number
+    node: QuadTreeNode
     density: number
     bounds: Bounds2f
 }
@@ -30,17 +30,19 @@ class QuadTree {
     }
 
     constructor(
-        private bounds: Bounds2f,
-        private minDepth: number,
-        private maxDepth: number,
+        public bounds: Bounds2f,
+        public minDepth: number,
+        public maxDepth: number,
+        public splitThreshold: number,
     ) {
         this.rebuild()
     }
 
-    private rebuildNode(node: QuadTreeNode, depth: number) {
+    private rebuildNode(node: QuadTreeNode, depth: number, rootWeight: number) {
         const wasSplit = node.children != undefined
         const canBeSplit = depth < this.maxDepth
-        const wantsToBeSplit = depth < this.minDepth
+        const wantsToBeSplit = depth < this.minDepth ||
+            node.accumulator > this.splitThreshold * rootWeight
         const willBeSplit = canBeSplit && wantsToBeSplit
 
         if (wasSplit && !willBeSplit) {
@@ -60,13 +62,22 @@ class QuadTree {
 
         if (willBeSplit) {
             for (const child of node.children) {
-                this.rebuildNode(child, depth + 1)
+                this.rebuildNode(child, depth + 1, rootWeight)
             }
         }
     }
 
-    private rebuild() {
-        this.rebuildNode(this.root, 0)
+    private propagateNode(node: QuadTreeNode): number {
+        if (node.children) {
+            node.accumulator = node.children.reduce((acc, child) =>
+                acc + this.propagateNode(child), 0)
+        }
+        return node.accumulator
+    }
+
+    rebuild() {
+        this.rebuildNode(this.root, 0,
+            this.propagateNode(this.root))
     }
 
     private childBounds(bounds: Bounds2f, i: number) {
@@ -80,7 +91,7 @@ class QuadTree {
     private collectPatches(node: QuadTreeNode, bounds: Bounds2f): QuadTreePatch[] {
         if (node.children == undefined) {
             return [{
-                id: node.id,
+                node,
                 density: node.density,
                 bounds
             }]
@@ -121,7 +132,7 @@ class QuadTree {
                 t1: Math.min(t.max.x, t.max.y),
                 patch: {
                     bounds,
-                    id: node.id,
+                    node,
                     density: node.density
                 },
             }
@@ -190,7 +201,7 @@ export default makeScene2D(function* (view) {
     const quadtree = new QuadTree({
         min: vec2f(-400, -400),
         max: vec2f(400, 400),
-    }, 3, 16)
+    }, 4, 16, 0.02)
 
     const ray: Ray2f = {
         o: vec2f(-180, 80),
@@ -201,17 +212,27 @@ export default makeScene2D(function* (view) {
         to: vec2f(500, 400)
     }
 
-    const hit = new Set<number>()
     const endT = line2f_intersect(line, ray)
+    for (const t of quadtree.traverse(ray)) {
+        const contrib = (t.t1 - t.t0) / endT
+        t.patch.node.accumulator += contrib
+    }
+
+    quadtree.minDepth = 0
+    quadtree.rebuild()
+
+    const hit = new Set<number>()
     for (const t of quadtree.traverse(ray)) {
         //console.log(t)
         if (t.t1 < 0) continue
-        hit.add(t.patch.id)
+        hit.add(t.patch.node.id)
     }
 
     const t = createSignal(0)
 
+    let count = 0
     for (const patch of quadtree.visualize()) {
+        count++
         const center = bounds2f_center(patch.bounds)
         const startT = (center.x - center.y + 900) / 2100
         const u = () => {
@@ -224,12 +245,13 @@ export default makeScene2D(function* (view) {
                 size={() => vec2f_multiply(vec2f_sub(patch.bounds.max, patch.bounds.min),
                     easeOutBack(u())
                 )}
-                opacity={() => (hit.has(patch.id) ? 1 : 0.5) * u()}
+                opacity={() => (hit.has(patch.node.id) ? 1 : 0.5) * u()}
                 stroke="#ffffff"
-                lineWidth={hit.has(patch.id) ? 8 : 3}
+                lineWidth={hit.has(patch.node.id) ? 5 : 3}
             />
         )
     }
+    console.log(count)
 
     view.add(
         <Line
