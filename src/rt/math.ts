@@ -249,7 +249,6 @@ export function line2f_intersect(line: Line2f, ray: Ray2f) {
     const r = vec2f_sub(ray.o, line.from)
 
     const denom = ray.d.x * d.y - ray.d.y * d.x
-    console.log(denom)
     if (denom == 0) return Infinity
 
     const u = (ray.d.x * r.y - ray.d.y * r.x) / denom
