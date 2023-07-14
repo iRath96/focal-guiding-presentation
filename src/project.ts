@@ -7,7 +7,7 @@ import vmf from './scenes/vmf?scene';
 export default makeProject({
   scenes: [
     //example,
-    //quadtree,
-    vmf,
+    quadtree,
+    //vmf,
   ],
 });

@@ -85,6 +85,13 @@ export function vec3f_multiply(a: Vector3f, b: number): Vector3f {
     }
 }
 
+export function bounds2f_copy(a: Bounds2f): Bounds2f {
+    return {
+        min: vec2f_copy(a.min),
+        max: vec2f_copy(a.max),
+    }
+}
+
 export function vec2f_copy(a: Vector2f): Vector2f {
     return {
         x: a.x,

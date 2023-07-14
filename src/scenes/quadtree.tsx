@@ -1,20 +1,30 @@
-import {Rect, makeScene2D} from '@motion-canvas/2d'
-import { Bounds2f, Vector2f, bounds2f_center, vec2f, vec2f_add, vec2f_copy, vec2f_multiply, vec2f_sub } from '../rt/math';
+import {Ray, Rect, makeScene2D} from '@motion-canvas/2d'
+import { Bounds2f, Ray2f, Vector2f, bounds2f_center, bounds2f_copy, vec2f, vec2f_add, vec2f_copy, vec2f_multiply, vec2f_normalized, vec2f_sub } from '../rt/math';
 import { createSignal } from '@motion-canvas/core';
 
 interface QuadTreeNode {
+    id: number
     accumulator: number
     density: number
     children?: QuadTreeNode[]
 }
 
 interface QuadTreePatch {
+    id: number
     density: number
     bounds: Bounds2f
 }
 
+interface QuadTreeTraversal {
+    patch: QuadTreePatch
+    t0: number
+    t1: number
+}
+
 class QuadTree {
+    private lastId = 0
     private root: QuadTreeNode = {
+        id: 0,
         accumulator: 0,
         density: 0,
     }
@@ -42,6 +52,7 @@ class QuadTree {
             node.children = []
             for (let i = 0; i < 4; i++) {
                 node.children.push({
+                    id: this.lastId++,
                     accumulator: node.accumulator / 4,
                     density: node.density / 4,
                 })
@@ -59,29 +70,117 @@ class QuadTree {
         this.rebuildNode(this.root, 0)
     }
 
+    private childBounds(bounds: Bounds2f, i: number) {
+        const mid = bounds2f_center(bounds);
+        const b = bounds2f_copy(bounds);
+        (i & 1 ? b.min : b.max).x = mid.x;
+        (i & 2 ? b.min : b.max).y = mid.y;
+        return b
+    }
+
     private collectPatches(node: QuadTreeNode, bounds: Bounds2f): QuadTreePatch[] {
         if (node.children == undefined) {
             return [{
+                id: node.id,
                 density: node.density,
                 bounds
             }]
         }
 
-        const mid = bounds2f_center(bounds)
-        const childBounds = (i: number) => {
-            let b = { min: vec2f_copy(bounds.min), max: vec2f_copy(bounds.max) }
-            b[i & 1 ? "min" : "max"].x = mid.x
-            b[i & 2 ? "min" : "max"].y = mid.y
-            return b
-        }
-
         return node.children.reduce((patches, child, i) =>
-            [ ...patches, ...this.collectPatches(child, childBounds(i)) ]
+            [ ...patches, ...this.collectPatches(child, this.childBounds(bounds, i)) ]
         , [])
     }
 
     public visualize() {
         return this.collectPatches(this.root, this.bounds)
+    }
+
+    private firstNode(tNear: Vector2f, tMid: Vector2f) {
+        const maxDimension = tNear.x < tNear.y ? 1 : 0
+        const maxValue = Math.max(tNear.x, tNear.y)
+        
+        let result = 0
+        if (maxDimension == 1 && tMid.x < maxValue) result |= 1
+        if (maxDimension == 0 && tMid.y < maxValue) result |= 2
+        return result
+    }
+
+    private newNode(currNode: number, tFar: Vector2f) {
+        const exitDimension = tFar.x < tFar.y ? 0 : 1
+        const flag = 1 << exitDimension
+        if (currNode & flag) return 4
+        return currNode | flag
+    }
+
+    private* traverseNode(
+        bounds: Bounds2f, node: QuadTreeNode, t: Bounds2f, a: number
+    ): Generator<QuadTreeTraversal> {
+        if (!node.children) {
+            yield {
+                t0: Math.max(t.min.x, t.min.y),
+                t1: Math.min(t.max.x, t.max.y),
+                patch: {
+                    bounds,
+                    id: node.id,
+                    density: node.density
+                },
+            }
+            return
+        }
+
+        const tMid = bounds2f_center(t)
+        let currNode = this.firstNode(t.min, tMid)
+        do {
+            let tChild = bounds2f_copy(t);
+            ((currNode >> 0) & 1 ? tChild.min : tChild.max).x = tMid.x;
+            ((currNode >> 1) & 1 ? tChild.min : tChild.max).y = tMid.y;
+
+            const childIndex = a ^ currNode
+            const child = node.children[childIndex]
+            yield *this.traverseNode(
+                this.childBounds(bounds, childIndex),
+                child, tChild, a)
+            currNode = this.newNode(currNode, tChild.max)
+        } while (currNode < 4)
+    }
+
+    public* traverse(ray: Ray2f) {
+        ray = { o: vec2f_copy(ray.o), d: vec2f_copy(ray.d) }
+
+        let a = 0
+        if (ray.d.x == 0) ray.d.x = 1e-10 // TODO: hack
+        if (ray.d.y == 0) ray.d.y = 1e-10 // TODO: hack
+
+        if (ray.d.x < 0) {
+            ray.o.x = this.bounds.max.x + this.bounds.min.x - ray.o.x
+            ray.d.x = -ray.d.x
+            a |= 1
+        }
+
+        if (ray.d.y < 0) {
+            ray.o.y = this.bounds.max.y + this.bounds.min.y - ray.o.y
+            ray.d.y = -ray.d.y
+            a |= 2
+        }
+
+        const tNear = vec2f(
+            (this.bounds.min.x - ray.o.x) / ray.d.x,
+            (this.bounds.min.y - ray.o.y) / ray.d.y,
+        )
+
+        const tFar = vec2f(
+            (this.bounds.max.x - ray.o.x) / ray.d.x,
+            (this.bounds.max.y - ray.o.y) / ray.d.y,
+        )
+
+        console.log("start")
+        console.log(a, tNear, tFar)
+
+        if (Math.max(tNear.x, tNear.y) < Math.min(tFar.x, tFar.y)) {
+            yield *this.traverseNode(
+                this.bounds, this.root, { min: tNear, max: tFar }, a)
+        }
     }
 }
 
@@ -96,6 +195,19 @@ export default makeScene2D(function* (view) {
         min: vec2f(-400, -400),
         max: vec2f(400, 400),
     }, 3, 16)
+
+    const ray: Ray2f = {
+        o: vec2f(-180, 80),
+        d: vec2f_normalized(vec2f(0.8, -0.2)),
+    }
+    const hit = new Set<number>()
+    console.log(ray)
+    for (const t of quadtree.traverse(ray)) {
+        console.log(t)
+        if (t.t1 < 0) continue
+        hit.add(t.patch.id)
+    }
+    console.log(hit)
 
     const t = createSignal(0)
 
@@ -112,12 +224,22 @@ export default makeScene2D(function* (view) {
                 size={() => vec2f_multiply(vec2f_sub(patch.bounds.max, patch.bounds.min),
                     easeOutBack(u())
                 )}
-                opacity={() => 0.5*u()}
+                opacity={() => (hit.has(patch.id) ? 1 : 0.5) * u()}
                 stroke="#ffffff"
-                lineWidth={3}
+                lineWidth={hit.has(patch.id) ? 8 : 3}
             />
         )
     }
+
+    view.add(
+        <Ray
+            from={ray.o}
+            to={vec2f_add(ray.o, vec2f_multiply(ray.d, 1000))}
+            stroke="#ffffff"
+            lineWidth={8}
+            endArrow
+        />
+    )
 
     yield* t(0, 0).to(1, 2).to(0, 2)
 });
