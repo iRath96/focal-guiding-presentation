@@ -1,6 +1,6 @@
-import {Line, Ray, Rect, makeScene2D} from '@motion-canvas/2d'
+import {Line, Ray, Rect, View2D, makeScene2D, Node} from '@motion-canvas/2d'
 import { Bounds2f, Line2f, Ray2f, Vector2f, bounds2f_center, bounds2f_copy, line2f_intersect, vec2f, vec2f_add, vec2f_copy, vec2f_multiply, vec2f_normalized, vec2f_sub } from '../rt/math';
-import { createSignal } from '@motion-canvas/core';
+import { BounceSpring, ThreadGenerator, all, createEaseOutBack, createSignal, delay, waitFor } from '@motion-canvas/core';
 
 interface QuadTreeNode {
     id: number
@@ -197,11 +197,106 @@ function easeOutBack(x: number): number {
     return 1 + c3 * Math.pow(x - 1, 3) + c1 * Math.pow(x - 1, 2)
 }
 
+class QuadtreeVisualizer {
+    private shownPatches = new Map<number, Node>()
+    private previousMaxId = 0
+
+    constructor(
+        private view: View2D,
+        private quadtree: QuadTree
+    ) {}
+
+    private createRect(patch: QuadTreePatch) {
+        const center = bounds2f_center(patch.bounds)
+        return <Rect
+            position={center}
+            size={vec2f_sub(patch.bounds.max, patch.bounds.min)}
+            stroke="#ffffff"
+            lineWidth={3}
+        />
+    }
+
+    public* show() {
+        const elementAnimationTime = 0.1
+
+        const unusedPatches = new Set(this.shownPatches.keys())
+        const newPatches = new Set<number>()
+        let tasks: {
+            time: number;
+            task: ThreadGenerator;
+        }[] = []
+
+        let newMaxId = 0
+        let minTime = Infinity
+        let maxTime = -Infinity
+        for (const patch of this.quadtree.visualize()) {
+            const center = bounds2f_center(patch.bounds)
+            const time = center.x - center.y
+            minTime = Math.min(minTime, time)
+            maxTime = Math.max(maxTime, time)
+
+            const { id } = patch.node
+            if (this.shownPatches.has(id)) {
+                unusedPatches.delete(id)
+            } else {
+                newPatches.add(id)
+
+                const wasSplit = id > this.previousMaxId
+
+                const rect = this.createRect(patch);
+                this.shownPatches.set(id, rect)
+                this.view.add(rect)
+
+                if (wasSplit) {
+                    rect.opacity(0)
+                    tasks.push({
+                        time,
+                        task: all(
+                            rect.opacity(0, 0).to(1, elementAnimationTime),
+                            rect.scale(0.1, 0).to(1, elementAnimationTime,
+                                createEaseOutBack(2))
+                        )
+                    })
+                }
+            }
+            newMaxId = Math.max(newMaxId, id)
+        }
+
+        for (const id of unusedPatches) {
+            const rect = this.shownPatches.get(id);
+            const center = rect.position()
+            const time = center.x - center.y
+            minTime = Math.min(minTime, time)
+            maxTime = Math.max(maxTime, time)
+
+            rect.opacity(1)
+            tasks.push({
+                time,
+                task: rect.opacity(1, 0).to(0, elementAnimationTime)
+            })
+        }
+
+        // animate in new nodes
+        const remapTime = (t: number) => (t - minTime) / (maxTime - minTime);
+        yield *all(...tasks.map(t => delay(remapTime(t.time), t.task)))
+
+        // delete old nodes
+        for (const id of unusedPatches) {
+            this.shownPatches.get(id).remove()
+            this.shownPatches.delete(id)
+        }
+
+        // bookkeeping
+        this.previousMaxId = newMaxId
+    }
+}
+
 export default makeScene2D(function* (view) {
     const quadtree = new QuadTree({
         min: vec2f(-400, -400),
         max: vec2f(400, 400),
-    }, 4, 16, 0.02)
+    }, 4, 16, 0.02);
+    const visualizer = new QuadtreeVisualizer(view, quadtree);
 
     const ray: Ray2f = {
         o: vec2f(-180, 80),
@@ -217,41 +312,6 @@ export default makeScene2D(function* (view) {
         const contrib = (t.t1 - t.t0) / endT
         t.patch.node.accumulator += contrib
     }
-
-    quadtree.minDepth = 0
-    quadtree.rebuild()
-
-    const hit = new Set<number>()
-    for (const t of quadtree.traverse(ray)) {
-        //console.log(t)
-        if (t.t1 < 0) continue
-        hit.add(t.patch.node.id)
-    }
-
-    const t = createSignal(0)
-
-    let count = 0
-    for (const patch of quadtree.visualize()) {
-        count++
-        const center = bounds2f_center(patch.bounds)
-        const startT = (center.x - center.y + 900) / 2100
-        const u = () => {
-            const u = (t() - startT) * 10
-            return Math.min(Math.max(u, 0), 1)
-        }
-        view.add(
-            <Rect
-                position={center}
-                size={() => vec2f_multiply(vec2f_sub(patch.bounds.max, patch.bounds.min),
-                    easeOutBack(u())
-                )}
-                opacity={() => (hit.has(patch.node.id) ? 1 : 0.5) * u()}
-                stroke="#ffffff"
-                lineWidth={hit.has(patch.node.id) ? 5 : 3}
-            />
-        )
-    }
-    console.log(count)
 
     view.add(
         <Line
@@ -271,5 +331,21 @@ export default makeScene2D(function* (view) {
         />
     )
 
-    yield* t(0, 0).to(1, 2).to(0, 2)
+    yield* visualizer.show()
+
+    //
+
+    quadtree.minDepth = 0
+    quadtree.rebuild()
+
+    const hit = new Set<number>()
+    for (const t of quadtree.traverse(ray)) {
+        //console.log(t)
+        if (t.t1 < 0) continue
+        hit.add(t.patch.node.id)
+    }
+
+    yield* visualizer.show()
+
+    yield* waitFor(1)
 });
