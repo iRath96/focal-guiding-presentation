@@ -35,7 +35,6 @@ class QuadTree {
         private maxDepth: number,
     ) {
         this.rebuild()
-        console.log(this.root)
     }
 
     private rebuildNode(node: QuadTreeNode, depth: number) {
