@@ -12,7 +12,7 @@ interface Lens {
 
 function makeLens(view: View2D): Lens {
     const curvature = 0.3
-    const y = -250
+    const y = -150
     const line: Line2f = {
         from: vec2f(100, y),
         to: vec2f(-100, y)
@@ -96,14 +96,14 @@ export default makeScene2D(function* (view) {
     const pathvis = new PathVisualizer(view)
     const prng = new Random(1337)
     const light: Circle2f = {
-        center: vec2f(0, -400),
+        center: vec2f(0, -300),
         radius: 15
     }
-    const cameraPos = vec2f(-300, -100)
+    const cameraPos = vec2f(-300, 0)
     const lens = makeLens(view)
     const floor: Line2f = {
-        from: vec2f(-200, 200),
-        to: vec2f(200, 200),
+        from: vec2f(-200, 300),
+        to: vec2f(200, 300),
     }
 
     function pathtrace(): PathVertex[] {
@@ -184,15 +184,16 @@ export default makeScene2D(function* (view) {
     />)
 
     const quadtree = new QuadTree({
-        min: vec2f(-450, -500),
-        max: vec2f(350, 300),
+        min: vec2f(-380, -400),
+        max: vec2f(380, 360),
     }, 3, 7, 0.01);
     const visualizer = new QuadtreeVisualizer(view, quadtree);
     visualizer.maxDensity = 30
 
     yield* visualizer.show()
-
+    
     for (let iteration = 0; iteration < 3; iteration++) {
+
         for (let i = 0; i < 5000; i++) {
             const path = pathtrace()
             if (path[path.length - 1].type != PathVertexType.Light)
@@ -212,9 +213,13 @@ export default makeScene2D(function* (view) {
                 }
             }
         }
+        
+        quadtree.rebuild()
+        yield* visualizer.show()
+        yield* waitFor(1)
 
         quadtree.minDepth = 0
-        quadtree.rebuild()
+        quadtree.refine()
         yield* visualizer.show()
     }
 

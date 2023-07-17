@@ -17,12 +17,10 @@ export class QuadtreeVisualizer {
 
     private createRect(patch: QuadTreePatch) {
         const center = bounds2f_center(patch.bounds)
-        const a = Math.min(patch.density / this.maxDensity, 1)
         return <Rect
             position={center}
             size={vec2f_sub(patch.bounds.max, patch.bounds.min)}
             stroke={`rgba(255, 255, 255, ${this.gridOpacity})`}
-            fill={`rgba(255, 127, 0, ${a})`}
             lineWidth={this.gridLineWidth}
         />
     }
@@ -70,6 +68,13 @@ export class QuadtreeVisualizer {
                 })
             }
             newMaxId = Math.max(newMaxId, id)
+
+            // update density
+            const a = Math.min(patch.density / this.maxDensity, 1)
+            const rect = this.shownPatches.get(id);
+            rect.applyState({
+                fill: `rgba(255, 127, 0, ${a.toFixed(2)})`
+            })
         }
 
         for (const id of unusedPatches) {

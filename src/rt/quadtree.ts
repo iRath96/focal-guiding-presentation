@@ -36,16 +36,24 @@ export class QuadTree {
         public maxDepth: number,
         public splitThreshold: number,
     ) {
-        this.rebuild()
+        this.refine()
     }
 
-    private rebuildNode(node: QuadTreeNode, depth: number, rootWeight: number, invarea: number) {
+    private rebuildNode(node: QuadTreeNode, rootWeight: number, invarea: number) {
         if (node.accumulator > 0) {
             node.density = invarea * node.accumulator / rootWeight
         } else {
             node.density = 0
         }
 
+        if (node.children) {
+            for (const child of node.children) {
+                this.rebuildNode(child, rootWeight, 4 * invarea)
+            }
+        }
+    }
+
+    private refineNode(node: QuadTreeNode, depth: number, rootWeight: number) {
         const wasSplit = node.children != undefined
         const canBeSplit = depth < this.maxDepth
         const wantsToBeSplit = depth < this.minDepth ||
@@ -69,7 +77,7 @@ export class QuadTree {
 
         if (willBeSplit) {
             for (const child of node.children) {
-                this.rebuildNode(child, depth + 1, rootWeight, 4 * invarea)
+                this.refineNode(child, depth + 1, rootWeight)
             }
         }
 
@@ -86,8 +94,12 @@ export class QuadTree {
     }
 
     rebuild() {
-        this.rebuildNode(this.root, 0,
-            this.propagateNode(this.root), 1)
+        this.rebuildNode(this.root, this.propagateNode(this.root), 1)
+    }
+
+    refine() {
+        this.refineNode(this.root, 0,
+            this.propagateNode(this.root))
     }
 
     private childBounds(bounds: Bounds2f, i: number) {
