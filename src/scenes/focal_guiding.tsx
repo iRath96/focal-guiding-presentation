@@ -1,4 +1,4 @@
-import { Circle, Line, View2D, makeScene2D } from '@motion-canvas/2d'
+import { Circle, Img, Line, View2D, makeScene2D } from '@motion-canvas/2d'
 import { Circle2f, Curve2f, Line2f, Ray2f, circle2f_evaluate, circle2f_intersect, curve2f_intersect, curve2f_normal, curve2f_rasterize, line2f_evaluate, line2f_intersect, line2f_normal, ray2f_evaluate, vec2f, vec2f_add, vec2f_direction, vec2f_dot, vec2f_multiply, vec2f_normalized, vec2f_polar, vec2f_refract, vec3f } from '../rt/math'
 import { Random, waitFor } from '@motion-canvas/core'
 import { QuadTree  } from '../rt/quadtree'
@@ -195,7 +195,21 @@ export default makeScene2D(function* (view) {
         return path
     }
 
-    view.add(<Circle
+    view.add(<Img
+        size={100}
+        position={cameraPos}
+        rotation={42}
+        src={"svg/camera-side-view-svgrepo-com.svg"}
+    />)
+
+    view.add(<Img
+        size={6 * light.radius}
+        position={vec2f_add(light.center, vec2f(0, -30))}
+        rotation={180}
+        src={"svg/lighbulb-with-filament-svgrepo-com.svg"}
+    />)
+
+    /*view.add(<Circle
         position={light.center}
         size={2 * light.radius}
         fill={"#ffaa00"}
@@ -206,7 +220,7 @@ export default makeScene2D(function* (view) {
         size={20}
         fill={"#00aaff"}
         zIndex={4}
-    />)
+    />)*/
     view.add(<Line
         points={[ floor.from, floor.to ]}
         stroke="#ffffff"
