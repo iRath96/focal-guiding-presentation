@@ -1,4 +1,4 @@
-import { Circle, Img, Line, View2D, makeScene2D } from '@motion-canvas/2d'
+import { Circle, Img, Line, Rect, View2D, makeScene2D } from '@motion-canvas/2d'
 import { Circle2f, Curve2f, Line2f, Ray2f, circle2f_evaluate, circle2f_intersect, curve2f_intersect, curve2f_normal, curve2f_rasterize, line2f_evaluate, line2f_intersect, line2f_normal, ray2f_evaluate, vec2f, vec2f_add, vec2f_direction, vec2f_dot, vec2f_multiply, vec2f_normalized, vec2f_polar, vec2f_refract, vec3f } from '../rt/math'
 import { Random, waitFor } from '@motion-canvas/core'
 import { QuadTree  } from '../rt/quadtree'
@@ -53,7 +53,7 @@ export default makeScene2D(function* (view) {
     const prng = new Random(1337)
     const light: Circle2f = {
         center: vec2f(0, -300),
-        radius: 15
+        radius: 22
     }
     const cameraPos = vec2f(-300, 0)
     const lens = makeLens(view)
@@ -200,13 +200,22 @@ export default makeScene2D(function* (view) {
         position={cameraPos}
         rotation={42}
         src={"svg/camera-side-view-svgrepo-com.svg"}
+        zIndex={10}
+    />)
+    view.add(<Rect
+        position={cameraPos}
+        size={[100,70]}
+        rotation={42}
+        fill="#000"
+        zIndex={9}
     />)
 
     view.add(<Img
-        size={6 * light.radius}
-        position={vec2f_add(light.center, vec2f(0, -30))}
+        size={3 * light.radius}
+        position={vec2f_add(light.center, vec2f(0, -0.5 * light.radius))}
         rotation={180}
         src={"svg/lighbulb-with-filament-svgrepo-com.svg"}
+        zIndex={10}
     />)
 
     /*view.add(<Circle
@@ -273,8 +282,9 @@ export default makeScene2D(function* (view) {
         const success =
             path[path.length - 1].type == PathVertexType.Camera
         
-        if (!success) continue
+        //if (!success) continue
         const pathId = pathvis.showPath(path)
+        pathvis.getPath(pathId).opacity(success ? 0.5 : 0.1)
         yield
     }
 
