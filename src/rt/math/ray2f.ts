@@ -89,6 +89,7 @@ export function line2f_intersect(line: Line2f, ray: Ray2f) {
     const t = (d.x * r.y - d.y * r.x) / denom
     if (u < 0 || u > 1) return Infinity
 
+    if (t < 0) return Infinity
     return t
 }
 

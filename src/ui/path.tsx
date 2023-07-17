@@ -34,7 +34,9 @@ export class PathVisualizer {
                 stroke="#ffffff"
                 opacity={0.5}
                 lineWidth={4}
-                endArrow
+                endArrow={
+                    path[i].type == PathVertexType.Diffuse
+                }
                 zIndex={2}
             />
             pvp.segments.push(segment)

@@ -1,5 +1,5 @@
 import { Circle, Line, View2D, makeScene2D } from '@motion-canvas/2d'
-import { Circle2f, Curve2f, Line2f, Ray2f, circle2f_intersect, curve2f_intersect, curve2f_normal, curve2f_rasterize, line2f_evaluate, line2f_intersect, line2f_normal, ray2f_evaluate, vec2f, vec2f_add, vec2f_direction, vec2f_multiply, vec2f_polar, vec2f_refract, vec3f } from '../rt/math'
+import { Circle2f, Curve2f, Line2f, Ray2f, circle2f_evaluate, circle2f_intersect, curve2f_intersect, curve2f_normal, curve2f_rasterize, line2f_evaluate, line2f_intersect, line2f_normal, ray2f_evaluate, vec2f, vec2f_add, vec2f_direction, vec2f_dot, vec2f_multiply, vec2f_normalized, vec2f_polar, vec2f_refract, vec3f } from '../rt/math'
 import { Random, waitFor } from '@motion-canvas/core'
 import { QuadTree  } from '../rt/quadtree'
 import { QuadtreeVisualizer } from '../ui/quadtree'
@@ -117,9 +117,79 @@ export default makeScene2D(function* (view) {
         if (!isFinite(isect4)) return exit()
 
         // end
+        const endPos = ray2f_evaluate(ray, isect4)
+        const lightNormal = vec2f_direction(light.center, endPos)
+        if (-vec2f_dot(lightNormal, ray.d) < 0.8) return exit()
         path.push({
-            p: ray2f_evaluate(ray, isect4),
+            p: endPos,
             type: PathVertexType.Light,
+        })
+
+        return path
+    }
+
+    function lighttrace(nextFloat: () => number): PathVertex[] {
+        function exit() {
+            path.push({
+                p: ray2f_evaluate(ray, 2000),
+                type: PathVertexType.Miss
+            })
+            return path
+        }
+
+        // at light
+        const lightPos = circle2f_evaluate(light, nextFloat())
+        const lightNormal = vec2f_direction(light.center, lightPos)
+        let ray: Ray2f = {
+            o: lightPos,
+            //d: lightNormal,
+            d: vec2f_polar(Math.atan2(
+                lightNormal.y, lightNormal.x
+            ) + 0.3 * (2 * nextFloat() - 1)),
+            //d: vec2f_direction(lightPos,
+            //    line2f_evaluate(lens.a, nextFloat())),
+        }
+        const path: PathVertex[] = [{
+            p: ray.o,
+            type: PathVertexType.Light,
+        }]
+        const isect = line2f_intersect(lens.a, ray)
+        if (!isFinite(isect)) return exit()
+
+        // at lens
+        const normal = line2f_normal(lens.a)
+        ray.o = ray2f_evaluate(ray, isect)
+        ray.d = vec2f_refract(normal, ray.d, 1/lens.ior)
+        path.push({
+            p: ray.o,
+            type: PathVertexType.Specular,
+        })
+        const isect2 = curve2f_intersect(lens.b, ray)
+        if (!isFinite(isect2.t)) return exit()
+
+        // in lens
+        const normal2 = vec2f_multiply(
+            curve2f_normal(lens.b, isect2.x), -1)
+        ray.o = ray2f_evaluate(ray, isect2.t)
+        ray.d = vec2f_refract(normal2, ray.d, lens.ior)
+        path.push({
+            p: ray.o,
+            type: PathVertexType.Specular,
+        })
+        const isect3 = line2f_intersect(floor, ray)
+        if (!isFinite(isect3)) return exit()
+
+        // at floor
+        ray.o = ray2f_evaluate(ray, isect3)
+        path.push({
+            p: ray.o,
+            type: PathVertexType.Diffuse,
+        })
+
+        // end
+        path.push({
+            p: cameraPos,
+            type: PathVertexType.Camera,
         })
 
         return path
@@ -184,7 +254,19 @@ export default makeScene2D(function* (view) {
         }
     }()
 
-    pssmlt.stepSize = 0.05
+    for (let i = 0; i < 100; i++) {
+        const path = lighttrace(() => pssmlt.nextFloat())
+        const success =
+            path[path.length - 1].type == PathVertexType.Camera
+        
+        if (!success) continue
+        const pathId = pathvis.showPath(path)
+        yield
+    }
+
+    return
+
+    pssmlt.stepSize = 0.02
 
     let lastAcceptId = -1
     let lastRejectId = -1
@@ -192,7 +274,7 @@ export default makeScene2D(function* (view) {
         const path = pathtrace(() => pssmlt.nextFloat())
         const success =
             path[path.length - 1].type == PathVertexType.Light &&
-            (lastAcceptId < 0 || Math.random() > 0.9)
+            (lastAcceptId < 0 || Math.random() > 0.5)
         if (success) {
             pssmlt.accept()
         } else {
