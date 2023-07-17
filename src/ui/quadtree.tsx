@@ -6,6 +6,9 @@ import { ThreadGenerator, all, createEaseOutBack, delay } from "@motion-canvas/c
 export class QuadtreeVisualizer {
     private shownPatches = new Map<number, Node>()
     private previousMaxId = 0
+    public maxDensity = 0
+    public gridOpacity = 1
+    public gridLineWidth = 1
 
     constructor(
         private view: View2D,
@@ -14,11 +17,13 @@ export class QuadtreeVisualizer {
 
     private createRect(patch: QuadTreePatch) {
         const center = bounds2f_center(patch.bounds)
+        const a = Math.min(patch.density / this.maxDensity, 1)
         return <Rect
             position={center}
             size={vec2f_sub(patch.bounds.max, patch.bounds.min)}
-            stroke="#ffffff"
-            lineWidth={3}
+            stroke={`rgba(255, 255, 255, ${this.gridOpacity})`}
+            fill={`rgba(255, 127, 0, ${a})`}
+            lineWidth={this.gridLineWidth}
         />
     }
 
@@ -53,17 +58,16 @@ export class QuadtreeVisualizer {
                 this.shownPatches.set(id, rect)
                 this.view.add(rect)
 
-                if (wasSplit) {
-                    rect.opacity(0)
-                    tasks.push({
-                        time,
-                        task: all(
-                            rect.opacity(0, 0).to(1, elementAnimationTime),
-                            rect.scale(0.1, 0).to(1, elementAnimationTime,
-                                createEaseOutBack(2))
-                        )
-                    })
-                }
+                rect.opacity(0)
+                rect.scale(wasSplit ? 0.1 : 1)
+                tasks.push({
+                    time,
+                    task: all(
+                        rect.opacity(1, elementAnimationTime),
+                        rect.scale(1, elementAnimationTime,
+                            createEaseOutBack(2))
+                    )
+                })
             }
             newMaxId = Math.max(newMaxId, id)
         }
@@ -78,7 +82,7 @@ export class QuadtreeVisualizer {
             rect.opacity(1)
             tasks.push({
                 time,
-                task: rect.opacity(1, 0).to(0, elementAnimationTime)
+                task: rect.opacity(0, elementAnimationTime)
             })
         }
 

@@ -7,6 +7,17 @@ export function vec2f(x: number, y: number): Vector2f {
     return { x, y }
 }
 
+export function vec2f_direction(from: Vector2f, to: Vector2f) {
+    return vec2f_normalized(vec2f_sub(to, from))
+}
+
+export function vec2f_lerp(a: Vector2f, b: Vector2f, t: number) {
+    return {
+        x: (1 - t) * a.x + t * b.x,
+        y: (1 - t) * a.y + t * b.y,
+    }
+}
+
 export function vec2f_squared_length(a: Vector2f): number {
     return vec2f_dot(a, a)
 }

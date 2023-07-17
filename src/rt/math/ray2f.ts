@@ -1,7 +1,7 @@
 import * as quartic from 'quartic'
 import { Matrix33f, mat33f_inverse, mat33f_multiply } from './mat33f'
-import { Vector2f, vec2f, vec2f_add, vec2f_copy, vec2f_multiply, vec2f_normalized, vec2f_sub } from './vec2f'
-import { vec3f_homogeneous_project } from './vec3f'
+import { Vector2f, vec2f, vec2f_add, vec2f_copy, vec2f_dot, vec2f_lerp, vec2f_multiply, vec2f_normalized, vec2f_polar, vec2f_squared_length, vec2f_sub } from './vec2f'
+import { vec3f, vec3f_homogeneous_project } from './vec3f'
 
 const eps = 1e-3
 
@@ -37,9 +37,45 @@ export function bounds2f_copy(a: Bounds2f): Bounds2f {
     }
 }
 
+export interface Circle2f {
+    center: Vector2f
+    radius: number
+}
+
+export function circle2f_evaluate(circle: Circle2f, t: number) {
+    return vec2f_add(circle.center,
+        vec2f_polar(2 * Math.PI * t, circle.radius))
+}
+
+export function circle2f_intersect(circle: Circle2f, ray: Ray2f) {
+    const omc = vec2f_sub(ray.o, circle.center)
+    const ph = vec2f_dot(omc, ray.d)
+    const q = vec2f_squared_length(omc) - circle.radius * circle.radius
+
+    const rad = ph * ph - q
+    if (rad < 0) return Infinity
+
+    const s = Math.sqrt(rad)
+    const t1 = -ph - s
+    if (t1 > 0) return t1
+    const t2 = -ph + s
+    if (t2 > 0) return t2
+
+    return Infinity
+}
+
 export interface Line2f {
     from: Vector2f
     to: Vector2f
+}
+
+export function line2f_evaluate(line: Line2f, t: number) {
+    return vec2f_lerp(line.from, line.to, t)
+}
+
+export function line2f_normal(line: Line2f) {
+    const d = vec2f_sub(line.to, line.from)
+    return vec2f_normalized(vec2f(-d.y, d.x))
 }
 
 export function line2f_intersect(line: Line2f, ray: Ray2f) {
@@ -64,6 +100,17 @@ export interface Curve2f {
     c0: number
     c2: number
     c4: number
+}
+
+export function curve2f_rasterize(curve: Curve2f, segments: number) {
+    const points: ([number, number])[] = []
+    for (let i = 0; i < segments; i++) {
+        const x = 2 * i / (segments - 1) - 1
+        const y = curve2f_eval(curve, x)
+        const p = vec3f_homogeneous_project(mat33f_multiply(curve.t, vec3f(x, y, 1)))
+        points.push([ p.x, p.y ])
+    }
+    return points
 }
 
 export function curve2f_eval(curve: Curve2f, x: number) {

@@ -1,32 +1,6 @@
-import {Circle, Latex, Line, Ray, makeScene2D} from '@motion-canvas/2d';
-import {all, createRef, createSignal} from '@motion-canvas/core';
-import { Curve2f, Ray2f, Vector2f, curve2f_eval, curve2f_intersect, curve2f_normal, mat33f_multiply, ray2f_evaluate, vec2f, vec2f_add, vec2f_multiply, vec2f_normalized, vec2f_refract, vec3f, vec3f_homogeneous_project } from '../rt/math';
-
-/*import { PerspectiveCamera3f, Scene3f, quad3f_box, vec3f } from 'rt/math';
-
-const scene: Scene3f = {
-  quads: [
-    ...quad3f_box()
-  ]
-}
-
-const camera: PerspectiveCamera3f = new PerspectiveCamera3f(
-  vec3f(0, 0, -10),
-  vec3f(0, 0, 1),
-  vec3f(0, 1, 0),
-  30, 30
-)*/
-
-function curve2f_rasterize(curve: Curve2f, segments: number) {
-  const points: ([number, number])[] = []
-  for (let i = 0; i < segments; i++) {
-    const x = 2 * i / (segments - 1) - 1
-    const y = curve2f_eval(curve, x)
-    const p = vec3f_homogeneous_project(mat33f_multiply(curve.t, vec3f(x, y, 1)))
-    points.push([ p.x, p.y ])
-  }
-  return points
-}
+import {Line, Ray, makeScene2D} from '@motion-canvas/2d';
+import {createSignal} from '@motion-canvas/core';
+import { Curve2f, Ray2f, Vector2f, curve2f_intersect, curve2f_normal, curve2f_rasterize, ray2f_evaluate, vec2f, vec2f_add, vec2f_multiply, vec2f_normalized, vec2f_refract, vec3f } from '../rt/math';
 
 export default makeScene2D(function* (view) {
   const curve: Curve2f = {
