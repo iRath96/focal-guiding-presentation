@@ -37,6 +37,7 @@ export class PathVisualizer {
                 points={[ path[i-1].p, path[i].p ]}
                 stroke="#ffffff"
                 lineWidth={4}
+                arrowSize={12}
                 endArrow={
                     path[i].type == PathVertexType.Diffuse
                 }
