@@ -61,4 +61,11 @@ export class PathVisualizer {
         this.shownPaths.get(id).root.remove()
         this.shownPaths.delete(id)
     }
+
+    removeAll() {
+        for (const path of this.shownPaths.values()) {
+            path.root.remove()
+        }
+        this.shownPaths.clear()
+    }
 }

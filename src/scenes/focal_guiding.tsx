@@ -5,6 +5,47 @@ import { QuadTree  } from '../rt/quadtree'
 import { QuadtreeVisualizer } from '../ui/quadtree'
 import { PathVertex, PathVertexType, PathVisualizer } from '../ui/path'
 
+export class PSSMLT {
+    private prng = new Random(123)
+    public stepSize = 0.1
+    private rnd: {
+        v: number // base
+        m: number // mutated
+        a: boolean
+    }[] = []
+    private index = 0
+
+    nextFloat() {
+        if (this.index >= this.rnd.length) {
+            const m = this.prng.nextFloat()
+            this.rnd.push({ v: 0, m, a: false })
+            return m
+        }
+
+        const r = this.rnd[this.index++]
+        if (r.a) {
+            r.m = r.v + this.stepSize * (2 * this.prng.nextFloat() - 1)
+            if (r.m > 1) r.m -= 1
+            if (r.m < 0) r.m += 1
+        } else {
+            r.m = this.prng.nextFloat()
+        }
+        return r.m
+    }
+
+    accept() {
+        for (const r of this.rnd) {
+            r.v = r.m
+            r.a = true
+        }
+        this.index = 0
+    }
+
+    reject() {
+        this.index = 0
+    }
+}
+
 interface Lens {
     a: Line2f
     b: Curve2f
@@ -218,67 +259,14 @@ export default makeScene2D(function* (view) {
         zIndex={10}
     />)
 
-    /*view.add(<Circle
-        position={light.center}
-        size={2 * light.radius}
-        fill={"#ffaa00"}
-        zIndex={4}
-    />)
-    view.add(<Circle
-        position={cameraPos}
-        size={20}
-        fill={"#00aaff"}
-        zIndex={4}
-    />)*/
     view.add(<Line
         points={[ floor.from, floor.to ]}
         stroke="#ffffff"
         lineWidth={8}
     />)
 
-    const pssmlt = new class {
-        private prng = new Random(123)
-        public stepSize = 0.1
-        private rnd: {
-            v: number // base
-            m: number // mutated
-            a: boolean
-        }[] = []
-        private index = 0
-
-        nextFloat() {
-            if (this.index >= this.rnd.length) {
-                const m = prng.nextFloat()
-                this.rnd.push({ v: 0, m, a: false })
-                return m
-            }
-
-            const r = this.rnd[this.index++]
-            if (r.a) {
-                r.m = r.v + this.stepSize * (2 * prng.nextFloat() - 1)
-                if (r.m > 1) r.m -= 1
-                if (r.m < 0) r.m += 1
-            } else {
-                r.m = prng.nextFloat()
-            }
-            return r.m
-        }
-
-        accept() {
-            for (const r of this.rnd) {
-                r.v = r.m
-                r.a = true
-            }
-            this.index = 0
-        }
-
-        reject() {
-            this.index = 0
-        }
-    }()
-
     for (let i = 0; i < 100; i++) {
-        const path = lighttrace(() => pssmlt.nextFloat())
+        const path = lighttrace(() => prng.nextFloat())
         const success =
             path[path.length - 1].type == PathVertexType.Camera
         
@@ -288,8 +276,11 @@ export default makeScene2D(function* (view) {
         yield
     }
 
-    return
+    pathvis.removeAll()
 
+    //
+
+    const pssmlt = new PSSMLT()
     pssmlt.stepSize = 0.02
 
     let lastAcceptId = -1
@@ -311,7 +302,7 @@ export default makeScene2D(function* (view) {
             pathvis.removePath(lastRejectId)
             lastAcceptId = pathId
 
-            yield *waitFor(0.5)
+            yield *waitFor(0.1)
         } else {
             pathvis.removePath(lastRejectId)
             lastRejectId = pathId
@@ -321,7 +312,9 @@ export default makeScene2D(function* (view) {
         //break
     }
 
-    return
+    pathvis.removeAll()
+
+    //
 
     const quadtree = new QuadTree({
         min: vec2f(-380, -400),
@@ -333,11 +326,16 @@ export default makeScene2D(function* (view) {
     yield* visualizer.show()
     
     for (let iteration = 0; iteration < 3; iteration++) {
+        pathvis.removeAll()
+
         for (let i = 0; i < 5000; i++) {
             const path = pathtrace(() => prng.nextFloat())
             if (path[path.length - 1].type != PathVertexType.Light)
                 continue
-            //pathvis.showPath(path)
+            if (Math.random() > 0.9) {
+                const id = pathvis.showPath(path)
+                pathvis.getPath(id).opacity(0.4)
+            }
 
             for (let i = 1; i < path.length; i++) {
                 if (i != 2) continue
