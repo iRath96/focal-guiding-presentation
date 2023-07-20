@@ -357,6 +357,102 @@ class Obstruction {
     }
 }
 
+class VirtualImageLens {
+    private pathvis: PathVisualizer
+    private lightNode: Node
+    public light: Circle2f = {
+        center: vec2f(0, -150),
+        radius: 30,
+    }
+
+    private curvature = createSignal(0)
+
+    constructor(
+        private view: Node
+    ) {
+        this.pathvis = new PathVisualizer(view)
+    }
+
+    *draw() {
+        this.lightNode = this.pathvis.showLight(this.light)
+        this.lightNode.scale(0)
+        yield* this.lightNode.scale(1, 1)
+
+        // draw paths
+
+        const lensA: Line2f = {
+            from: vec2f(150, 0),
+            to: vec2f(-150, 0),
+        }
+        const lensB = createSignal<Curve2f>(() => ({
+            t: {
+                x: vec3f(150,0,0),
+                y: vec3f(0,150,0),
+                z: vec3f(0,0,1),
+            },
+            c0: 1.2 * this.curvature(),
+            c2: -this.curvature(),
+            c4: 0.14 * this.curvature(),
+        }))
+        this.view.add(<Line
+            points={() => [
+                ...curve2f_rasterize(lensB(), 64),
+                lensA.from, lensA.to
+            ]}
+            closed
+            fill="rgba(59, 91, 255, 0.5)"
+            stroke="rgb(59, 91, 255)"
+            lineWidth={4}
+            zIndex={2}
+        />)
+
+        const ior = 3
+        const targetY = 400
+        const numPaths = 15
+        for (let i = 0; i < numPaths; i++) {
+            const t = i / (numPaths - 1);
+            const d = vec2f_polar(Math.PI * (0.5 - 0.4 * (t - 0.5)))
+            const o = vec2f_add(
+                this.light.center,
+                vec2f_multiply(d, this.light.radius)
+            )
+            const path = createSignal<Vector2f[]>(() => {
+                let ray: Ray2f = { o, d }
+                const points = [ ray.o ]
+                function miss(t: number) {
+                    if (!isFinite(t)) return true
+                    ray.o = ray2f_evaluate(ray, t)
+                    points.push(ray.o)
+                    return false
+                }
+                function exit() {
+                    const t = (targetY - ray.o.y) / ray.d.y
+                    points.push(ray2f_evaluate(ray, t))
+                    return points
+                }
+
+                if (miss(line2f_intersect(lensA, ray))) return exit()
+                ray.d = vec2f_refract(vec2f(0, -1), ray.d, 1/ior)
+
+                const cisect = curve2f_intersect(lensB(), ray)
+                if (miss(cisect.t)) return exit()
+                const cnormal = vec2f_multiply(curve2f_normal(lensB(), cisect.x), -1)
+                ray.d = vec2f_refract(cnormal, ray.d, ior)
+
+                return exit()
+            })
+
+            this.view.add(<Line
+                points={path}
+                stroke={"#fff"}
+                lineWidth={4}
+            />)
+        }
+
+        yield* this.curvature(0.4, 3)
+    }
+}
+
 export default makeScene2D(function* (view) {
     const prng = new Random(11)
 
@@ -452,6 +548,20 @@ export default makeScene2D(function* (view) {
 
     yield* laser.hide()
     yield* obstruction.hide()
+
+    yield* all(
+        laserView.opacity(0, 0.5),
+        obstructionView.opacity(0, 0.5)
+    );
+
+    //
+    // virtual images
+    //
+
+    const viLensView = <Layout />;
+    view.add(viLensView)
+    const viLens = new VirtualImageLens(viLensView)
+    yield* viLens.draw()
 
     yield* waitFor(100)
 });
