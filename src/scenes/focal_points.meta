@@ -1,0 +1,38 @@
+{
+  "version": 0,
+  "timeEvents": [
+    {
+      "name": "light",
+      "targetTime": 5.476666730415721
+    },
+    {
+      "name": "camera",
+      "targetTime": 7.976875490070688
+    },
+    {
+      "name": "start",
+      "targetTime": 11.57898361070768
+    },
+    {
+      "name": "end",
+      "targetTime": 12.984500796221676
+    },
+    {
+      "name": "known",
+      "targetTime": 18.91240692396927
+    },
+    {
+      "name": "laser",
+      "targetTime": 27.87132949070131
+    },
+    {
+      "name": "diffusing",
+      "targetTime": 30.435181766646675
+    },
+    {
+      "name": "obs/done",
+      "targetTime": 38.32926611559061
+    }
+  ],
+  "seed": 3153095361
+}

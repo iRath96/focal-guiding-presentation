@@ -11,6 +11,10 @@ export function vec2f_direction(from: Vector2f, to: Vector2f) {
     return vec2f_normalized(vec2f_sub(to, from))
 }
 
+export function vec2f_distance(from: Vector2f, to: Vector2f) {
+    return vec2f_length(vec2f_sub(to, from))
+}
+
 export function vec2f_lerp(a: Vector2f, b: Vector2f, t: number) {
     return {
         x: (1 - t) * a.x + t * b.x,
@@ -55,6 +59,13 @@ export function vec2f_sub(a: Vector2f, b: Vector2f): Vector2f {
     return {
         x: a.x - b.x,
         y: a.y - b.y,
+    }
+}
+
+export function vec2f_minus(a: Vector2f): Vector2f {
+    return {
+        x: -a.x,
+        y: -a.y,
     }
 }
 

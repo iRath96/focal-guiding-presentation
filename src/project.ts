@@ -1,17 +1,11 @@
-import {makeProject} from '@motion-canvas/core';
+import {makeProject} from '@motion-canvas/core'
 
-import example from './scenes/example?scene';
-import quadtree from './scenes/quadtree?scene';
-import vmf from './scenes/vmf?scene';
-import lens from './scenes/lens?scene';
-import focal_guiding from './scenes/focal_guiding?scene';
+import focal_points from './scenes/focal_points?scene'
+import audio from '../audio/focal-points.mp3'
 
 export default makeProject({
+  audio,
   scenes: [
-    //example,
-    //quadtree,
-    //vmf,
-    //lens,
-    focal_guiding,
+    focal_points,
   ],
-});
+})
