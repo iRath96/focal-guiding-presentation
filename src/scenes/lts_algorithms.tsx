@@ -1,8 +1,8 @@
-import { makeScene2D, Node } from '@motion-canvas/2d';
-import { Random, all, chain, sequence, waitFor, waitUntil } from '@motion-canvas/core';
+import { Circle, Layout, Line, makeScene2D, Node } from '@motion-canvas/2d';
+import { Random, all, chain, createSignal, sequence, waitFor, waitUntil } from '@motion-canvas/core';
 import { CBox } from '../common/cbox';
 import { path_length, path_segments, PathVertex, PathVertexType, PathVisualizer } from '../ui/path';
-import { Ray2f, ray2f_evaluate, vec2f, vec2f_add, vec2f_direction, vec2f_distance, vec2f_dot, vec2f_lerp, vec2f_multiply } from '../rt/math';
+import { Ray2f, ray2f_evaluate, vec2f, vec2f_add, vec2f_direction, vec2f_distance, vec2f_dot, vec2f_lerp, vec2f_multiply, vec2f_sub } from '../rt/math';
 
 class StratifiedRandom {
     private dim = 0
@@ -172,6 +172,70 @@ function* bdptSingle($: {
 
     yield* waitUntil('bdpt/done')
     yield* $.cbox.pathvis.fadeAndRemove(0.5)
+}
+
+function* vertexMerging($: {
+    cbox: CBox
+    view: Node
+}) {
+    const view = <Layout />;
+    $.view.add(view);
+
+    const cameraPrng = new FakeRandom([ 0.17 ])
+    const cameraPath = $.cbox.pathtrace(() => cameraPrng.nextFloat(), {
+        useNEE: false,
+        maxDepth: 2,
+    })[0]
+    const lightPrng = new FakeRandom([ 0.898 ])
+    const lightPath = $.cbox.lighttrace(() => lightPrng.nextFloat(), {
+        useNEE: false,
+        maxDepth: 2,
+    })[0]
+
+    const merge = createSignal(0)
+    const mergedPoint = vec2f_lerp(
+        cameraPath[cameraPath.length - 1].p,
+        lightPath[lightPath.length - 1].p,
+        0.5
+    )
+
+    function* showSubpath(subPath: PathVertex[]) {
+        view.add(<Line
+            points={() =>
+                subPath.map((v, i) =>
+                    vec2f_lerp(v.p, mergedPoint,
+                        i === subPath.length - 1
+                        ? merge()
+                        : 0
+                    )
+                )
+            }
+            stroke="#fff"
+            lineWidth={4}
+            arrowSize={12}
+            endArrow
+        />)
+    }
+
+    yield* waitUntil('vm/camera')
+    yield* showSubpath(cameraPath)
+    yield* waitUntil('vm/light')
+    yield* showSubpath(lightPath)
+
+    yield* waitUntil('vm/merge')
+    const mergeHighlight = <Circle
+        size={[50, 100]}
+        position={vec2f_sub(mergedPoint, vec2f(0, 6))}
+        fill="rgba(0, 255, 0, 0.3)"
+        zIndex={-1}
+    />;
+    view.add(mergeHighlight)
+    yield* mergeHighlight.scale(0, 0).to(1, 1)
+    yield* merge(1, 3)
+
+    yield* waitUntil('vm/done')
+    yield* view.opacity(0, 1)
+    view.remove()
 }
 
 function* pathtrace($: {
@@ -391,6 +455,9 @@ export default makeScene2D(function* (view) {
 
     yield* waitUntil('lts/bdpt')
     yield* bdptSingle({ cbox })
+
+    yield* waitUntil('lts/vm')
+    yield* vertexMerging({ cbox, view })
 
     yield* waitUntil('lts/done')
     yield* waitFor(100)

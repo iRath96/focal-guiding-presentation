@@ -74,8 +74,28 @@
       "targetTime": 75.79305151821649
     },
     {
+      "name": "lts/vm",
+      "targetTime": 76.92923565661778
+    },
+    {
+      "name": "vm/camera",
+      "targetTime": 77.79116255380661
+    },
+    {
+      "name": "vm/light",
+      "targetTime": 79.38909324427334
+    },
+    {
+      "name": "vm/merge",
+      "targetTime": 86.78729911181084
+    },
+    {
+      "name": "vm/done",
+      "targetTime": 90.9300518690587
+    },
+    {
       "name": "lts/done",
-      "targetTime": 86.79305151821649
+      "targetTime": 93.06254359181622
     }
   ],
   "seed": 3292355136
