@@ -1,0 +1,26 @@
+{
+  "version": 0,
+  "timeEvents": [
+    {
+      "name": "lts",
+      "targetTime": 9.300284983845094
+    },
+    {
+      "name": "lts/pt",
+      "targetTime": 19.65685683109274
+    },
+    {
+      "name": "lts/pt2",
+      "targetTime": 24.58366089569695
+    },
+    {
+      "name": "lts/nee",
+      "targetTime": 36.025413197183276
+    },
+    {
+      "name": "lts/done",
+      "targetTime": 54.225413197183094
+    }
+  ],
+  "seed": 3292355136
+}

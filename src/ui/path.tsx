@@ -14,6 +14,7 @@ export interface PathVertex {
     p: Vector2f
     n: Vector2f
     type: PathVertexType
+    nee?: boolean
 }
 
 interface PVPath {
@@ -143,6 +144,10 @@ export class PathVisualizer {
 
     getPath(id: number) {
         return this.shownPaths.get(id).root
+    }
+
+    getSegments(id: number) {
+        return this.shownPaths.get(id).segments
     }
 
     removePath(id: number) {
