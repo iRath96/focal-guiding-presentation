@@ -7,19 +7,35 @@
     },
     {
       "name": "lts/pt",
-      "targetTime": 19.65685683109274
+      "targetTime": 19.017967320461047
     },
     {
-      "name": "lts/pt2",
-      "targetTime": 24.58366089569695
+      "name": "pt/all",
+      "targetTime": 22.469538002382848
     },
     {
-      "name": "lts/nee",
-      "targetTime": 36.025413197183276
+      "name": "pt/cam",
+      "targetTime": 27.119538002382885
+    },
+    {
+      "name": "pt/virt",
+      "targetTime": 29.954581051927843
+    },
+    {
+      "name": "pt/nee",
+      "targetTime": 34.98556249583735
+    },
+    {
+      "name": "pt/done",
+      "targetTime": 41.99667517535153
+    },
+    {
+      "name": "lts/lt",
+      "targetTime": 47.41661096911195
     },
     {
       "name": "lts/done",
-      "targetTime": 54.225413197183094
+      "targetTime": 67.76183553241657
     }
   ],
   "seed": 3292355136

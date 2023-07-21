@@ -1,7 +1,8 @@
 import { makeScene2D, Node } from '@motion-canvas/2d';
 import { Random, all, sequence, waitFor, waitUntil } from '@motion-canvas/core';
 import { CBox } from '../common/cbox';
-import { PathVertexType, PathVisualizer } from '../ui/path';
+import { PathVertex, PathVertexType, PathVisualizer } from '../ui/path';
+import { ray2f_evaluate, vec2f, vec2f_lerp } from '../rt/math';
 
 class StratifiedRandom {
     private dim = 0
@@ -76,9 +77,11 @@ function* pathtrace($: {
 }) {
     const segments: {
         node: Node
-        isCamera: boolean
-        isNEE: boolean
-        hitSpecular: boolean
+        isCamera?: boolean
+        isNEE?: boolean
+        isSpecular?: boolean
+        wasSpecular?: boolean
+        isHelper?: boolean
     }[] = []
     const ids: number[] = []
     const prng = new StratifiedRandom(new Random(1234), $.numPaths)
@@ -94,28 +97,71 @@ function* pathtrace($: {
             const n = $.cbox.pathvis.getPath(id)
             const s = $.cbox.pathvis.getSegments(id)
             for (let i = 1; i < path.length; i++) {
+                const wasSpecular = i === 2 && path[i-1].type === PathVertexType.Specular
                 segments.push({
                     node: s[i-1],
                     isCamera: i === 1,
                     isNEE: path[i].nee,
-                    hitSpecular: path[i].type === PathVertexType.Specular
+                    isSpecular: path[i].type === PathVertexType.Specular,
+                    wasSpecular
                 })
+
+                if (wasSpecular) {
+                    // create helper segment to show focal point
+                    const helpId = $.cbox.pathvis.showPath([
+                        path[i-1],
+                        {
+                            p: vec2f_lerp(path[i].p, path[i-1].p, 100),
+                            n: vec2f(0, 0),
+                            type: PathVertexType.Miss
+                        }
+                    ], {
+                        lineDash: [8,8]
+                    })
+                    segments.push({
+                        node: $.cbox.pathvis.getSegments(helpId)[0],
+                        isHelper: true, wasSpecular
+                    })
+                    ids.push(helpId)
+                }
             }
             //n.opacity(0.2)
         }
     }
 
     for (const segment of segments) {
-        segment.node.opacity(segment.isNEE ? 0 : 1)
+        segment.node.opacity(segment.isNEE || segment.isHelper ? 0 : 0.5)
     }
 
-    for (const segment of segments) {
-        if (segment.isNEE) continue
-        segment.node.opacity(segment.isCamera ? 0.8 : 0.2)
-    }
-
+    yield* waitUntil('pt/all')
 
     yield* sequence(0.05, ...ids.map(id => $.cbox.pathvis.fadeInPath(id, 2)))
+
+    yield* waitUntil('pt/cam')
+
+    yield* all(...segments.filter(s => !s.isNEE && !s.isHelper).map(s =>
+        s.node.opacity(s.isCamera ? 1 : 0.2, 1)))
+
+    yield* waitUntil('pt/virt')
+
+    yield* all(...segments.filter(s => !s.isNEE).map(s =>
+        s.node.opacity(
+            s.isSpecular && s.isCamera || s.wasSpecular ?
+            1 : 0.2, 1))
+    )
+    
+    yield* waitUntil('pt/nee')
+
+    yield* all(...segments.map(s =>
+        s.node.opacity(
+            s.isNEE ?
+            1 : 0.2, 1))
+    )
+
+    yield* waitUntil('pt/done')
+
+    yield* all(...segments.map(s => s.node.opacity(0, 1)))
+    $.cbox.pathvis.removeAll()
 }
 
 function* lighttrace($: {
@@ -149,12 +195,9 @@ export default makeScene2D(function* (view) {
 
     yield* waitUntil('lts/pt')
     yield* pathtraceSingle({ cbox })
-    yield* waitUntil('lts/pt2')
     yield* pathtrace({ cbox, useNEE: true, numPaths: 16 })
-    yield* waitUntil('lts/nee')
 
-    cbox.pathvis.removeAll()
-
+    yield* waitUntil('lts/lt')
     yield* lighttraceSingle({ cbox })
     yield* waitFor(10)
     yield* lighttrace({ cbox, numPaths: 20 })

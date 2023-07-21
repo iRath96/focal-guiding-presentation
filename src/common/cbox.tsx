@@ -149,10 +149,6 @@ export class CBox {
                         ...path,
                         { ...neeIsect, nee: true }
                     ])
-                    //paths.push([
-                    //    path[path.length - 1],
-                    //    neeIsect
-                    //])
                 }
             }
             

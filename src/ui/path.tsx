@@ -1,4 +1,4 @@
-import { Line, View2D, Node, Layout, Img, Rect, Circle } from '@motion-canvas/2d'
+import { Line, View2D, Node, Layout, Img, Rect, Circle, LineProps } from '@motion-canvas/2d'
 import { Circle2f, Vector2f, vec2f, vec2f_add, vec2f_direction, vec2f_distance, vec2f_lerp, vec2f_multiply, vec2f_polar } from '../rt/math'
 import { SimpleSignal, createSignal } from '@motion-canvas/core'
 
@@ -85,7 +85,7 @@ export class PathVisualizer {
         private view: Node
     ) {}
 
-    showPath(path: PathVertex[]) {
+    showPath(path: PathVertex[], props: LineProps = {}) {
         const root = <Layout />
         this.view.add(root)
 
@@ -107,7 +107,7 @@ export class PathVisualizer {
             )
             const segment = <Line
                 points={() => [ lerp(t0()), lerp(t1()) ]}
-                stroke="#ffffff"
+                stroke="#fff"
                 lineWidth={4}
                 arrowSize={12}
                 endArrow={
@@ -115,6 +115,8 @@ export class PathVisualizer {
                     path[i].type === PathVertexType.Miss
                 }
                 zIndex={2}
+                lineDash={path[i].nee ? [5,5] : undefined}
+                {...props}
             />
             pvp.segments.push(segment)
             root.add(segment)
