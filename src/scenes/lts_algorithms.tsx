@@ -1,8 +1,8 @@
 import { makeScene2D, Node } from '@motion-canvas/2d';
-import { Random, all, sequence, waitFor, waitUntil } from '@motion-canvas/core';
+import { Random, all, chain, sequence, waitFor, waitUntil } from '@motion-canvas/core';
 import { CBox } from '../common/cbox';
-import { path_length, PathVertex, PathVertexType, PathVisualizer } from '../ui/path';
-import { ray2f_evaluate, vec2f, vec2f_distance, vec2f_lerp } from '../rt/math';
+import { path_length, path_segments, PathVertex, PathVertexType, PathVisualizer } from '../ui/path';
+import { Ray2f, ray2f_evaluate, vec2f, vec2f_add, vec2f_direction, vec2f_distance, vec2f_dot, vec2f_lerp, vec2f_multiply } from '../rt/math';
 
 class StratifiedRandom {
     private dim = 0
@@ -44,10 +44,9 @@ function* pathtraceSingle($: {
     cbox: CBox
 }) {
     const prng = new FakeRandom([ 0.9, 0.2, 0.05 ])
-    const paths = $.cbox.pathtrace(() => prng.nextFloat(), false)
-    if (paths.length === 0) return
-    const path = paths[0]
-
+    const path = $.cbox.pathtrace(() => prng.nextFloat(), {
+        useNEE: false })[0]
+    
     for (let i = 1; i < path.length; i++) {
         const id = $.cbox.pathvis.showPath([ path[i-1], path[i] ])
         yield* $.cbox.pathvis.fadeInPath(id, 1)
@@ -61,9 +60,8 @@ function* lighttraceSingle($: {
     cbox: CBox
 }) {
     const prng = new FakeRandom([ 0.05, 0.8, 0.94 ])
-    const paths = $.cbox.lighttrace(() => prng.nextFloat(), false)
-    if (paths.length === 0) return
-    const path = paths[0]
+    const path = $.cbox.lighttrace(() => prng.nextFloat(), {
+        useNEE: false })[0]
 
     for (let i = 1; i < path.length; i++) {
         const id = $.cbox.pathvis.showPath([ path[i-1], path[i] ])
@@ -71,6 +69,108 @@ function* lighttraceSingle($: {
     }
 
     yield* waitFor(1)
+    yield* $.cbox.pathvis.fadeAndRemove(0.5)
+}
+
+function* bdptSingle($: {
+    cbox: CBox
+}) {
+    const pathvis = $.cbox.pathvis
+
+    const cameraPrng = new FakeRandom([ 1, 0.11, 0.73 ])
+    const cameraPath = $.cbox.pathtrace(() => cameraPrng.nextFloat(), {
+        useNEE: false,
+        maxDepth: 2,
+    })[0]
+    const lightPrng = new FakeRandom([ 0.9, 0.89, 0.05 ])
+    const lightPath = $.cbox.lighttrace(() => lightPrng.nextFloat(), {
+        useNEE: false,
+        maxDepth: 3,
+    })[0]
+
+    function* showSubpath(subPath: PathVertex[]) {
+        const segments: number[] = []
+        yield* chain(...[...path_segments(subPath)].map(segment => {
+            const id = pathvis.showPath(segment)
+            segments.push(id)
+            return pathvis.fadeInPath(id, 0.25)
+        }))
+        allSegments.push(segments)
+    }
+
+    const allSegments: number[][] = []
+    yield* waitUntil('bdpt/camera')
+    yield* showSubpath(cameraPath)
+    yield* waitUntil('bdpt/light')
+    yield* showSubpath(lightPath)
+
+    yield* waitUntil('bdpt/connections')
+    yield* all(
+        ...allSegments.flat().map(id =>
+            pathvis.getPath(id).opacity(0.2, 1))
+    )
+
+    for (let cameraI = 0; cameraI < cameraPath.length; cameraI++) {
+        //allSegments[1].map(id =>
+        //    pathvis.getPath(id).opacity(0.2))
+        for (let lightI = 0; lightI < lightPath.length; lightI++) {
+            let cVertex = cameraPath[cameraI]
+            let lVertex = lightPath[lightI]
+
+            if (cameraI > 0) {
+                yield* pathvis
+                    .getPath(allSegments[0][cameraI-1])
+                    .opacity(1, 0.25)
+            }
+            if (cameraI === 0 && lightI > 0) {
+                yield* pathvis
+                    .getPath(allSegments[1][lightI-1])
+                    .opacity(1, 0.25)
+            }
+
+            //if (lightI === 0 || cameraI === 0) continue
+            if (cVertex.type === PathVertexType.Specular) continue
+            if (lVertex.type === PathVertexType.Specular) continue
+
+            if (cameraI === 0) cVertex = {
+                ...cVertex,
+                p: $.cbox.camera.center
+            }
+            if (lightI === 0) lVertex = {
+                ...lVertex,
+                p: $.cbox.light.center
+            }
+            const pD = vec2f_direction(cVertex.p, lVertex.p)
+            if (cameraI === 0) cVertex = {
+                ...cVertex,
+                p: vec2f_add(cVertex.p, vec2f_multiply(pD, $.cbox.camera.radius))
+            }
+            if (lightI === 0) lVertex = {
+                ...lVertex,
+                p: vec2f_add(lVertex.p, vec2f_multiply(pD, -$.cbox.light.radius))
+            }
+
+            const visRay: Ray2f = {
+                o: cVertex.p,
+                d: vec2f_direction(cVertex.p, lVertex.p)
+            }
+            let isVisible = vec2f_distance(
+                $.cbox.intersect(visRay, false).p, lVertex.p) < 1
+            if (vec2f_dot(visRay.d, cVertex.n) < 0) isVisible = false
+            //if (vec2f_dot(visRay.d, lVertex.n) < 0) isVisible = false
+            if (!isVisible) continue
+            
+            const helpId = $.cbox.pathvis.showPath([
+                cVertex, lVertex
+            ], {
+                lineDash: [ 8, 8 ],
+                stroke: isVisible ? "#fff" : "red"
+            })
+            yield* pathvis.fadeInPath(helpId, 0.25)
+        }
+    }
+
+    yield* waitUntil('bdpt/done')
     yield* $.cbox.pathvis.fadeAndRemove(0.5)
 }
 
@@ -91,7 +191,9 @@ function* pathtrace($: {
     const prng = new StratifiedRandom(new Random(1234), $.numPaths)
     for (let i = 0; i < $.numPaths; i++) {
         prng.start()
-        const paths = $.cbox.pathtrace(() => prng.nextFloat(), $.useNEE)
+        const paths = $.cbox.pathtrace(() => prng.nextFloat(), {
+            useNEE: $.useNEE
+        })
         for (let path of paths) {
             let hack = 0
             if (path[path.length - 1].nee) {
@@ -286,6 +388,9 @@ export default makeScene2D(function* (view) {
     yield* waitUntil('lts/lt')
     yield* lighttraceSingle({ cbox })
     yield* lighttrace({ cbox, numPaths: 20 })
+
+    yield* waitUntil('lts/bdpt')
+    yield* bdptSingle({ cbox })
 
     yield* waitUntil('lts/done')
     yield* waitFor(100)

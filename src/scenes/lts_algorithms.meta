@@ -54,8 +54,28 @@
       "targetTime": 59.235348753270195
     },
     {
+      "name": "lts/bdpt",
+      "targetTime": 62.15416220296438
+    },
+    {
+      "name": "bdpt/camera",
+      "targetTime": 65.46847634334526
+    },
+    {
+      "name": "bdpt/light",
+      "targetTime": 67.2585759991017
+    },
+    {
+      "name": "bdpt/connections",
+      "targetTime": 70.00947772471864
+    },
+    {
+      "name": "bdpt/done",
+      "targetTime": 75.79305151821649
+    },
+    {
       "name": "lts/done",
-      "targetTime": 60.235348753270195
+      "targetTime": 86.79305151821649
     }
   ],
   "seed": 3292355136

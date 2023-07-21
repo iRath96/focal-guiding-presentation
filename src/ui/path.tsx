@@ -26,12 +26,17 @@ interface PVPath {
     segments: Node[]
 }
 
-export function path_length(path: PathVertex[]) {
-    let length = 0
+export function* path_segments(path: PathVertex[]):
+    Generator<[PathVertex, PathVertex]> {
     for (let i = 1; i < path.length; i++) {
-        length += vec2f_distance(path[i-1].p, path[i].p)
+        yield [ path[i-1], path[i] ]
     }
-    return length
+}
+
+export function path_length(path: PathVertex[]): number {
+    return [ ...path_segments(path) ].reduce((len, [a,b]) =>
+        vec2f_distance(a.p, b.p)
+    , 0)
 }
 
 export class PathVisualizer {

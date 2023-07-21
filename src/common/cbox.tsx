@@ -104,8 +104,17 @@ export class CBox {
 
     pathtrace(
         nextFloat: () => number,
-        useNEE = true
+        opt: {
+            useNEE?: boolean
+            maxDepth?: number
+        } = {}
     ): PathVertex[][] {
+        opt = {
+            useNEE: true,
+            maxDepth: 10,
+            ...opt
+        }
+
         let ray: Ray2f = {
             o: this.camera.center,
             d: vec2f_polar(
@@ -120,9 +129,9 @@ export class CBox {
             type: PathVertexType.Camera,
         }]
         const paths: PathVertex[][] = []
-        for (let i = 0;; i++) {
+        for (let depth = 1;; depth++) {
             const isect = this.intersect(ray)
-            if (i >= 10) {
+            if (depth >= opt.maxDepth) {
                 isect.type = PathVertexType.Miss
             }
             path.push(isect)
@@ -133,7 +142,7 @@ export class CBox {
                 break
             }
 
-            if (useNEE && isect.type !== PathVertexType.Specular) {
+            if (opt.useNEE && isect.type !== PathVertexType.Specular) {
                 const neeD = vec2f_direction(isect.p, this.light.center)
                 const neeP = vec2f_add(
                     this.light.center,
@@ -164,8 +173,17 @@ export class CBox {
 
     lighttrace(
         nextFloat: () => number,
-        useNEE = true
+        opt: {
+            useNEE?: boolean
+            maxDepth?: number
+        } = {}
     ): PathVertex[][] {
+        opt = {
+            useNEE: true,
+            maxDepth: 10,
+            ...opt
+        }
+
         let ray: Ray2f = {
             o: this.light.center,
             d: vec2f_polar(2 * Math.PI * nextFloat()),
@@ -177,9 +195,9 @@ export class CBox {
             type: PathVertexType.Light,
         }]
         const paths: PathVertex[][] = []
-        for (let i = 0;; i++) {
+        for (let depth = 1;; depth++) {
             const isect = this.intersect(ray, false)
-            if (i >= 10) {
+            if (depth >= opt.maxDepth) {
                 isect.type = PathVertexType.Miss
             }
             path.push(isect)
@@ -190,7 +208,7 @@ export class CBox {
                 break
             }
 
-            if (useNEE && isect.type !== PathVertexType.Specular) {
+            if (opt.useNEE && isect.type !== PathVertexType.Specular) {
                 const neeD = vec2f_direction(isect.p, this.camera.center)
                 const neeP = vec2f_add(
                     this.camera.center,
