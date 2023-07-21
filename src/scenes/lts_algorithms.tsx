@@ -155,7 +155,7 @@ function* pathtrace($: {
             1 : 0.2, 1))
     )
 
-    yield* waitFor(1)
+    yield* waitFor(3)
 
     yield* all(...segments.filter(s => !s.isNEE).map(s =>
         s.node.opacity(s.isHelper ? 0 : 0.2, 1)))
@@ -164,8 +164,10 @@ function* pathtrace($: {
 
     yield* all(...segments.map(s =>
         s.node.opacity(
-            s.isNEE ?
-            1 : 0.2, 1))
+            s.isHelper ? 0 :
+            s.isNEE ? 1 :
+            0.2
+        , 1))
     )
 
     yield* waitUntil('pt/done')
