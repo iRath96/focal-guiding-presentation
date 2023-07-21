@@ -11,31 +11,51 @@
     },
     {
       "name": "pt/all",
-      "targetTime": 22.469538002382848
+      "targetTime": 23.517967320461047
     },
     {
       "name": "pt/cam",
-      "targetTime": 27.119538002382885
+      "targetTime": 26.597199763335837
     },
     {
       "name": "pt/virt",
-      "targetTime": 29.954581051927843
+      "targetTime": 29.432242812880794
     },
     {
       "name": "pt/nee",
-      "targetTime": 34.98556249583735
+      "targetTime": 34.4632242567903
     },
     {
       "name": "pt/done",
-      "targetTime": 41.99667517535153
+      "targetTime": 41.474336936304475
     },
     {
       "name": "lts/lt",
-      "targetTime": 47.41661096911195
+      "targetTime": 46.8942727300649
+    },
+    {
+      "name": "lt/all",
+      "targetTime": 51.3942727300649
+    },
+    {
+      "name": "lt/light",
+      "targetTime": 52.95427273006479
+    },
+    {
+      "name": "lt/virt",
+      "targetTime": 53.95427273006479
+    },
+    {
+      "name": "lt/miss",
+      "targetTime": 55.58381930989157
+    },
+    {
+      "name": "lt/done",
+      "targetTime": 59.235348753270195
     },
     {
       "name": "lts/done",
-      "targetTime": 67.76183553241657
+      "targetTime": 60.235348753270195
     }
   ],
   "seed": 3292355136

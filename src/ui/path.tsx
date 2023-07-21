@@ -1,6 +1,6 @@
 import { Line, View2D, Node, Layout, Img, Rect, Circle, LineProps } from '@motion-canvas/2d'
 import { Circle2f, Vector2f, vec2f, vec2f_add, vec2f_direction, vec2f_distance, vec2f_lerp, vec2f_multiply, vec2f_polar } from '../rt/math'
-import { SimpleSignal, createSignal } from '@motion-canvas/core'
+import { SimpleSignal, all, createSignal } from '@motion-canvas/core'
 
 export enum PathVertexType {
     Camera,
@@ -24,6 +24,14 @@ interface PVPath {
     length: number
     root: Node
     segments: Node[]
+}
+
+export function path_length(path: PathVertex[]) {
+    let length = 0
+    for (let i = 1; i < path.length; i++) {
+        length += vec2f_distance(path[i-1].p, path[i].p)
+    }
+    return length
 }
 
 export class PathVisualizer {
@@ -85,14 +93,13 @@ export class PathVisualizer {
         private view: Node
     ) {}
 
-    showPath(path: PathVertex[], props: LineProps = {}) {
+    showPath(path: PathVertex[], props: LineProps = {}, length = 0) {
         const root = <Layout />
         this.view.add(root)
 
         const t0 = createSignal(0)
         const t1 = createSignal(0)
 
-        let length = 0
         const pvp: PVPath = {
             t0: t0, t1: t1, length, root, segments: [] }
         for (let i = 1; i < path.length; i++) {
@@ -134,14 +141,16 @@ export class PathVisualizer {
         return this.shownPaths.keys()
     }
 
-    *fadeInPath(id: number, time: number) {
+    *fadeInPath(id: number, time: number, constSpeed = false) {
         const path = this.shownPaths.get(id)
-        yield* path.t1(0, 0).to(path.length, time)
+        if (constSpeed) time *= path.length
+        yield* path.t1(0, 0).to(path.length, time, t => t)
     }
 
-    *fadeOutPath(id: number, time: number) {
+    *fadeOutPath(id: number, time: number, constSpeed = false) {
         const path = this.shownPaths.get(id)
-        yield* path.t0(0, 0).to(path.length, time)
+        if (constSpeed) time *= path.length
+        yield* path.t0(0, 0).to(path.length, time, t => t)
     }
 
     getPath(id: number) {
@@ -163,5 +172,12 @@ export class PathVisualizer {
             path.root.remove()
         }
         this.shownPaths.clear()
+    }
+
+    *fadeAndRemove(time: number) {
+        yield* all(...[ ...this.shownPaths.values() ].map(path =>
+            path.root.opacity(0, time)
+        ))
+        this.removeAll()
     }
 }
