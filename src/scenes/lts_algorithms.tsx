@@ -449,7 +449,7 @@ export function* pssmlt($: {
     const pathvis = $.cbox.pathvis
     let lastAcceptId = -1
     let lastRejectId = -1
-    for (let i = 0; i < 500; i++) {
+    for (let i = 0; i < 300; i++) {
         const path = $.cbox.pathtrace(() =>
             pssmlt.nextFloat(), {
                 useNEE: false,
@@ -475,7 +475,7 @@ export function* pssmlt($: {
             pathvis.removePath(lastRejectId)
             lastAcceptId = pathId
 
-            yield//* waitFor(0.2)
+            yield* waitFor(0.05)
         } else {
             pathvis.removePath(lastRejectId)
             lastRejectId = pathId
@@ -490,8 +490,6 @@ export function* pssmlt($: {
 
 export default makeScene2D(function* (view) {
     yield* waitUntil('lts')
-
-    const prng = new Random(1234)
 
     const cbox = new CBox(view)
     cbox.cameraSpread = 90
