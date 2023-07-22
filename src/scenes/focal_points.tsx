@@ -258,9 +258,8 @@ class Obstruction {
     }
 
     private *drawSuccessfulPaths() {
-        yield* all(...[ ...this.pathvis.all() ].map(id =>
-            this.pathvis.getPath(id).opacity(0.3, 1)
-        ))
+        const previousPaths = [ ...this.pathvis.all() ]
+        
         const ids: number[] = []
         const focalPoint = line2f_evaluate(this.line, 0.5)
         const numPaths = 15
@@ -280,9 +279,14 @@ class Obstruction {
             }))
         }
 
-        yield* all(...ids.map(id =>
-            this.pathvis.fadeInPath(id, 1)
-        ))
+        yield* all(
+            ...previousPaths.map(id =>
+                this.pathvis.getPath(id).opacity(0.3, 1)
+            ),
+            ...ids.map(id =>
+                this.pathvis.fadeInPath(id, 1)
+            )
+        )
     }
 
     *draw() {
