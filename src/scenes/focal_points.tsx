@@ -324,20 +324,20 @@ export default makeScene2D(function* (view) {
     const cboxView = <Layout />
     view.add(cboxView)
     const cbox = new CBox(cboxView, { onlyFloor: true })
+    cbox.cameraDir = 34.4
+    cbox.cameraSpread = 25
     cbox.draw()
 
     const pathvis = new PathVisualizer(view)
-    const cameraNode = pathvis.showCamera(cbox.camera, 35)
-    const lightNode = pathvis.showLight(cbox.light)
-
+    
     yield* waitUntil('light')
-    yield* lightNode.scale(2, 1).to(1, 1)
+    yield* cbox.lightNode.scale(2, 1).to(1, 1)
     yield* waitUntil('camera')
-    yield* cameraNode.scale(2, 1).to(1, 1)
+    yield* cbox.cameraNode.scale(2, 1).to(1, 1)
 
     const useNEE = true
     const showAllPaths = !useNEE
-    const numPaths = 50
+    const numPaths = 10
     
     const cameraPaths: number[] = []
     const lightPaths: number[] = []
@@ -349,7 +349,7 @@ export default makeScene2D(function* (view) {
                 return i / (numPaths - 1)
             }
             return prng.nextFloat()
-        }, useNEE)
+        }, { useNEE })
         for (const path of paths) {
             if (path.length <= 2) continue;
             if (!showAllPaths && path[path.length - 1].type !== PathVertexType.Light) {
@@ -382,8 +382,8 @@ export default makeScene2D(function* (view) {
     ;
     
     yield* all(
-        cameraNode.scale(0, 1),
-        lightNode.scale(0, 1)
+        cbox.cameraNode.scale(0, 1),
+        cbox.lightNode.scale(0, 1)
     );
 
     //

@@ -59,8 +59,8 @@ export class CBox {
             />)
         }
 
-        this.pathvis.showCamera(this.camera, this.cameraDir)
-        this.pathvis.showLight(this.light)
+        this.cameraNode = this.pathvis.showCamera(this.camera, this.cameraDir)
+        this.lightNode = this.pathvis.showLight(this.light)
     }
 
     intersect(ray: Ray2f, ignoreCamera = true): PathVertex {
