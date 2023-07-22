@@ -257,7 +257,8 @@ function* pathtrace($: {
     for (let i = 0; i < $.numPaths; i++) {
         prng.start()
         const paths = $.cbox.pathtrace(() => prng.nextFloat(), {
-            useNEE: $.useNEE
+            useNEE: $.useNEE,
+            maxDepth: 2
         })
         for (let path of paths) {
             let hack = 0
@@ -359,7 +360,9 @@ function* lighttrace($: {
     const prng = new StratifiedRandom(new Random(1234), $.numPaths)
     for (let i = 0; i < $.numPaths; i++) {
         prng.start()
-        const paths = $.cbox.lighttrace(() => prng.nextFloat())
+        const paths = $.cbox.lighttrace(() => prng.nextFloat(), {
+            maxDepth: 2
+        })
         for (let path of paths) {
             let hack = 0
             if (path[path.length - 1].nee) {
@@ -502,7 +505,7 @@ export default makeScene2D(function* (view) {
 
     yield* waitUntil('lts/lt')
     yield* lighttraceSingle({ cbox })
-    yield* lighttrace({ cbox, numPaths: 20 })
+    yield* lighttrace({ cbox, numPaths: 18 })
 
     yield* waitUntil('lts/bdpt')
     yield* bdptSingle({ cbox })

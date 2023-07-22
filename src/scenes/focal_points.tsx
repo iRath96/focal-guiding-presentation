@@ -445,6 +445,28 @@ class VirtualImageMirror {
             })()
 
             ids.push(this.pathvis.showPath(path))
+
+            // reflection path
+
+            const mirrorD = vec2f_direction(
+                path[1].p,
+                vec2f(cbox.light.center.x, -600 - cbox.light.center.y)
+            )
+            const path2 = [
+                path[1],
+                {
+                    ...path[0],
+                    //p: vec2f(path[0].p.x, -600-path[0].p.y),
+                    //p: vec2f(cbox.light.center.x, -600-cbox.light.center.y),
+                    //p: vec2f_lerp(path[2].p, path[1].p, 2)
+                    p: vec2f_add(path[1].p,
+                        vec2f_multiply(mirrorD, -300 / mirrorD.y))
+                },
+            ]
+            ids.push(this.pathvis.showPath(path2, {
+                lineDash: [8,8],
+                lineWidth: 2
+            }))
         }
 
         yield* waitUntil('vi/mirror')
@@ -559,13 +581,14 @@ export default makeScene2D(function* (view) {
     view.add(viLensView)
     const viLens = new VirtualImageLens(cbox, viLensView)
     yield* viLens.draw()
-    yield* viLensView.opacity(0.5, 2)
+    yield* viLensView.opacity(0.5, 1)
 
     const viMirrorView = <Layout />;
     view.add(viMirrorView)
     const viMirror = new VirtualImageMirror(cbox, viMirrorView)
     yield* viMirror.draw()
 
+    yield* waitUntil('vi/done')
     yield* all(
         viLensView.opacity(0, 2),
         viMirrorView.opacity(0, 2)
