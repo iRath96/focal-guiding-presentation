@@ -30,8 +30,16 @@
       "targetTime": 30.393387122052744
     },
     {
+      "name": "laser/end",
+      "targetTime": 32.77792886338899
+    },
+    {
       "name": "obs/done",
-      "targetTime": 41.927635464568134
+      "targetTime": 43.49217720590439
+    },
+    {
+      "name": "vi/lens",
+      "targetTime": 51.6436169817995
     }
   ],
   "seed": 3153095361

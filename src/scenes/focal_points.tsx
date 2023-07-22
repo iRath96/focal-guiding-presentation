@@ -187,6 +187,7 @@ class Obstruction {
             ]}
             stroke={"#fff"}
             lineWidth={() => 4 + this.angle()}
+            zIndex={20}
         />)
         view.add(<Line
             points={() => [
@@ -196,6 +197,7 @@ class Obstruction {
             ]}
             stroke={"#fff"}
             lineWidth={() => 4 + this.angle()}
+            zIndex={20}
         />)
         view.add(<Img
             ref={this.tree}
@@ -247,11 +249,11 @@ class Obstruction {
             }));
         }
 
-        yield* sequence(0.03, ...sunIds.map(id =>
-            this.pathvis.fadeInPath(id, 1)
+        yield* all(...sunIds.map(id =>
+            this.pathvis.fadeInPath(id, 0.6)
         ))
-        yield* sequence(0.03, ...missIds.map(id =>
-            this.pathvis.fadeInPath(id, 1)
+        yield* all(...missIds.map(id =>
+            this.pathvis.fadeInPath(id, 0.6)
         ))
     }
 
@@ -286,7 +288,7 @@ class Obstruction {
     *draw() {
         yield* this.tree().opacity(1, 1)
         yield* this.drawFailedPaths()
-        yield* this.angle(Math.PI, 2)
+        yield* this.angle(Math.PI, 1)
         yield* this.drawSuccessfulPaths()
     }
 
@@ -343,7 +345,7 @@ class VirtualImageLens {
         const light = this.cbox.light
         const ior = 3
         const targetY = 400
-        const numPaths = 15
+        const numPaths = 10
         for (let i = 0; i < numPaths; i++) {
             const t = i / (numPaths - 1);
             const d = vec2f_polar(Math.PI * (0.5 - 0.4 * (t - 0.5)))
@@ -386,7 +388,8 @@ class VirtualImageLens {
             />)
         }
 
-        yield* this.curvature(0.4, 3)
+        yield* waitUntil('vi/lens')
+        yield* this.curvature(0.4, 1.5)
     }
 }
 
@@ -403,9 +406,9 @@ export default makeScene2D(function* (view) {
     const pathvis = new PathVisualizer(view)
     
     yield* waitUntil('light')
-    yield* wiggle(cbox.lightNode, 2, 2)
+    yield* wiggle(cbox.lightNode, 1.5)
     yield* waitUntil('camera')
-    yield* wiggle(cbox.cameraNode, 2, 2)
+    yield* wiggle(cbox.cameraNode, 1.5)
 
     const useNEE = true
     const showAllPaths = !useNEE
@@ -471,6 +474,7 @@ export default makeScene2D(function* (view) {
     yield* laser.draw()
     yield* waitUntil('diffusing')
     yield* laser.drawReflection()
+    yield* waitUntil('laser/end')
     yield* laser.hide()
 
     // obstruction
