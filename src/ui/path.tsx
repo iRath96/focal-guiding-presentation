@@ -39,6 +39,11 @@ export function path_length(path: PathVertex[]): number {
     , 0)
 }
 
+interface ShowPathProps extends LineProps {
+    length?: number
+    visible?: boolean
+}
+
 export class PathVisualizer {
     private shownPaths = new Map<number, PVPath>()
     private nextId = 0
@@ -98,7 +103,13 @@ export class PathVisualizer {
         private view: Node
     ) {}
 
-    showPath(path: PathVertex[], props: LineProps = {}, length = 0) {
+    showPath(path: PathVertex[], props: ShowPathProps = {}) {
+        let { length, visible, ...lineProps } = {
+            length: 0,
+            visible: false,
+            ...props
+        }
+
         const root = <Layout />
         this.view.add(root)
 
@@ -136,6 +147,7 @@ export class PathVisualizer {
         }
 
         pvp.length = length
+        if (visible) t1(length)
         
         const id = this.nextId++
         this.shownPaths.set(id, pvp)

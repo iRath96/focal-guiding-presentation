@@ -1,8 +1,9 @@
 import { Circle, Layout, Line, makeScene2D, Node } from '@motion-canvas/2d';
-import { Random, all, chain, createSignal, sequence, waitFor, waitUntil } from '@motion-canvas/core';
+import { Random, all, chain, createSignal, debug, sequence, waitFor, waitUntil } from '@motion-canvas/core';
 import { CBox } from '../common/cbox';
 import { path_length, path_segments, PathVertex, PathVertexType, PathVisualizer } from '../ui/path';
 import { Ray2f, ray2f_evaluate, vec2f, vec2f_add, vec2f_direction, vec2f_distance, vec2f_dot, vec2f_lerp, vec2f_multiply, vec2f_sub } from '../rt/math';
+import { PSSMLT } from '../rt/pssmlt';
 
 class StratifiedRandom {
     private dim = 0
@@ -264,7 +265,7 @@ function* pathtrace($: {
                 hack = path_length(path.slice(0, path.length - 1))
                 path = path.slice(path.length - 2)
             }
-            const id = $.cbox.pathvis.showPath(path, {}, hack)
+            const id = $.cbox.pathvis.showPath(path, { length: hack })
             ids.push(id)
             const s = $.cbox.pathvis.getSegments(id)
             for (let i = 1; i < path.length; i++) {
@@ -287,8 +288,9 @@ function* pathtrace($: {
                             type: PathVertexType.Miss
                         }
                     ], {
-                        lineDash: [8,8]
-                    }, length)
+                        lineDash: [8,8],
+                        length
+                    })
                     segments.push({
                         node: $.cbox.pathvis.getSegments(helpId)[0],
                         isHelper: true, wasSpecular
@@ -364,7 +366,7 @@ function* lighttrace($: {
                 hack = path_length(path.slice(0, path.length - 1))
                 path = path.slice(path.length - 2)
             }
-            const id = $.cbox.pathvis.showPath(path, {}, hack)
+            const id = $.cbox.pathvis.showPath(path, { length: hack })
             ids.push(id)
             const s = $.cbox.pathvis.getSegments(id)
             for (let i = 1; i < path.length; i++) {
@@ -387,8 +389,9 @@ function* lighttrace($: {
                             type: PathVertexType.Miss
                         }
                     ], {
-                        lineDash: [8,8]
-                    }, length)
+                        lineDash: [8,8],
+                        length
+                    })
                     segments.push({
                         node: $.cbox.pathvis.getSegments(helpId)[0],
                         isHelper: true, wasSpecular
@@ -436,6 +439,55 @@ function* lighttrace($: {
     yield* $.cbox.pathvis.fadeAndRemove(1)
 }
 
+export function* pssmlt($: {
+    cbox: CBox
+}) {
+    const pssmlt = new PSSMLT()
+    pssmlt.seed([ 0.61, 0.3, 0.22 ])
+    pssmlt.stepSize = 0.05
+
+    const pathvis = $.cbox.pathvis
+    let lastAcceptId = -1
+    let lastRejectId = -1
+    for (let i = 0; i < 500; i++) {
+        const path = $.cbox.pathtrace(() =>
+            pssmlt.nextFloat(), {
+                useNEE: false,
+                maxDepth: 4,
+            })[0]
+        const success =
+            path[path.length - 1].type == PathVertexType.Light &&
+            (lastAcceptId < 0 || pssmlt.randomAccept())
+        if (success) {
+            pssmlt.accept()
+        } else {
+            pssmlt.reject()
+        }
+        
+        const pathId = pathvis.showPath(path, {
+            opacity: success ? 1 : 0.4,
+            visible: true
+        });
+        //yield* waitFor(5)
+        //break
+        if (success) {
+            pathvis.removePath(lastAcceptId)
+            pathvis.removePath(lastRejectId)
+            lastAcceptId = pathId
+
+            yield//* waitFor(0.2)
+        } else {
+            pathvis.removePath(lastRejectId)
+            lastRejectId = pathId
+
+            yield//* waitFor(0.01)
+        }
+        //break
+    }
+
+    pathvis.removeAll()
+}
+
 export default makeScene2D(function* (view) {
     yield* waitUntil('lts')
 
@@ -458,6 +510,9 @@ export default makeScene2D(function* (view) {
 
     yield* waitUntil('lts/vm')
     yield* vertexMerging({ cbox, view })
+
+    yield* waitUntil('lts/pssmlt')
+    yield* pssmlt({ cbox })
 
     yield* waitUntil('lts/done')
     yield* waitFor(100)

@@ -131,13 +131,15 @@ export class CBox {
         const paths: PathVertex[][] = []
         for (let depth = 1;; depth++) {
             const isect = this.intersect(ray)
-            if (depth >= opt.maxDepth) {
+            let isDone = (
+                isect.type === PathVertexType.Miss ||
+                isect.type === PathVertexType.Light)
+            if (depth >= opt.maxDepth && !isDone) {
                 isect.type = PathVertexType.Miss
+                isDone = true
             }
             path.push(isect)
-            if (isect.type === PathVertexType.Miss ||
-                isect.type === PathVertexType.Light
-            ) {
+            if (isDone) {
                 paths.push(path)
                 break
             }
@@ -197,13 +199,15 @@ export class CBox {
         const paths: PathVertex[][] = []
         for (let depth = 1;; depth++) {
             const isect = this.intersect(ray, false)
-            if (depth >= opt.maxDepth) {
+            let isDone = (
+                isect.type === PathVertexType.Miss ||
+                isect.type === PathVertexType.Camera)
+            if (depth >= opt.maxDepth && !isDone) {
                 isect.type = PathVertexType.Miss
+                isDone = true
             }
             path.push(isect)
-            if (isect.type === PathVertexType.Miss ||
-                isect.type === PathVertexType.Camera
-            ) {
+            if (isDone) {
                 paths.push(path)
                 break
             }

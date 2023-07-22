@@ -94,6 +94,10 @@
       "targetTime": 90.9300518690587
     },
     {
+      "name": "lts/pssmlt",
+      "targetTime": 91.9300518690587
+    },
+    {
       "name": "lts/done",
       "targetTime": 93.06254359181622
     }
