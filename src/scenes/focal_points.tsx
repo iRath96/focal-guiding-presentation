@@ -1,6 +1,6 @@
 import {Circle, Line, Ray, View2D, makeScene2D, Node, Txt, Spline, Layout, Rect, Img, LineProps} from '@motion-canvas/2d';
 import {Random, SimpleSignal, all, chain, createRef, createSignal, debug, delay, sequence, waitFor, waitUntil} from '@motion-canvas/core';
-import { Circle2f, Curve2f, Line2f, Ray2f, Vector2f, circle2f_evaluate, circle2f_intersect, circle2f_normal, curve2f_intersect, curve2f_normal, curve2f_rasterize, line2f_angle, line2f_evaluate, line2f_intersect, line2f_length, line2f_normal, ray2f_evaluate, sample_hemicircle, vec2f, vec2f_add, vec2f_direction, vec2f_distance, vec2f_dot, vec2f_length, vec2f_lerp, vec2f_minus, vec2f_multiply, vec2f_normalized, vec2f_polar, vec2f_refract, vec2f_sub, vec3f } from '../rt/math';
+import { Circle2f, Curve2f, Line2f, Ray2f, Vector2f, circle2f_evaluate, circle2f_intersect, circle2f_normal, curve2f_intersect, curve2f_normal, curve2f_rasterize, line2f_angle, line2f_evaluate, line2f_intersect, line2f_length, line2f_normal, ray2f_evaluate, sample_hemicircle, vec2f, vec2f_add, vec2f_direction, vec2f_distance, vec2f_dot, vec2f_length, vec2f_lerp, vec2f_minus, vec2f_multiply, vec2f_normalized, vec2f_polar, vec2f_reflect, vec2f_refract, vec2f_sub, vec3f } from '../rt/math';
 import { PathVertex, PathVertexType, PathVisualizer } from '../ui/path';
 import { CBox } from '../common/cbox';
 import { wiggle } from '../common/animations';
@@ -303,7 +303,14 @@ class Obstruction {
     }
 }
 
+function lerpPath(path: Vector2f[], t: number) {
+    const base = path[0]
+    return path.map(p => vec2f_lerp(base, p, t))
+}
+
 class VirtualImageLens {
+    private lensRayT = createSignal(0)
+    private lensT = createSignal(0)
     private curvature = createSignal(0)
 
     constructor(
@@ -334,6 +341,7 @@ class VirtualImageLens {
                 ...curve2f_rasterize(lensB(), 64),
                 lensA.from, lensA.to
             ]}
+            scale={() => [ this.lensT(), 1 ]}
             closed
             fill="rgba(59, 91, 255, 0.5)"
             stroke="rgb(59, 91, 255)"
@@ -344,7 +352,6 @@ class VirtualImageLens {
         const cbox = this.cbox
         const light = this.cbox.light
         const ior = 3
-        const targetY = 400
         const numPaths = 10
         for (let i = 0; i < numPaths; i++) {
             const t = i / (numPaths - 1);
@@ -364,8 +371,6 @@ class VirtualImageLens {
                 }
                 function exit() {
                     const t = cbox.intersect(ray)
-                    //const t = (targetY - ray.o.y) / ray.d.y
-                    //points.push(ray2f_evaluate(ray, t))
                     points.push(t.p)
                     return points
                 }
@@ -382,14 +387,70 @@ class VirtualImageLens {
             })
 
             this.view.add(<Line
-                points={path}
+                points={() => lerpPath(path(), this.lensRayT())}
                 stroke={"#fff"}
                 lineWidth={4}
+                arrowSize={12}
+                endArrow
             />)
         }
 
         yield* waitUntil('vi/lens')
+        yield* this.lensRayT(1, 1)
+        yield* this.lensT(1, 1)
         yield* this.curvature(0.4, 1.5)
+    }
+}
+
+class VirtualImageMirror {
+    private pathvis: PathVisualizer
+
+    constructor(
+        private cbox: CBox,
+        private view: Node
+    ) {
+        this.pathvis = new PathVisualizer(view)
+    }
+
+    *draw() {
+        const ids: number[] = []
+        const cbox = this.cbox
+        const light = this.cbox.light
+        const numPaths = 10
+        for (let i = 0; i < numPaths; i++) {
+            const t = i / (numPaths - 1);
+            const d = vec2f_polar(Math.PI * (-0.5 - 0.7 * (t - 0.5)))
+            const o = vec2f_add(
+                light.center,
+                vec2f_multiply(d, light.radius)
+            )
+            const path = (() => {
+                let ray: Ray2f = { o, d }
+                const points: PathVertex[] = [{
+                    p: ray.o,
+                    n: vec2f(0, 0),
+                    type: PathVertexType.Camera,
+                }]
+
+                const t1 = cbox.intersect(ray)
+                points.push(t1)
+                if (t1.type !== PathVertexType.Specular) return points
+
+                ray.o = t1.p
+                ray.d = vec2f_reflect(t1.n, vec2f_multiply(ray.d, -1))
+                const t2 = cbox.intersect(ray)
+                points.push(t2)
+
+                return points
+            })()
+
+            ids.push(this.pathvis.showPath(path))
+        }
+
+        yield* waitUntil('vi/mirror')
+        yield* all(...ids.map(id =>
+            this.pathvis.fadeInPath(id, 1)
+        ))
     }
 }
 
@@ -498,4 +559,15 @@ export default makeScene2D(function* (view) {
     view.add(viLensView)
     const viLens = new VirtualImageLens(cbox, viLensView)
     yield* viLens.draw()
+    yield* viLensView.opacity(0.5, 2)
+
+    const viMirrorView = <Layout />;
+    view.add(viMirrorView)
+    const viMirror = new VirtualImageMirror(cbox, viMirrorView)
+    yield* viMirror.draw()
+
+    yield* all(
+        viLensView.opacity(0, 2),
+        viMirrorView.opacity(0, 2)
+    )
 });

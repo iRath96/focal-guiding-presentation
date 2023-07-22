@@ -492,6 +492,9 @@ export default makeScene2D(function* (view) {
     const cbox = new CBox(view)
     cbox.cameraSpread = 90
     cbox.draw()
+    
+    cbox.cameraNode.scale(0)
+    yield* cbox.cameraNode.scale(1, 1)
 
     yield* waitUntil('lts/pt')
     yield* pathtraceSingle({ cbox })

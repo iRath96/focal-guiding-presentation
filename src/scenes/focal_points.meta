@@ -39,7 +39,11 @@
     },
     {
       "name": "vi/lens",
-      "targetTime": 51.6436169817995
+      "targetTime": 49.282533101474236
+    },
+    {
+      "name": "vi/mirror",
+      "targetTime": 53.15893777804783
     }
   ],
   "seed": 3153095361
