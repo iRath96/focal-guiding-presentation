@@ -7,6 +7,10 @@ export function vec2f(x: number, y: number): Vector2f {
     return { x, y }
 }
 
+export function vec2f_angle(a: Vector2f) {
+    return Math.atan2(a.y, a.x)
+}
+
 export function vec2f_direction(from: Vector2f, to: Vector2f) {
     return vec2f_normalized(vec2f_sub(to, from))
 }

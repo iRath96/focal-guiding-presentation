@@ -1,8 +1,9 @@
 import {Circle, Line, Ray, View2D, makeScene2D, Node, Txt, Spline, Layout, Rect, Img, LineProps} from '@motion-canvas/2d';
 import {Random, SimpleSignal, all, chain, createRef, createSignal, debug, delay, sequence, waitFor, waitUntil} from '@motion-canvas/core';
-import { Circle2f, Curve2f, Line2f, Ray2f, Vector2f, circle2f_evaluate, circle2f_intersect, circle2f_normal, curve2f_intersect, curve2f_normal, curve2f_rasterize, line2f_evaluate, line2f_intersect, line2f_normal, ray2f_evaluate, sample_hemicircle, vec2f, vec2f_add, vec2f_direction, vec2f_distance, vec2f_dot, vec2f_length, vec2f_lerp, vec2f_minus, vec2f_multiply, vec2f_normalized, vec2f_polar, vec2f_refract, vec2f_sub, vec3f } from '../rt/math';
+import { Circle2f, Curve2f, Line2f, Ray2f, Vector2f, circle2f_evaluate, circle2f_intersect, circle2f_normal, curve2f_intersect, curve2f_normal, curve2f_rasterize, line2f_angle, line2f_evaluate, line2f_intersect, line2f_length, line2f_normal, ray2f_evaluate, sample_hemicircle, vec2f, vec2f_add, vec2f_direction, vec2f_distance, vec2f_dot, vec2f_length, vec2f_lerp, vec2f_minus, vec2f_multiply, vec2f_normalized, vec2f_polar, vec2f_refract, vec2f_sub, vec3f } from '../rt/math';
 import { PathVertex, PathVertexType, PathVisualizer } from '../ui/path';
 import { CBox } from '../common/cbox';
+import { wiggle } from '../common/animations';
 
 function knownBeforehandLabel(cbox: CBox, view: View2D) {
     const layout = <Layout
@@ -46,25 +47,20 @@ function knownBeforehandLabel(cbox: CBox, view: View2D) {
 }
 
 class Laser {
-    public position = vec2f(250, 0)
-    public target = vec2f(0, 300)
+    public position = vec2f(-300, 100)
+    public target = vec2f(300, -70)
     public pathvis: PathVisualizer
     public node: Node
     private laser = createRef<Img>()
 
     private ids: number[] = []
     private t0 = createSignal(0)
-    private t1 = createSignal(1)
+    private t1 = createSignal(0)
 
     constructor(
         private view: Node
     ) {
         this.pathvis = new PathVisualizer(view)
-        view.add(<Line
-            points={[ vec2f(-300, 300), vec2f( 300, 300) ]}
-            stroke={"#fff"}
-            lineWidth={4}
-        />)
     }
 
     *draw() {
@@ -99,7 +95,7 @@ class Laser {
         this.laser().scale(0)
 
         yield* this.laser().scale(1, 0.5)
-        yield* this.node.rotation(0, 0).to(10, 0.2).to(-10, 0.2).to(0, 0.2)
+        yield* wiggle(this.node, 1)
         yield* this.t1(1, 0.5)
     }
 
@@ -107,7 +103,7 @@ class Laser {
         const numPaths = 14
         for (let i = 0; i < numPaths; i++) {
             const t = i / (numPaths - 1)
-            const off = vec2f_polar(Math.PI * (t + 1), 200)
+            const off = vec2f_polar(Math.PI * (1.5 - t), 150)
             const point = vec2f_add(this.target, off)
             const path: PathVertex[] = [
                 { type: PathVertexType.Diffuse, p: this.target, n: vec2f(0, 0) },
@@ -161,98 +157,170 @@ class AnimatedLine {
 class Obstruction {
     private pathvis: PathVisualizer
     private ids: number[] = []
-    private lines: AnimatedLine[] = []
+    private line: Line2f = {
+        from: vec2f(300, -25),
+        to: vec2f(300, 25),
+    }
+    private angle = createSignal(0)
+    private tree = createRef<Img>()
 
     constructor(
         private view: Node,
     ) {
+        const angle0 = line2f_angle(this.line)
+        const dist = line2f_length(this.line)
+        const shift = createSignal(() => vec2f(2 * this.angle(), 0))
+        const from = createSignal(() => vec2f_add(this.line.from, shift()))
+        const to = createSignal(() => vec2f_add(this.line.to, shift()))
+
         this.pathvis = new PathVisualizer(view)
+        view.add(<Rect
+            size={[ 10, Math.abs(this.line.from.y - this.line.to.y)]}
+            position={line2f_evaluate(this.line, 0.5)}
+            fill={"#000"}
+        />)
         view.add(<Line
-            points={[ vec2f(-300, 300), vec2f( 300, 300) ]}
+            points={() => [
+                from(),
+                vec2f_add(from(),
+                    vec2f_polar(angle0 - this.angle(), dist / 2))
+            ]}
             stroke={"#fff"}
-            lineWidth={4}
+            lineWidth={() => 4 + this.angle()}
+        />)
+        view.add(<Line
+            points={() => [
+                to(),
+                vec2f_add(to(),
+                    vec2f_polar(-angle0 + this.angle(), dist / 2))
+            ]}
+            stroke={"#fff"}
+            lineWidth={() => 4 + this.angle()}
+        />)
+        view.add(<Img
+            ref={this.tree}
+            opacity={0}
+            size={500}
+            position={[ 600, 82 ]}
+            src={"svg/tree-2-svgrepo-com.svg"}
+            zIndex={20}
         />)
     }
 
+    private *drawFailedPaths() {
+        const failPRNG = new Random(1234)
+        const failedPaths = 30
+        const treeLine: Line2f = {
+            from: vec2f(570, -120),
+            to: vec2f(450, 100),
+        }
+        const wallLine: Line2f = {
+            from: vec2f(300, -300),
+            to: vec2f(300, 300),
+        }
+        const sunIds: number[] = []
+        const missIds: number[] = []
+        for (let i = 0; i < failedPaths; i++) {
+            const a = line2f_evaluate(treeLine, i / (failedPaths - 1))
+            const b = line2f_evaluate(wallLine, failPRNG.nextFloat())
+            missIds.push(this.pathvis.showPath([
+                {
+                    p: a,
+                    n: vec2f(0, 0), type: PathVertexType.Diffuse },
+                {
+                    p: b,
+                    n: vec2f(0, 0), type: PathVertexType.Diffuse },
+            ], {
+                stroke: "#027580",
+                opacity: 0.7
+            }));
+            (i % 2 == 0) && sunIds.push(this.pathvis.showPath([
+                {
+                    p: vec2f_add(a, vec2f(-250, -700)),
+                    n: vec2f(0, 0), type: PathVertexType.Light },
+                {
+                    p: a,
+                    n: vec2f(0, 0), type: PathVertexType.Specular },
+            ], {
+                stroke: "#FEA925",
+                opacity: 0.6
+            }));
+        }
+
+        yield* sequence(0.03, ...sunIds.map(id =>
+            this.pathvis.fadeInPath(id, 1)
+        ))
+        yield* sequence(0.03, ...missIds.map(id =>
+            this.pathvis.fadeInPath(id, 1)
+        ))
+    }
+
+    private *drawSuccessfulPaths() {
+        yield* all(...[ ...this.pathvis.all() ].map(id =>
+            this.pathvis.getPath(id).opacity(0.3, 1)
+        ))
+        const ids: number[] = []
+        const focalPoint = line2f_evaluate(this.line, 0.5)
+        const numPaths = 15
+        for (let i = 0; i < numPaths; i++) {
+            const t = i / (numPaths - 1)
+            const d = vec2f_polar(0.14 * Math.PI * (2 * t - 1) + Math.PI)
+            const t0 = -290 + t * 200 + t*t * 20 - t*t*t * 100
+            ids.push(this.pathvis.showPath([
+                {
+                    p: vec2f_add(focalPoint, vec2f_multiply(d, t0)),
+                    n: vec2f(0, 0), type: PathVertexType.Diffuse },
+                {
+                    p: vec2f_add(focalPoint, vec2f_multiply(d, 300)),
+                    n: vec2f(0, 0), type: PathVertexType.Diffuse },
+            ], {
+                stroke: "#027580"
+            }))
+        }
+
+        yield* all(...ids.map(id =>
+            this.pathvis.fadeInPath(id, 1)
+        ))
+    }
+
     *draw() {
-        const a: Line2f = {
-            from: vec2f(-300, 0),
-            to: vec2f(-10, 0),
-        }
-        const b: Line2f = {
-            from: vec2f(10, 0),
-            to: vec2f(300, 0),
-        }
-        const light: Line2f = {
-            from: vec2f(-100, -200),
-            to: vec2f( 100, -200),
-        }
-        this.lines.push(
-            new AnimatedLine(this.view, a.from, a.to),
-            new AnimatedLine(this.view, b.from, b.to),
-            new AnimatedLine(this.view, light.from, light.to, {
-                stroke: "#ffaa00",
-                lineWidth: 8
-            })
-        )
-        yield* chain(...this.lines.map(v => v.start(0.3)))
-
-        // draw rays
-
-        const targetY = 300
-        const numRays = 15
-        for (let i = 0; i < numRays; i++) {
-            const t = 0.05 + 0.9 * i / (numRays - 1)
-            const o = line2f_evaluate(light, t)
-            const d = vec2f_direction(o, vec2f(0, 0))
-            const end = ray2f_evaluate({ o, d }, (targetY - o.y) / d.y)
-
-            this.ids.push(this.pathvis.showPath([
-                { type: PathVertexType.Light, n: vec2f(0, 0), p: o },
-                { type: PathVertexType.Diffuse, n: vec2f(0, 0), p: end },
-            ]))
-        }
-
-        yield* sequence(0.04, ...this.ids.map(id => this.pathvis.fadeInPath(id, 0.5)))
+        yield* this.tree().opacity(1, 1)
+        yield* this.drawFailedPaths()
+        yield* this.angle(Math.PI, 2)
+        yield* this.drawSuccessfulPaths()
     }
 
     *hide() {
-        yield* sequence(0.04, ...this.ids.map(id => this.pathvis.fadeOutPath(id, 0.5)))
-        yield* chain(...this.lines.map(v => v.end(0.3)))
+        yield* all(
+            ...[ ...this.pathvis.all() ].map(id =>
+                this.pathvis.getPath(id).opacity(0, 1)
+            ),
+            this.tree().opacity(0, 1)
+        )
+        yield* this.angle(0, 2)
     }
 }
 
 class VirtualImageLens {
-    private pathvis: PathVisualizer
-    private lightNode: Node
-    public light: Circle2f = {
-        center: vec2f(0, -150),
-        radius: 30,
-    }
-
     private curvature = createSignal(0)
 
     constructor(
+        private cbox: CBox,
         private view: Node
     ) {
-        this.pathvis = new PathVisualizer(view)
     }
 
     *draw() {
-        this.lightNode = this.pathvis.showLight(this.light)
-        this.lightNode.scale(0)
-        yield* this.lightNode.scale(1, 1)
-
-        // draw paths
-
+        const width = 100
+        const y = -110
         const lensA: Line2f = {
-            from: vec2f(150, 0),
-            to: vec2f(-150, 0),
+            from: vec2f(width, y),
+            to: vec2f(-width, y),
         }
         const lensB = createSignal<Curve2f>(() => ({
             t: {
-                x: vec3f(150,0,0),
-                y: vec3f(0,150,0),
+                x: vec3f(width,0,0),
+                y: vec3f(0,width,y),
                 z: vec3f(0,0,1),
             },
             c0: 1.2 * this.curvature(),
@@ -271,6 +339,8 @@ class VirtualImageLens {
             zIndex={2}
         />)
 
+        const cbox = this.cbox
+        const light = this.cbox.light
         const ior = 3
         const targetY = 400
         const numPaths = 15
@@ -278,8 +348,8 @@ class VirtualImageLens {
             const t = i / (numPaths - 1);
             const d = vec2f_polar(Math.PI * (0.5 - 0.4 * (t - 0.5)))
             const o = vec2f_add(
-                this.light.center,
-                vec2f_multiply(d, this.light.radius)
+                light.center,
+                vec2f_multiply(d, light.radius)
             )
             const path = createSignal<Vector2f[]>(() => {
                 let ray: Ray2f = { o, d }
@@ -291,8 +361,10 @@ class VirtualImageLens {
                     return false
                 }
                 function exit() {
-                    const t = (targetY - ray.o.y) / ray.d.y
-                    points.push(ray2f_evaluate(ray, t))
+                    const t = cbox.intersect(ray)
+                    //const t = (targetY - ray.o.y) / ray.d.y
+                    //points.push(ray2f_evaluate(ray, t))
+                    points.push(t.p)
                     return points
                 }
 
@@ -323,7 +395,7 @@ export default makeScene2D(function* (view) {
 
     const cboxView = <Layout />
     view.add(cboxView)
-    const cbox = new CBox(cboxView, { onlyFloor: true })
+    const cbox = new CBox(cboxView)
     cbox.cameraDir = 34.4
     cbox.cameraSpread = 25
     cbox.draw()
@@ -331,9 +403,9 @@ export default makeScene2D(function* (view) {
     const pathvis = new PathVisualizer(view)
     
     yield* waitUntil('light')
-    yield* cbox.lightNode.scale(2, 1).to(1, 1)
+    yield* wiggle(cbox.lightNode, 2, 2)
     yield* waitUntil('camera')
-    yield* cbox.cameraNode.scale(2, 1).to(1, 1)
+    yield* wiggle(cbox.cameraNode, 2, 2)
 
     const useNEE = true
     const showAllPaths = !useNEE
@@ -349,7 +421,7 @@ export default makeScene2D(function* (view) {
                 return i / (numPaths - 1)
             }
             return prng.nextFloat()
-        }, { useNEE })
+        }, { useNEE, maxDepth: 2 })
         for (const path of paths) {
             if (path.length <= 2) continue;
             if (!showAllPaths && path[path.length - 1].type !== PathVertexType.Light) {
@@ -390,8 +462,6 @@ export default makeScene2D(function* (view) {
     // indirect focal points
     //
 
-    yield cboxView.opacity(0)
-
     // laser
 
     const laserView = <Layout />
@@ -401,8 +471,7 @@ export default makeScene2D(function* (view) {
     yield* laser.draw()
     yield* waitUntil('diffusing')
     yield* laser.drawReflection()
-
-    yield* laserView.position([ -700, 0 ], 1)
+    yield* laser.hide()
 
     // obstruction
 
@@ -411,21 +480,18 @@ export default makeScene2D(function* (view) {
     const obstruction = new Obstruction(obstructionView)
     yield* obstruction.draw()
     yield* waitUntil('obs/done')
-
-    yield* laser.hide()
     yield* obstruction.hide()
-
-    yield* all(
-        laserView.opacity(0, 0.5),
-        obstructionView.opacity(0, 0.5)
-    );
 
     //
     // virtual images
     //
 
+    yield* all(
+        cbox.lightNode.scale(1, 1)
+    );
+
     const viLensView = <Layout />;
     view.add(viLensView)
-    const viLens = new VirtualImageLens(viLensView)
+    const viLens = new VirtualImageLens(cbox, viLensView)
     yield* viLens.draw()
 });

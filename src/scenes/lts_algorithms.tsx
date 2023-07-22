@@ -489,8 +489,6 @@ export function* pssmlt($: {
 }
 
 export default makeScene2D(function* (view) {
-    yield* waitUntil('lts')
-
     const cbox = new CBox(view)
     cbox.cameraSpread = 90
     cbox.draw()

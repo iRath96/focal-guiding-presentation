@@ -1,6 +1,6 @@
 import * as quartic from 'quartic'
 import { Matrix33f, mat33f_inverse, mat33f_multiply } from './mat33f'
-import { Vector2f, vec2f, vec2f_add, vec2f_copy, vec2f_direction, vec2f_dot, vec2f_lerp, vec2f_multiply, vec2f_normalized, vec2f_polar, vec2f_squared_length, vec2f_sub } from './vec2f'
+import { Vector2f, vec2f, vec2f_add, vec2f_angle, vec2f_copy, vec2f_direction, vec2f_dot, vec2f_length, vec2f_lerp, vec2f_multiply, vec2f_normalized, vec2f_polar, vec2f_squared_length, vec2f_sub } from './vec2f'
 import { vec3f, vec3f_homogeneous_project } from './vec3f'
 
 const eps = 1e-3
@@ -79,6 +79,18 @@ export function circle2f_intersect(circle: Circle2f, ray: Ray2f) {
 export interface Line2f {
     from: Vector2f
     to: Vector2f
+}
+
+export function line2f_span(line: Line2f) {
+    return vec2f_sub(line.to, line.from)
+}
+
+export function line2f_length(line: Line2f) {
+    return vec2f_length(line2f_span(line))
+}
+
+export function line2f_angle(line: Line2f) {
+    return vec2f_angle(line2f_span(line))
 }
 
 export function line2f_evaluate(line: Line2f, t: number) {
