@@ -4,6 +4,7 @@ import { Circle2f, Curve2f, Line2f, Ray2f, Vector2f, circle2f_evaluate, circle2f
 import { PathVertex, PathVertexType, PathVisualizer } from '../ui/path';
 import { CBox } from '../common/cbox';
 import { wiggle } from '../common/animations';
+import { Captions } from '../common/captions';
 
 function knownBeforehandLabel(cbox: CBox, view: View2D) {
     const layout = <Layout
@@ -116,9 +117,11 @@ class Laser {
     }
 
     *hide() {
-        yield* sequence(0.04, ...this.ids.map(id => this.pathvis.fadeOutPath(id, 0.3)))
-        yield* this.laser().scale(0, 0.5)
-        yield* this.t0(1, 0.5)
+        yield* all(
+            this.laser().scale(0, 0.5),
+            this.t0(1, 0.5),
+            sequence(0.04, ...this.ids.map(id => this.pathvis.fadeOutPath(id, 0.3)))
+        )
     }
 }
 
@@ -259,7 +262,7 @@ class Obstruction {
 
     private *drawSuccessfulPaths() {
         const previousPaths = [ ...this.pathvis.all() ]
-        
+
         const ids: number[] = []
         const focalPoint = line2f_evaluate(this.line, 0.5)
         const numPaths = 15
@@ -481,6 +484,12 @@ class VirtualImageMirror {
 }
 
 export default makeScene2D(function* (view) {
+    const captions = createRef<Captions>()
+    view.add(<Captions
+        ref={captions}
+        chapter="Focal points"
+    />);
+    
     const prng = new Random(11)
 
     const cboxView = <Layout />
@@ -492,6 +501,8 @@ export default makeScene2D(function* (view) {
 
     const pathvis = new PathVisualizer(view)
     
+    yield* captions().title("Direct focal points", 1);
+
     yield* waitUntil('light')
     yield* wiggle(cbox.lightNode, 1.5)
     yield* waitUntil('camera')
@@ -534,9 +545,10 @@ export default makeScene2D(function* (view) {
 
     yield* waitUntil('known')
     const knownBeforehand = knownBeforehandLabel(cbox, view)
-    yield* knownBeforehand.opacity(1, 1).wait(1).to(0, 1)
+    yield* knownBeforehand.opacity(1, 1)
+    yield* waitFor(1)
     
-    yield* sequence(0.05, ...cameraPaths.map((id, index) =>
+    const pathRemove = sequence(0.05, ...cameraPaths.map((id, index) =>
         chain(
             pathvis.fadeOutPath(cameraPaths[index], 0.5),
             pathvis.fadeOutPath(lightPaths[index], 0.5)
@@ -545,12 +557,17 @@ export default makeScene2D(function* (view) {
     
     yield* all(
         cbox.cameraNode.scale(0, 1),
-        cbox.lightNode.scale(0, 1)
+        cbox.lightNode.scale(0, 1),
+        captions().title("", 1),
+        knownBeforehand.opacity(0, 1),
+        pathRemove
     );
 
     //
     // indirect focal points
     //
+
+    yield* captions().title("Indirect focal points", 1);
 
     // laser
 
@@ -571,14 +588,18 @@ export default makeScene2D(function* (view) {
     const obstruction = new Obstruction(obstructionView)
     yield* obstruction.draw()
     yield* waitUntil('obs/done')
-    yield* obstruction.hide()
+    yield* all(
+        obstruction.hide(),
+        delay(1, captions().title("", 1)),
+    )
 
     //
     // virtual images
     //
 
     yield* all(
-        cbox.lightNode.scale(1, 1)
+        cbox.lightNode.scale(1, 1),
+        captions().title("Virtual images", 1),
     );
 
     const viLensView = <Layout />;
@@ -595,6 +616,7 @@ export default makeScene2D(function* (view) {
     yield* waitUntil('vi/done')
     yield* all(
         viLensView.opacity(0, 2),
-        viMirrorView.opacity(0, 2)
+        viMirrorView.opacity(0, 2),
+        delay(1, captions().title("", 1))
     )
 });

@@ -19,35 +19,35 @@
     },
     {
       "name": "known",
-      "targetTime": 18.91240692396927
+      "targetTime": 18.330690605628263
     },
     {
       "name": "laser",
-      "targetTime": 27.87132949070131
+      "targetTime": 27.2896131723603
     },
     {
       "name": "diffusing",
-      "targetTime": 30.393387122052744
+      "targetTime": 29.811670803711735
     },
     {
       "name": "laser/end",
-      "targetTime": 32.77792886338899
+      "targetTime": 32.16199393808675
     },
     {
       "name": "obs/done",
-      "targetTime": 43.49217720590439
+      "targetTime": 42.87624228060215
     },
     {
       "name": "vi/lens",
-      "targetTime": 49.282533101474236
+      "targetTime": 48.666598176171995
     },
     {
       "name": "vi/mirror",
-      "targetTime": 53.790193499598395
+      "targetTime": 53.174258574296154
     },
     {
       "name": "vi/done",
-      "targetTime": 57.32237041472984
+      "targetTime": 56.7064354894276
     }
   ],
   "seed": 3153095361

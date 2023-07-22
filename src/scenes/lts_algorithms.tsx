@@ -1,9 +1,10 @@
 import { Circle, Layout, Line, makeScene2D, Node } from '@motion-canvas/2d';
-import { Random, all, chain, createSignal, debug, sequence, waitFor, waitUntil } from '@motion-canvas/core';
+import { Random, all, chain, createRef, createSignal, debug, sequence, waitFor, waitUntil } from '@motion-canvas/core';
 import { CBox } from '../common/cbox';
 import { path_length, path_segments, PathVertex, PathVertexType, PathVisualizer } from '../ui/path';
 import { Ray2f, ray2f_evaluate, vec2f, vec2f_add, vec2f_direction, vec2f_distance, vec2f_dot, vec2f_lerp, vec2f_multiply, vec2f_sub } from '../rt/math';
 import { PSSMLT } from '../rt/pssmlt';
+import { Captions } from '../common/captions';
 
 class StratifiedRandom {
     private dim = 0
@@ -94,7 +95,7 @@ function* bdptSingle($: {
         yield* chain(...[...path_segments(subPath)].map(segment => {
             const id = pathvis.showPath(segment)
             segments.push(id)
-            return pathvis.fadeInPath(id, 0.25)
+            return pathvis.fadeInPath(id, 0.5)
         }))
         allSegments.push(segments)
     }
@@ -178,7 +179,7 @@ function* bdptSingle($: {
 function* vertexMerging($: {
     cbox: CBox
     view: Node
-}) {
+}, showTitle: () => any, hideTitle: () => any) {
     const view = <Layout />;
     $.view.add(view);
 
@@ -224,6 +225,7 @@ function* vertexMerging($: {
     yield* showSubpath(lightPath)
 
     yield* waitUntil('vm/merge')
+    yield* showTitle()
     const mergeHighlight = <Circle
         size={[50, 100]}
         position={vec2f_sub(mergedPoint, vec2f(0, 6))}
@@ -235,7 +237,10 @@ function* vertexMerging($: {
     yield* merge(1, 3)
 
     yield* waitUntil('vm/done')
-    yield* view.opacity(0, 1)
+    yield* all(
+        view.opacity(0, 1),
+        hideTitle()
+    )
     view.remove()
 }
 
@@ -492,6 +497,12 @@ export function* pssmlt($: {
 }
 
 export default makeScene2D(function* (view) {
+    const captions = createRef<Captions>()
+    view.add(<Captions
+        ref={captions}
+        chapter="Previous works"
+    />);
+
     const cbox = new CBox(view)
     cbox.cameraSpread = 90
     cbox.draw()
@@ -500,20 +511,29 @@ export default makeScene2D(function* (view) {
     yield* cbox.cameraNode.scale(1, 1)
 
     yield* waitUntil('lts/pt')
+    yield* captions().title("Path Tracing", 1)
     yield* pathtraceSingle({ cbox })
     yield* pathtrace({ cbox, useNEE: true, numPaths: 16 })
+    yield* captions().title("", 1)
 
     yield* waitUntil('lts/lt')
+    yield* captions().title("Light Tracing", 1)
     yield* lighttraceSingle({ cbox })
     yield* lighttrace({ cbox, numPaths: 18 })
+    yield* captions().title("", 1)
 
     yield* waitUntil('lts/bdpt')
+    yield* captions().title("Bidirectional Path Tracing", 1)
     yield* bdptSingle({ cbox })
+    yield* captions().title("", 1)
 
     yield* waitUntil('lts/vm')
-    yield* vertexMerging({ cbox, view })
+    yield* vertexMerging({ cbox, view },
+        () => captions().title("Photon Mapping", 1),
+        () => captions().title("", 1))
 
     yield* waitUntil('lts/pssmlt')
+    yield* captions().title("Markov Chain Monte Carlo", 1)
     yield* pssmlt({ cbox })
 
     yield* waitUntil('lts/done')
