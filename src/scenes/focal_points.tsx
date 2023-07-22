@@ -501,7 +501,7 @@ export default makeScene2D(function* (view) {
 
     const pathvis = new PathVisualizer(view)
     
-    yield* captions().title("Direct focal points", 1);
+    yield* captions().updateTitle("Direct focal points");
 
     yield* waitUntil('light')
     yield* wiggle(cbox.lightNode, 1.5)
@@ -558,16 +558,16 @@ export default makeScene2D(function* (view) {
     yield* all(
         cbox.cameraNode.scale(0, 1),
         cbox.lightNode.scale(0, 1),
-        captions().title("", 1),
+        captions().updateTitle(),
         knownBeforehand.opacity(0, 1),
-        pathRemove
+        pathRemove,
     );
 
     //
     // indirect focal points
     //
 
-    yield* captions().title("Indirect focal points", 1);
+    yield* captions().updateTitle("Indirect focal points");
 
     // laser
 
@@ -590,7 +590,7 @@ export default makeScene2D(function* (view) {
     yield* waitUntil('obs/done')
     yield* all(
         obstruction.hide(),
-        delay(1, captions().title("", 1)),
+        delay(1, captions().updateTitle()),
     )
 
     //
@@ -599,7 +599,7 @@ export default makeScene2D(function* (view) {
 
     yield* all(
         cbox.lightNode.scale(1, 1),
-        captions().title("Virtual images", 1),
+        captions().updateTitle("Virtual images"),
     );
 
     const viLensView = <Layout />;
@@ -617,6 +617,6 @@ export default makeScene2D(function* (view) {
     yield* all(
         viLensView.opacity(0, 2),
         viMirrorView.opacity(0, 2),
-        delay(1, captions().title("", 1))
+        delay(1, captions().updateTitle())
     )
 });

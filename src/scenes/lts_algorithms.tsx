@@ -6,6 +6,8 @@ import { Ray2f, ray2f_evaluate, vec2f, vec2f_add, vec2f_direction, vec2f_distanc
 import { PSSMLT } from '../rt/pssmlt';
 import { Captions } from '../common/captions';
 
+const captions = createRef<Captions>()
+
 class StratifiedRandom {
     private dim = 0
     private index = -1
@@ -179,7 +181,7 @@ function* bdptSingle($: {
 function* vertexMerging($: {
     cbox: CBox
     view: Node
-}, showTitle: () => any, hideTitle: () => any) {
+}) {
     const view = <Layout />;
     $.view.add(view);
 
@@ -225,7 +227,10 @@ function* vertexMerging($: {
     yield* showSubpath(lightPath)
 
     yield* waitUntil('vm/merge')
-    yield* showTitle()
+    yield* all(
+        captions().updateTitle("Photon Mapping"),
+        captions().updateReference("[Shirley et al. 1995; Jensen 1996; Walter et al. 1997]"),
+    )
     const mergeHighlight = <Circle
         size={[50, 100]}
         position={vec2f_sub(mergedPoint, vec2f(0, 6))}
@@ -239,7 +244,8 @@ function* vertexMerging($: {
     yield* waitUntil('vm/done')
     yield* all(
         view.opacity(0, 1),
-        hideTitle()
+        captions().updateTitle(),
+        captions().updateReference(),
     )
     view.remove()
 }
@@ -335,6 +341,7 @@ function* pathtrace($: {
         s.node.opacity(s.isHelper ? 0 : 0.2, 1)))
     
     yield* waitUntil('pt/nee')
+    yield* captions().updateReference("[Hanika et al. 2015; Zeltner et al. 2020]")
 
     yield* all(...segments.map(s =>
         s.node.opacity(
@@ -497,7 +504,6 @@ export function* pssmlt($: {
 }
 
 export default makeScene2D(function* (view) {
-    const captions = createRef<Captions>()
     view.add(<Captions
         ref={captions}
         chapter="Previous works"
@@ -511,29 +517,45 @@ export default makeScene2D(function* (view) {
     yield* cbox.cameraNode.scale(1, 1)
 
     yield* waitUntil('lts/pt')
-    yield* captions().title("Path Tracing", 1)
+    yield* all(
+        captions().updateTitle("Path Tracing"),
+        captions().updateReference("[Kajiya 1986]")
+    )
     yield* pathtraceSingle({ cbox })
     yield* pathtrace({ cbox, useNEE: true, numPaths: 16 })
-    yield* captions().title("", 1)
+    yield* all(
+        captions().updateTitle(),
+        captions().updateReference(),
+    )
 
     yield* waitUntil('lts/lt')
-    yield* captions().title("Light Tracing", 1)
+    yield* captions().updateTitle("Light Tracing")
     yield* lighttraceSingle({ cbox })
     yield* lighttrace({ cbox, numPaths: 18 })
-    yield* captions().title("", 1)
+    yield* all(
+        captions().updateTitle(),
+        captions().updateReference(),
+    )
 
     yield* waitUntil('lts/bdpt')
-    yield* captions().title("Bidirectional Path Tracing", 1)
+    yield* all(
+        captions().updateTitle("Bidirectional Path Tracing"),
+        captions().updateReference("[Lafortune and Willems 1993; Veach and Guibas 1995a]")
+    )
     yield* bdptSingle({ cbox })
-    yield* captions().title("", 1)
+    yield* all(
+        captions().updateTitle(),
+        captions().updateReference(),
+    )
 
     yield* waitUntil('lts/vm')
-    yield* vertexMerging({ cbox, view },
-        () => captions().title("Photon Mapping", 1),
-        () => captions().title("", 1))
+    yield* vertexMerging({ cbox, view })
 
     yield* waitUntil('lts/pssmlt')
-    yield* captions().title("Markov Chain Monte Carlo", 1)
+    yield* all(
+        captions().updateTitle("Markov Chain Monte Carlo"),
+        captions().updateReference("[Metropolis et al. 1953; Veach and Guibas 1997; Kelemen et al. 2002]")
+    )
     yield* pssmlt({ cbox })
 
     yield* waitUntil('lts/done')
