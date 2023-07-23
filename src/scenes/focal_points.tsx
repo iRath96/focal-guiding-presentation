@@ -323,6 +323,34 @@ function lerpPath(path: Vector2f[], t: number) {
     return path.map(p => vec2f_lerp(base, p, t))
 }
 
+function apparentPosition(props: {
+    y: SimpleSignal<number>
+    opacity: SimpleSignal<number>
+}) {
+    return <Layout
+        scaleX={-1}
+        x={-150}
+        y={props.y}
+        opacity={props.opacity}
+    >
+        <Line
+            points={[[-10,0], [-100,0]]}
+            stroke={"#fff"}
+            lineWidth={4}
+            arrowSize={10}
+            endArrow
+        />
+        <Txt
+            text={"Apparent position"}
+            x={200}
+            y={3}
+            width={400}
+            fill={"#fff"}
+            fontSize={30}
+        />
+    </Layout>
+}
+
 class VirtualImageLens {
     private lensRayT = createSignal(0)
     private lensT = createSignal(0)
@@ -368,6 +396,7 @@ class VirtualImageLens {
         const light = this.cbox.light
         const ior = 3
         const numPaths = 10
+        let focalY: SimpleSignal<number>
         for (let i = 0; i < numPaths; i++) {
             const t = i / (numPaths - 1);
             const d = vec2f_polar(Math.PI * (0.5 - 0.30 * (t - 0.5)))
@@ -408,7 +437,25 @@ class VirtualImageLens {
                 arrowSize={12}
                 endArrow
             />)
+
+            if (i === 0) {
+                focalY = createSignal(() => {
+                    const a = path()[path().length-2]
+                    const b = path()[path().length-1]
+                    const d = vec2f_direction(a, b)
+                    if (d.x < 0) return 1000
+                    const t = -a.x / d.x
+                    return a.y + t * d.y
+                })
+            }
         }
+
+        this.view.add(apparentPosition({
+            y: focalY,
+            opacity: createSignal(() => Math.max(0, Math.min(1,
+                1 - (focalY() - 85) / 200
+            )))
+        }))
 
         yield* waitUntil('vi/lens')
         yield* this.lensRayT(1, 1)
@@ -429,7 +476,7 @@ class VirtualImageMirror {
                 to: [0, 100],
                 stops: [
                     { color: "black", offset: 0, },
-                    { color: "rgba(0,0,0,0)", offset: 1, },
+                    { color: "rgba(0,0,0,0)", offset: 0.5, },
                 ],
             })}
             zIndex={1}
@@ -471,6 +518,9 @@ class VirtualImageMirror {
                 ray.o = t1.p
                 ray.d = vec2f_reflect(t1.n, vec2f_multiply(ray.d, -1))
                 const t2 = cbox.intersect(ray)
+                if (vec2f_distance(t2.p, ray.o) > 350) {
+                    t2.p = ray2f_evaluate(ray, 350)
+                }
                 points.push(t2)
 
                 return points
@@ -502,7 +552,15 @@ class VirtualImageMirror {
         }
 
         yield* waitUntil('vi/mirror')
-        yield* this.pathvis.fadeInPaths(ids, 1)
+        const opacity = createSignal(0)
+        this.view.add(apparentPosition({
+            y: createSignal(cbox.mirroredLight.center.y),
+            opacity
+        }))
+        yield* all(
+            this.pathvis.fadeInPaths(ids, 1),
+            opacity(1, 1),
+        )
     }
 }
 
