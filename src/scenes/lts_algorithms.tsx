@@ -553,7 +553,7 @@ export default makeScene2D(function* (originalView) {
 
     yield* waitUntil('lts/pt')
     yield* all(
-        captions().updateTitle("Path Tracing"),
+        captions().updateTitle("Path tracing"),
         captions().updateReference("[Kajiya 1986]")
     )
     yield* pathtraceSingle({ cbox })
@@ -564,7 +564,7 @@ export default makeScene2D(function* (originalView) {
     )
 
     yield* waitUntil('lts/lt')
-    yield* captions().updateTitle("Light Tracing")
+    yield* captions().updateTitle("Light tracing")
     yield* lighttraceSingle({ cbox })
     yield* lighttrace({ cbox, numPaths: 18 })
     yield* all(
@@ -574,7 +574,7 @@ export default makeScene2D(function* (originalView) {
 
     yield* waitUntil('lts/bdpt')
     yield* all(
-        captions().updateTitle("Bidirectional Path Tracing"),
+        captions().updateTitle("Bidirectional path tracing"),
         captions().updateReference("[Lafortune and Willems 1993; Veach and Guibas 1995a]")
     )
     yield* bdptSingle({ cbox })
@@ -588,7 +588,7 @@ export default makeScene2D(function* (originalView) {
 
     yield* waitUntil('lts/pssmlt')
     yield* all(
-        captions().updateTitle("Markov Chain Monte Carlo"),
+        captions().updateTitle("Markov-chain Monte Carlo"),
         captions().updateReference("[Metropolis et al. 1953; Veach and Guibas 1997; Kelemen et al. 2002]")
     )
     yield* pssmlt({ cbox })

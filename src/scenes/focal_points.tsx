@@ -13,7 +13,7 @@ function knownBeforehandLabel(cbox: CBox, view: Node) {
     >
         <Spline
             points={[
-                [100,-30],
+                [95,-25],
                 [50,20],
             ]}
             stroke={"#fff"}
@@ -23,7 +23,7 @@ function knownBeforehandLabel(cbox: CBox, view: Node) {
         />
         <Spline
             points={[
-                [460,-80],
+                [455,-75],
                 [500,-120],
             ]}
             stroke={"#fff"}
@@ -32,11 +32,11 @@ function knownBeforehandLabel(cbox: CBox, view: Node) {
             arrowSize={16}
         />
         <Txt
-            position={[280, -50]}
+            position={[276, -44]}
             scaleX={-1}
             text={"Known beforehand"}
             fill={"#fff"}
-            fontSize={40}
+            fontSize={35}
         />
     </Layout>;
     view.add(layout);
@@ -54,6 +54,7 @@ class Laser {
     private ids: number[] = []
     private t0 = createSignal(0)
     private t1 = createSignal(0)
+    private markerOpacity = createSignal(0)
 
     constructor(
         private view: Node
@@ -110,7 +111,39 @@ class Laser {
             this.ids.push(this.pathvis.showPath(path))
         }
 
-        yield* this.pathvis.fadeInPaths(this.ids, 0.3, 0.04)
+        this.view.add(<Layout
+            scaleX={-1}
+            position={() => vec2f_add(this.target, vec2f(
+                0, 20 * (1 - this.markerOpacity())
+            ))}
+            opacity={this.markerOpacity}
+        >
+            <Line
+                points={[
+                    [-155,25],
+                    [-155,0],
+                    [-10,0]
+                ]}
+                stroke={"#fff"}
+                lineWidth={4}
+                arrowSize={10}
+                endArrow
+            />
+            <Txt
+                text={"Diffusing\nfocal point"}
+                textAlign={"center"}
+                x={-155}
+                y={80}
+                width={400}
+                fill={"#fff"}
+                fontSize={35}
+            />
+        </Layout>)
+
+        yield* all(
+            this.pathvis.fadeInPaths(this.ids, 0.3, 0.04),
+            this.markerOpacity(1, 1),
+        )
     }
 
     *hide() {
@@ -118,39 +151,8 @@ class Laser {
             this.laser().scale(0, 0.5),
             this.t0(1, 0.5),
             this.pathvis.fadeOutPaths(this.ids, 0.3, 0.04),
+            this.markerOpacity(0, 1),
         )
-    }
-}
-
-class AnimatedLine {
-    private node: Node
-    private t0 = createSignal(0)
-    private t1 = createSignal(0)
-
-    constructor(
-        private view: Node,
-        public from: Vector2f,
-        public to: Vector2f,
-        public props: LineProps = {}
-    ) {
-    }
-
-    *start(time: number) {
-        this.node = <Line
-            points={() => [
-                vec2f_lerp(this.from, this.to, this.t0()),
-                vec2f_lerp(this.from, this.to, this.t1()),
-            ]}
-            stroke={"#fff"}
-            lineWidth={4}
-            {...this.props}
-        />
-        this.view.add(this.node)
-        yield* this.t1(1, time)
-    }
-
-    *end(time: number) {
-        yield* this.t0(1, time)
     }
 }
 
@@ -162,6 +164,7 @@ class Obstruction {
     }
     private angle = createSignal(0)
     private tree = createRef<Img>()
+    private markerOpacity = createSignal(0)
 
     private addGradient() {
         this.view.add(<Rect
@@ -292,11 +295,39 @@ class Obstruction {
             }))
         }
 
+        this.view.add(<Layout
+            scaleX={-1}
+            position={() => vec2f_add(line2f_evaluate(this.line, 0.5), vec2f(
+                0, -20 * (1 - this.markerOpacity())
+            ))}
+            opacity={this.markerOpacity}
+        >
+            <Line
+                points={[
+                    [150,-150],
+                    [15,-15],
+                ]}
+                stroke={"#fff"}
+                lineWidth={4}
+                arrowSize={10}
+                endArrow
+            />
+            <Txt
+                text={"Occlusion focal point"}
+                textAlign={"left"}
+                position={[ 280, -180 ]}
+                width={400}
+                fill={"#fff"}
+                fontSize={35}
+            />
+        </Layout>)
+
         yield* all(
             ...previousPaths.map(id =>
                 this.pathvis.getPath(id).opacity(0.3, 1)
             ),
             this.pathvis.fadeInPaths(ids, 1),
+            delay(0.5, this.markerOpacity(1, 1)),
         )
     }
 
@@ -312,7 +343,8 @@ class Obstruction {
             ...[ ...this.pathvis.all() ].map(id =>
                 this.pathvis.getPath(id).opacity(0, 1)
             ),
-            this.tree().opacity(0, 1)
+            this.tree().opacity(0, 1),
+            this.markerOpacity(0, 1),
         )
         yield* this.angle(0, 2)
     }
@@ -329,7 +361,7 @@ function apparentPosition(props: {
 }) {
     return <Layout
         scaleX={-1}
-        x={-150}
+        x={-140}
         y={props.y}
         opacity={props.opacity}
     >
@@ -342,11 +374,11 @@ function apparentPosition(props: {
         />
         <Txt
             text={"Apparent position"}
-            x={200}
+            x={215}
             y={3}
             width={400}
             fill={"#fff"}
-            fontSize={30}
+            fontSize={35}
         />
     </Layout>
 }
