@@ -113,14 +113,14 @@ class Laser {
             this.ids.push(this.pathvis.showPath(path))
         }
 
-        yield* sequence(0.04, ...this.ids.map(id => this.pathvis.fadeInPath(id, 0.3)))
+        yield* this.pathvis.fadeInPaths(this.ids, 0.3, 0.04)
     }
 
     *hide() {
         yield* all(
             this.laser().scale(0, 0.5),
             this.t0(1, 0.5),
-            sequence(0.04, ...this.ids.map(id => this.pathvis.fadeOutPath(id, 0.3)))
+            this.pathvis.fadeOutPaths(this.ids, 0.3, 0.04),
         )
     }
 }
@@ -252,12 +252,8 @@ class Obstruction {
             }));
         }
 
-        yield* all(...sunIds.map(id =>
-            this.pathvis.fadeInPath(id, 0.6)
-        ))
-        yield* all(...missIds.map(id =>
-            this.pathvis.fadeInPath(id, 0.6)
-        ))
+        yield* this.pathvis.fadeInPaths(sunIds, 0.6)
+        yield* this.pathvis.fadeInPaths(missIds, 0.6)
     }
 
     private *drawSuccessfulPaths() {
@@ -286,9 +282,7 @@ class Obstruction {
             ...previousPaths.map(id =>
                 this.pathvis.getPath(id).opacity(0.3, 1)
             ),
-            ...ids.map(id =>
-                this.pathvis.fadeInPath(id, 1)
-            )
+            this.pathvis.fadeInPaths(ids, 1),
         )
     }
 
@@ -477,9 +471,7 @@ class VirtualImageMirror {
         }
 
         yield* waitUntil('vi/mirror')
-        yield* all(...ids.map(id =>
-            this.pathvis.fadeInPath(id, 1)
-        ))
+        yield* this.pathvis.fadeInPaths(ids, 1)
     }
 }
 
@@ -536,12 +528,10 @@ export default makeScene2D(function* (view) {
     }
 
     yield* waitUntil('start')
-    yield* sequence(0.05, ...cameraPaths.map(id =>
-        pathvis.fadeInPath(id, 0.5)))
+    yield* pathvis.fadeInPaths(cameraPaths, 1, 0.05)
+
     yield* waitUntil('end')
-    yield* sequence(0.05, ...lightPaths.map(id =>
-        pathvis.fadeInPath(id, 0.5))
-    )
+    yield* pathvis.fadeInPaths(lightPaths, 0.5, 0.05)
 
     yield* waitUntil('known')
     const knownBeforehand = knownBeforehandLabel(cbox, view)

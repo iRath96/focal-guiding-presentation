@@ -323,16 +323,13 @@ function* pathtrace($: {
     }
 
     yield* waitUntil('pt/all')
-
-    yield* sequence(0.03, ...ids.map(id => $.cbox.pathvis.fadeInPath(id, 1)))
-
+    yield* $.cbox.pathvis.fadeInPaths(ids, 1, 0.03)
+    
     yield* waitUntil('pt/cam')
-
     yield* all(...segments.filter(s => !s.isNEE && !s.isHelper).map(s =>
         s.node.opacity(s.isCamera ? 1 : 0.2, 1)))
 
     yield* waitUntil('pt/virt')
-
     yield* all(...segments.filter(s => !s.isNEE).map(s =>
         s.node.opacity(
             s.isSpecular && s.isCamera || s.wasSpecular ?
@@ -387,11 +384,9 @@ function* pathtrace($: {
             0.2
         , 1))
     )
-
     yield* $.cbox.pathvis.fadeInPaths(mneeIds, 1)
 
     yield* waitUntil('pt/done')
-
     yield* $.cbox.pathvis.fadeAndRemove(1)
 }
 
@@ -462,16 +457,13 @@ function* lighttrace($: {
     }
 
     yield* waitUntil('lt/all')
-
-    yield* sequence(0.01, ...ids.map(id => $.cbox.pathvis.fadeInPath(id, 1)))
+    yield* $.cbox.pathvis.fadeInPaths(ids, 1, 0.01)
 
     yield* waitUntil('lt/light')
-
     yield* all(...segments.filter(s => !s.isHelper).map(s =>
         s.node.opacity(s.isLight ? 1 : 0.2, 1)))
 
     yield* waitUntil('lt/virt')
-
     yield* all(...segments.map(s =>
         s.node.opacity(
             s.isSpecular && s.isLight || s.wasSpecular ?
@@ -479,7 +471,6 @@ function* lighttrace($: {
     )
 
     yield* waitUntil('lt/miss')
-
     yield* all(...segments.map(s =>
         s.node.opacity(
             s.isHelper ? 0 :
@@ -489,7 +480,6 @@ function* lighttrace($: {
     )
 
     yield* waitUntil('lt/done')
-
     yield* $.cbox.pathvis.fadeAndRemove(1)
 }
 
