@@ -1,5 +1,5 @@
 import { Circle, Layout, Line, makeScene2D, Node } from '@motion-canvas/2d';
-import { Random, all, chain, createRef, createSignal, debug, sequence, waitFor, waitUntil } from '@motion-canvas/core';
+import { Random, Vector2, all, chain, createRef, createSignal, debug, sequence, waitFor, waitUntil } from '@motion-canvas/core';
 import { CBox } from '../common/cbox';
 import { path_length, path_segments, PathVertex, PathVertexType, PathVisualizer } from '../ui/path';
 import { Ray2f, ray2f_evaluate, vec2f, vec2f_add, vec2f_direction, vec2f_distance, vec2f_dot, vec2f_lerp, vec2f_multiply, vec2f_sub } from '../rt/math';
@@ -262,6 +262,8 @@ function* pathtrace($: {
         isSpecular?: boolean
         wasSpecular?: boolean
         isHelper?: boolean
+        a?: PathVertex
+        b?: PathVertex
     }[] = []
     const ids: number[] = []
     const prng = new StratifiedRandom(new Random(1234), $.numPaths)
@@ -287,7 +289,9 @@ function* pathtrace($: {
                     isCamera: i === 1,
                     isNEE: path[i].nee,
                     isSpecular: path[i].type === PathVertexType.Specular,
-                    wasSpecular
+                    wasSpecular,
+                    a: path[i-1],
+                    b: path[i]
                 })
 
                 if (wasSpecular) {
@@ -341,7 +345,7 @@ function* pathtrace($: {
         s.node.opacity(s.isHelper ? 0 : 0.2, 1)))
     
     yield* waitUntil('pt/nee')
-    yield* captions().updateReference("[Hanika et al. 2015; Zeltner et al. 2020]")
+    yield* captions().updateReference("Next event estimation")
 
     yield* all(...segments.map(s =>
         s.node.opacity(
@@ -350,6 +354,41 @@ function* pathtrace($: {
             0.2
         , 1))
     )
+
+    yield* waitUntil('pt/mnee')
+    yield* captions().updateReference("Manifold NEE [Hanika et al. 2015; Zeltner et al. 2020]")
+
+    const mneeIds: number[] = []
+    for (const segment of segments) {
+        if (!segment.isNEE) continue
+        const start = segment.a.p
+        let end = $.cbox.mirroredLight.center
+        const d = vec2f_direction(start, end)
+        end = vec2f_sub(end, vec2f_multiply(d, $.cbox.light.radius))
+
+        const mend = $.cbox.mirrorAtCeiling(end)
+        const mid = vec2f_add(start, vec2f_multiply(d,
+            ($.cbox.ceilingY - start.y) / d.y
+        ))
+
+        mneeIds.push($.cbox.pathvis.showPath([
+            { p: start },
+            { p: mid },
+            { p: mend }
+        ], {
+            lineDash: [8,8]
+        }))
+    }
+
+    yield* all(...segments.map(s =>
+        s.node.opacity(
+            s.isHelper ? 0 :
+            s.isNEE ? 0.2 :
+            0.2
+        , 1))
+    )
+
+    yield* $.cbox.pathvis.fadeInPaths(mneeIds, 1)
 
     yield* waitUntil('pt/done')
 

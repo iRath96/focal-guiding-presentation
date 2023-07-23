@@ -1,6 +1,6 @@
 import { Line, View2D, Node, Layout, Img, Rect, Circle, LineProps } from '@motion-canvas/2d'
 import { Circle2f, Vector2f, vec2f, vec2f_add, vec2f_direction, vec2f_distance, vec2f_lerp, vec2f_multiply, vec2f_polar } from '../rt/math'
-import { SimpleSignal, all, createSignal } from '@motion-canvas/core'
+import { SimpleSignal, all, createSignal, sequence } from '@motion-canvas/core'
 
 export enum PathVertexType {
     Camera,
@@ -12,8 +12,8 @@ export enum PathVertexType {
 
 export interface PathVertex {
     p: Vector2f
-    n: Vector2f
-    type: PathVertexType
+    type?: PathVertexType
+    n?: Vector2f
     nee?: boolean
 }
 
@@ -164,10 +164,22 @@ export class PathVisualizer {
         yield* path.t1(0, 0).to(path.length, time, t => t)
     }
 
+    *fadeInPaths(ids: number[], time: number, delay = 0) {
+        yield* sequence(delay, ...ids.map(id =>
+            this.fadeInPath(id, time)
+        ))
+    }
+
     *fadeOutPath(id: number, time: number, constSpeed = false) {
         const path = this.shownPaths.get(id)
         if (constSpeed) time *= path.length
         yield* path.t0(0, 0).to(path.length, time, t => t)
+    }
+
+    *fadeOutPaths(ids: number[], time: number, delay = 0) {
+        yield* sequence(delay, ...ids.map(id =>
+            this.fadeOutPath(id, time)
+        ))
     }
 
     getPath(id: number) {

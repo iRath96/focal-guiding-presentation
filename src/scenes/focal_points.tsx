@@ -457,14 +457,14 @@ class VirtualImageMirror {
 
             const mirrorD = vec2f_direction(
                 path[1].p,
-                vec2f(cbox.light.center.x, -600 - cbox.light.center.y)
+                cbox.mirroredLight.center
             )
             const path2 = [
                 path[1],
                 {
                     ...path[0],
-                    //p: vec2f(path[0].p.x, -600-path[0].p.y),
-                    //p: vec2f(cbox.light.center.x, -600-cbox.light.center.y),
+                    //p: cbox.mirrorAtCeiling(path[0].p),
+                    //p: cbox.mirroredLight.center,
                     //p: vec2f_lerp(path[2].p, path[1].p, 2)
                     p: vec2f_add(path[1].p,
                         vec2f_multiply(mirrorD, -300 / mirrorD.y))

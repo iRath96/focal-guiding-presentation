@@ -1,6 +1,7 @@
 import { PathVertex, PathVertexType, PathVisualizer } from '../ui/path'
-import { Circle2f, Line2f, Ray2f, circle2f_intersect, circle2f_normal, line2f_intersect, line2f_normal, ray2f_evaluate, sample_hemicircle, vec2f, vec2f_add, vec2f_direction, vec2f_distance, vec2f_dot, vec2f_minus, vec2f_multiply, vec2f_polar, vec2f_reflect } from '../rt/math'
+import { Circle2f, Line2f, Ray2f, Vector2f, circle2f_intersect, circle2f_normal, line2f_intersect, line2f_normal, ray2f_evaluate, sample_hemicircle, vec2f, vec2f_add, vec2f_direction, vec2f_distance, vec2f_dot, vec2f_minus, vec2f_multiply, vec2f_polar, vec2f_reflect } from '../rt/math'
 import { Line, Node } from '@motion-canvas/2d'
+import { Vector2 } from '@motion-canvas/core'
 
 interface CBoxProps {
     onlyFloor: boolean
@@ -39,6 +40,28 @@ export class CBox {
 
     public cameraDir = 0
     public cameraSpread = 90
+
+    get ceilingY() {
+        return this.walls[1].to.y
+    }
+
+    mirrorAtCeiling(p: Vector2f) {
+        return vec2f(p.x, 2 * this.ceilingY - p.y)
+    }
+
+    get mirroredCamera(): Circle2f {
+        return {
+            center: this.mirrorAtCeiling(this.camera.center),
+            radius: this.camera.radius
+        }
+    }
+
+    get mirroredLight(): Circle2f {
+        return {
+            center: this.mirrorAtCeiling(this.light.center),
+            radius: this.light.radius
+        }
+    }
 
     constructor(
         private view: Node,
