@@ -532,11 +532,17 @@ export function* pssmlt($: {
     pathvis.removeAll()
 }
 
-export default makeScene2D(function* (view) {
-    view.add(<Captions
+export default makeScene2D(function* (originalView) {
+    originalView.add(<Captions
         ref={captions}
         chapter="Previous works"
     />);
+
+    const view = <Layout
+        position={[-350, 55]}
+        scale={[ -1, 1 ]}
+    />
+    originalView.add(view)
 
     const cbox = new CBox(view)
     cbox.cameraSpread = 90

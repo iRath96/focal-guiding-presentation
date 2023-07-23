@@ -1,4 +1,4 @@
-import {Circle, Line, Ray, View2D, makeScene2D, Node, Txt, Spline, Layout, Rect, Img, LineProps} from '@motion-canvas/2d';
+import {Circle, Line, Ray, View2D, makeScene2D, Node, Txt, Spline, Layout, Rect, Img, LineProps, Gradient} from '@motion-canvas/2d';
 import {Random, SimpleSignal, all, chain, createRef, createSignal, debug, delay, sequence, waitFor, waitUntil} from '@motion-canvas/core';
 import { Circle2f, Curve2f, Line2f, Ray2f, Vector2f, circle2f_evaluate, circle2f_intersect, circle2f_normal, curve2f_intersect, curve2f_normal, curve2f_rasterize, line2f_angle, line2f_evaluate, line2f_intersect, line2f_length, line2f_normal, ray2f_evaluate, sample_hemicircle, vec2f, vec2f_add, vec2f_direction, vec2f_distance, vec2f_dot, vec2f_length, vec2f_lerp, vec2f_minus, vec2f_multiply, vec2f_normalized, vec2f_polar, vec2f_reflect, vec2f_refract, vec2f_sub, vec3f } from '../rt/math';
 import { PathVertex, PathVertexType, PathVisualizer } from '../ui/path';
@@ -6,16 +6,15 @@ import { CBox } from '../common/cbox';
 import { wiggle } from '../common/animations';
 import { Captions } from '../common/captions';
 
-function knownBeforehandLabel(cbox: CBox, view: View2D) {
+function knownBeforehandLabel(cbox: CBox, view: Node) {
     const layout = <Layout
         position={vec2f_add(cbox.camera.center, vec2f(-40, -70))}
         zIndex={30}
     >
         <Spline
             points={[
-                [-10,-70],
-                [-10,-35],
-                [0,0],
+                [100,-30],
+                [50,20],
             ]}
             stroke={"#fff"}
             lineWidth={4}
@@ -24,12 +23,8 @@ function knownBeforehandLabel(cbox: CBox, view: View2D) {
         />
         <Spline
             points={[
-                [0,-130],
-                [100,-180],
-                vec2f_add(
-                    vec2f_sub(cbox.light.center, cbox.camera.center),
-                    vec2f(0, 60)
-                ),
+                [460,-80],
+                [500,-120],
             ]}
             stroke={"#fff"}
             lineWidth={4}
@@ -37,9 +32,11 @@ function knownBeforehandLabel(cbox: CBox, view: View2D) {
             arrowSize={16}
         />
         <Txt
-            position={[0, -100]}
+            position={[280, -50]}
+            scaleX={-1}
             text={"Known beforehand"}
             fill={"#fff"}
+            fontSize={40}
         />
     </Layout>;
     view.add(layout);
@@ -101,9 +98,9 @@ class Laser {
     }
 
     *drawReflection() {
-        const numPaths = 14
+        const numPaths = 12
         for (let i = 0; i < numPaths; i++) {
-            const t = i / (numPaths - 1)
+            const t = (i + 0.5) / numPaths
             const off = vec2f_polar(Math.PI * (1.5 - t), 150)
             const point = vec2f_add(this.target, off)
             const path: PathVertex[] = [
@@ -159,7 +156,6 @@ class AnimatedLine {
 
 class Obstruction {
     private pathvis: PathVisualizer
-    private ids: number[] = []
     private line: Line2f = {
         from: vec2f(300, -25),
         to: vec2f(300, 25),
@@ -167,9 +163,27 @@ class Obstruction {
     private angle = createSignal(0)
     private tree = createRef<Img>()
 
+    private addGradient() {
+        this.view.add(<Rect
+            size={[1920, 500]}
+            y={-400}
+            fill={new Gradient({
+                from: [0, -80],
+                to: [0, 100],
+                stops: [
+                    { color: "black", offset: 0, },
+                    { color: "rgba(0,0,0,0)", offset: 1, },
+                ],
+            })}
+            zIndex={1}
+        />)
+    }
+
     constructor(
         private view: Node,
     ) {
+        this.addGradient()
+
         const angle0 = line2f_angle(this.line)
         const dist = line2f_length(this.line)
         const shift = createSignal(() => vec2f(2 * this.angle(), 0))
@@ -356,7 +370,7 @@ class VirtualImageLens {
         const numPaths = 10
         for (let i = 0; i < numPaths; i++) {
             const t = i / (numPaths - 1);
-            const d = vec2f_polar(Math.PI * (0.5 - 0.4 * (t - 0.5)))
+            const d = vec2f_polar(Math.PI * (0.5 - 0.30 * (t - 0.5)))
             const o = vec2f_add(
                 light.center,
                 vec2f_multiply(d, light.radius)
@@ -406,11 +420,28 @@ class VirtualImageLens {
 class VirtualImageMirror {
     private pathvis: PathVisualizer
 
+    private addGradient() {
+        this.view.add(<Rect
+            size={[1920, 500]}
+            y={-400}
+            fill={new Gradient({
+                from: [0, -200],
+                to: [0, 100],
+                stops: [
+                    { color: "black", offset: 0, },
+                    { color: "rgba(0,0,0,0)", offset: 1, },
+                ],
+            })}
+            zIndex={1}
+        />)
+    }
+
     constructor(
         private cbox: CBox,
         private view: Node
     ) {
         this.pathvis = new PathVisualizer(view)
+        this.addGradient()
     }
 
     *draw() {
@@ -461,7 +492,7 @@ class VirtualImageMirror {
                     //p: cbox.mirroredLight.center,
                     //p: vec2f_lerp(path[2].p, path[1].p, 2)
                     p: vec2f_add(path[1].p,
-                        vec2f_multiply(mirrorD, -300 / mirrorD.y))
+                        vec2f_multiply(mirrorD, -400 / mirrorD.y))
                 },
             ]
             ids.push(this.pathvis.showPath(path2, {
@@ -475,12 +506,18 @@ class VirtualImageMirror {
     }
 }
 
-export default makeScene2D(function* (view) {
+export default makeScene2D(function* (originalView) {
     const captions = createRef<Captions>()
-    view.add(<Captions
+    originalView.add(<Captions
         ref={captions}
         chapter="Focal points"
     />);
+
+    const view = <Layout
+        position={[-350, 55]}
+        scale={[ -1, 1 ]}
+    />
+    originalView.add(view)
     
     const prng = new Random(11)
 
@@ -573,14 +610,19 @@ export default makeScene2D(function* (view) {
 
     // obstruction
 
+    const viewOriginalX = view.x()
     const obstructionView = <Layout />
     view.add(obstructionView)
     const obstruction = new Obstruction(obstructionView)
-    yield* obstruction.draw()
+    yield* all(
+        obstruction.draw(),
+        view.x(viewOriginalX + 250, 2),
+    )
     yield* waitUntil('obs/done')
     yield* all(
         obstruction.hide(),
         delay(1, captions().updateTitle()),
+        view.x(viewOriginalX, 2),
     )
 
     //

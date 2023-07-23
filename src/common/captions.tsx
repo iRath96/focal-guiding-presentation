@@ -1,4 +1,4 @@
-import { Node, NodeProps, Rect, Txt, initial, signal } from '@motion-canvas/2d'
+import { Gradient, Node, NodeProps, Rect, Txt, initial, signal } from '@motion-canvas/2d'
 import { SimpleSignal, createRef } from '@motion-canvas/core'
 
 export interface CaptionsProps extends NodeProps {
@@ -23,7 +23,8 @@ export class Captions extends Node {
 
     public constructor(props?: CaptionsProps) {
         super({
-            ...props
+            zIndex: 100,
+            ...props,
         })
 
         this.add(<Txt
@@ -51,6 +52,19 @@ export class Captions extends Node {
             opacity={0.4}
             fontSize={30}
             fontStyle={"italic"}
+        />)
+
+        this.add(<Rect
+            size={[1920, 1080]}
+            fill={new Gradient({
+                from: [-970, 0],
+                to: [970, 0],
+                stops: [
+                    { color: "rgba(0,0,0,0)", offset: 0.6, },
+                    { color: "black", offset: 0.75, },
+                ],
+            })}
+            zIndex={1}
         />)
     }
 
