@@ -487,12 +487,12 @@ export function* pssmlt($: {
     cbox: CBox
 }) {
     const pssmlt = new PSSMLT()
-    pssmlt.seed([ 0.61, 0.3, 0.22 ])
-    pssmlt.stepSize = 0.05
+    pssmlt.seed([ 0.603, 0.3, 0.22 ])
+    pssmlt.stepSize = 0.02
 
     const pathvis = $.cbox.pathvis
-    let lastAcceptId = -1
-    let lastRejectId = -1
+    let acceptedPath: number = -1
+    let proposalPath: number = -1
     for (let i = 0; i < 300; i++) {
         const path = $.cbox.pathtrace(() =>
             pssmlt.nextFloat(), {
@@ -501,32 +501,30 @@ export function* pssmlt($: {
             })[0]
         const success =
             path[path.length - 1].type == PathVertexType.Light &&
-            (lastAcceptId < 0 || pssmlt.randomAccept())
+            (acceptedPath < 0 || pssmlt.randomAccept())
         if (success) {
             pssmlt.accept()
         } else {
             pssmlt.reject()
         }
+
+        if (!success) continue
         
-        const pathId = pathvis.showPath(path, {
-            opacity: success ? 1 : 0.4,
-            visible: true
-        });
-        //yield* waitFor(5)
-        //break
-        if (success) {
-            pathvis.removePath(lastAcceptId)
-            pathvis.removePath(lastRejectId)
-            lastAcceptId = pathId
+        if (acceptedPath === -1) {
+            acceptedPath = pathvis.showPath(path)
+            yield* pathvis.fadeInPath(acceptedPath, 1)
+            yield* waitFor(1)
 
-            yield* waitFor(0.05)
-        } else {
-            pathvis.removePath(lastRejectId)
-            lastRejectId = pathId
-
-            yield//* waitFor(0.01)
+            /*proposalPath = pathvis.showPath(path, {
+                opacity: 0.4,
+                visible: true
+            });*/
         }
-        //break
+        yield pathvis.getPath(acceptedPath).opacity(1 - i / 300)
+        
+        //yield* pathvis.updatePath(proposalPath, path, 2)
+        yield* pathvis.updatePath(acceptedPath, path,
+            Math.max(Math.pow(1 - Math.min(i / 150, 1), 2), 0.05))
     }
 
     pathvis.removeAll()

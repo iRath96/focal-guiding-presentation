@@ -1,6 +1,6 @@
 import { Line, View2D, Node, Layout, Img, Rect, Circle, LineProps } from '@motion-canvas/2d'
 import { Circle2f, Vector2f, vec2f, vec2f_add, vec2f_direction, vec2f_distance, vec2f_lerp, vec2f_multiply, vec2f_polar } from '../rt/math'
-import { SimpleSignal, all, createSignal, sequence } from '@motion-canvas/core'
+import { SignalValue, SimpleSignal, all, createRef, createSignal, sequence } from '@motion-canvas/core'
 
 export enum PathVertexType {
     Camera,
@@ -17,13 +17,20 @@ export interface PathVertex {
     nee?: boolean
 }
 
+interface PVSegment {
+    a: SimpleSignal<Vector2f>
+    b: SimpleSignal<Vector2f>
+    node: Node
+}
+
 interface PVPath {
     t0: SimpleSignal<number>
     t1: SimpleSignal<number>
 
     length: number
     root: Node
-    segments: Node[]
+    props: LineProps
+    segments: PVSegment[]
 }
 
 export function* path_segments(path: PathVertex[]):
@@ -103,6 +110,39 @@ export class PathVisualizer {
         private view: Node
     ) {}
 
+    private createSegment(pvp: PVPath, v0: PathVertex, v1: PathVertex) {
+        const l = pvp.length
+        const a = createSignal(v0.p)
+        const b = createSignal(v1.p)
+        const s = createSignal(() => vec2f_distance(a(), b()));
+        const lerp = (t: number) => vec2f_lerp(
+            a(), b(),
+            Math.min(Math.max(0, t - l) / s(), 1)
+        )
+        const node = <Line
+            points={() => [ lerp(pvp.t0()), lerp(pvp.t1()) ]}
+            stroke="#fff"
+            lineWidth={4}
+            arrowSize={12}
+            endArrow={
+                v1.type === PathVertexType.Diffuse ||
+                v1.type === PathVertexType.Miss
+            }
+            zIndex={2}
+            lineDash={v1.nee ? [5,5] : undefined}
+            {...pvp.props}
+        />
+        const segment: PVSegment = {
+            a, b,
+            node
+        }
+        pvp.segments.push(segment)
+        pvp.root.add(segment.node)
+        pvp.length += s()
+
+        return segment
+    }
+
     showPath(path: PathVertex[], props: ShowPathProps = {}) {
         let { length, visible, ...lineProps } = {
             length: 0,
@@ -110,45 +150,21 @@ export class PathVisualizer {
             ...props
         }
 
-        const root = <Layout />
-        this.view.add(root)
-
-        const t0 = createSignal(0)
-        const t1 = createSignal(0)
-
         const pvp: PVPath = {
-            t0: t0, t1: t1, length, root, segments: [] }
-        for (let i = 1; i < path.length; i++) {
-            const l = length
-            const a = path[i-1].p
-            const b = path[i].p
-            const s = vec2f_distance(a, b)
-            const lerp = (t: number) => vec2f_lerp(
-                a,
-                b,
-                Math.min(Math.max(0, t - l) / s, 1)
-            )
-            const segment = <Line
-                points={() => [ lerp(t0()), lerp(t1()) ]}
-                stroke="#fff"
-                lineWidth={4}
-                arrowSize={12}
-                endArrow={
-                    path[i].type === PathVertexType.Diffuse ||
-                    path[i].type === PathVertexType.Miss
-                }
-                zIndex={2}
-                lineDash={path[i].nee ? [5,5] : undefined}
-                {...props}
-            />
-            pvp.segments.push(segment)
-            root.add(segment)
-            length += s
+            t0: createSignal(0),
+            t1: createSignal(0),
+            length,
+            root: <Layout />,
+            props: lineProps,
+            segments: []
+        }
+        for (const [ v0, v1 ] of path_segments(path)) {
+            this.createSegment(pvp, v0, v1)
         }
 
-        pvp.length = length
-        if (visible) t1(length)
+        if (visible) pvp.t1(pvp.length)
         
+        this.view.add(pvp.root)
         const id = this.nextId++
         this.shownPaths.set(id, pvp)
         return id
@@ -186,8 +202,35 @@ export class PathVisualizer {
         return this.shownPaths.get(id).root
     }
 
-    getSegments(id: number) {
-        return this.shownPaths.get(id).segments
+    *updatePath(id: number, path: PathVertex[], time = 1) {
+        const pvp = this.shownPaths.get(id);
+        if (!pvp) return
+        const newSegments: PVSegment[] = []
+        const tasks = [ ...path_segments(path) ].map(([ v0, v1 ], i) => {
+            if (pvp.segments.length <= i) {
+                const segment = this.createSegment(pvp, v0, v1)
+                newSegments.push(segment)
+                segment.node.opacity(0)
+            }
+            const segment = pvp.segments[i]
+            return all(
+                segment.a(v0.p, time),
+                segment.b(v1.p, time),
+            )
+        });
+        const unusedSegments = pvp.segments.slice(path.length - 1)
+        pvp.t1(Infinity)
+        yield* all(
+            ...newSegments.map(s => s.node.opacity(pvp.props.opacity || 1, time)),
+            ...unusedSegments.map(s => s.node.opacity(0, time)),
+            ...tasks
+        )
+        for (const us of unusedSegments) us.node.remove()
+        pvp.segments.splice(path.length - 1)
+    }
+
+    getSegments(id: number): Node[] {
+        return this.shownPaths.get(id).segments.map(s => s.node)
     }
 
     removePath(id: number) {
