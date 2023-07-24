@@ -90,6 +90,8 @@ class Laser {
                 arrowSize={16}
             />
         </Layout>
+        yield this.laser()
+
         this.view.add(this.node)
         this.laser().scale(0)
 
@@ -230,6 +232,8 @@ class Obstruction {
     }
 
     private *drawFailedPaths() {
+        yield this.tree()
+
         const failPRNG = new Random(1234)
         const failedPaths = 30
         const treeLine: Line2f = {
