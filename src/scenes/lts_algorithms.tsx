@@ -183,6 +183,7 @@ function* vertexMerging($: {
     view: Node
 }) {
     const view = <Layout />;
+    const pathvis = new PathVisualizer(view)
     $.view.add(view);
 
     const cameraPrng = new FakeRandom([ 0.17 ])
@@ -196,35 +197,19 @@ function* vertexMerging($: {
         maxDepth: 2,
     })[0]
 
-    const merge = createSignal(0)
     const mergedPoint = vec2f_lerp(
         cameraPath[cameraPath.length - 1].p,
         lightPath[lightPath.length - 1].p,
         0.5
     )
 
-    function* showSubpath(subPath: PathVertex[]) {
-        view.add(<Line
-            points={() =>
-                subPath.map((v, i) =>
-                    vec2f_lerp(v.p, mergedPoint,
-                        i === subPath.length - 1
-                        ? merge()
-                        : 0
-                    )
-                )
-            }
-            stroke="#fff"
-            lineWidth={4}
-            arrowSize={12}
-            endArrow
-        />)
-    }
+    const cameraId = pathvis.showPath(cameraPath)
+    const lightId = pathvis.showPath(lightPath)
 
     yield* waitUntil('vm/camera')
-    yield* showSubpath(cameraPath)
+    yield* pathvis.fadeInPath(cameraId, 1)
     yield* waitUntil('vm/light')
-    yield* showSubpath(lightPath)
+    yield* pathvis.fadeInPath(lightId, 1)
 
     yield* waitUntil('vm/merge')
     yield* all(
@@ -239,7 +224,13 @@ function* vertexMerging($: {
     />;
     view.add(mergeHighlight)
     yield* mergeHighlight.scale(0, 0).to(1, 1)
-    yield* merge(1, 3)
+    yield* all(
+        pathvis.updatePath(cameraId, cameraPath.map((v, i) =>
+            i == 2 ? lightPath[2] : v
+        ), 3),
+        mergeHighlight.position(vec2f_sub(lightPath[2].p, vec2f(0, 6)), 3),
+        mergeHighlight.scale([ 1, 0.6 ], 3),
+    )
 
     yield* waitUntil('vm/done')
     yield* all(
