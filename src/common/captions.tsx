@@ -1,5 +1,5 @@
 import { Gradient, Node, NodeProps, Rect, Txt, initial, signal } from '@motion-canvas/2d'
-import { SimpleSignal, createRef } from '@motion-canvas/core'
+import { SimpleSignal, all, createRef } from '@motion-canvas/core'
 
 export interface CaptionsProps extends NodeProps {
     chapter?: SimpleSignal<string> | string
@@ -66,6 +66,13 @@ export class Captions extends Node {
             })}
             zIndex={1}
         />)
+    }
+
+    *reset() {
+        yield* all(
+            this.updateTitle(),
+            this.updateReference(),
+        )
     }
 
     *updateTitle(title?: string) {

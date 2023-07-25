@@ -1,10 +1,11 @@
-import { Circle, Layout, Line, makeScene2D, Node } from '@motion-canvas/2d';
-import { Random, Vector2, all, chain, createRef, createSignal, debug, sequence, waitFor, waitUntil } from '@motion-canvas/core';
+import { Circle, Layout, Line, makeScene2D, Node, Ray } from '@motion-canvas/2d';
+import { Random, Vector2, all, chain, createRef, createSignal, debug, delay, sequence, tween, waitFor, waitUntil } from '@motion-canvas/core';
 import { CBox } from '../common/cbox';
 import { path_length, path_segments, PathVertex, PathVertexType, PathVisualizer } from '../ui/path';
-import { Ray2f, ray2f_evaluate, vec2f, vec2f_add, vec2f_direction, vec2f_distance, vec2f_dot, vec2f_lerp, vec2f_multiply, vec2f_sub } from '../rt/math';
+import { Ray2f, ray2f_evaluate, vec2f, vec2f_add, vec2f_direction, vec2f_distance, vec2f_dot, vec2f_lerp, vec2f_multiply, vec2f_normalized, vec2f_polar, vec2f_sub, Vector2f } from '../rt/math';
 import { PSSMLT } from '../rt/pssmlt';
 import { Captions } from '../common/captions';
+import { linear_lookup, linspace, polar_plot, sample, saturate, theta_linspace } from '../common/guiding';
 
 const captions = createRef<Captions>()
 
@@ -29,12 +30,20 @@ class StratifiedRandom {
     }
 }
 
+interface Rnd {
+    nextFloat(): number
+}
+
 class FakeRandom {
     private dim = 0
     constructor(
         public initial: number[],
-        public prng = new Random(1234),
+        public prng: Rnd = new Random(1234),
     ) {}
+
+    restart() {
+        this.dim = 0
+    }
 
     nextFloat() {
         if (this.dim < this.initial.length) {
@@ -235,8 +244,7 @@ function* vertexMerging($: {
     yield* waitUntil('vm/done')
     yield* all(
         view.opacity(0, 1),
-        captions().updateTitle(),
-        captions().updateReference(),
+        captions().reset(),
     )
     view.remove()
 }
@@ -474,17 +482,18 @@ function* lighttrace($: {
     yield* $.cbox.pathvis.fadeAndRemove(1)
 }
 
-export function* pssmlt($: {
+function* pssmlt($: {
     cbox: CBox
 }) {
     const pssmlt = new PSSMLT()
     pssmlt.seed([ 0.603, 0.3, 0.22 ])
     pssmlt.stepSize = 0.02
 
+    const numProposals = 250
     const pathvis = $.cbox.pathvis
     let acceptedPath: number = -1
     let proposalPath: number = -1
-    for (let i = 0; i < 300; i++) {
+    for (let i = 0; i < numProposals; i++) {
         const path = $.cbox.pathtrace(() =>
             pssmlt.nextFloat(), {
                 useNEE: false,
@@ -511,14 +520,162 @@ export function* pssmlt($: {
                 visible: true
             });*/
         }
-        yield pathvis.getPath(acceptedPath).opacity(1 - i / 300)
+        yield pathvis.getPath(acceptedPath).opacity(1 - i / numProposals)
         
         //yield* pathvis.updatePath(proposalPath, path, 2)
         yield* pathvis.updatePath(acceptedPath, path,
-            Math.max(Math.pow(1 - Math.min(i / 150, 1), 2), 0.05))
+            Math.max(Math.pow(1 - Math.min(2 * i / numProposals, 1), 2), 0.05))
     }
 
     pathvis.removeAll()
+}
+
+function* guiding($: {
+    cbox: CBox
+    view: Node
+}) {
+    const view = <Layout />
+    $.view.add(view)
+
+    const pathvis = $.cbox.pathvis
+
+    const hitpoint = createSignal<Vector2f>()
+    const pathIds: number[] = []
+    const numCandidates = 500
+    const prng = new FakeRandom([ 0.45 ],
+        new StratifiedRandom(new Random(1234), numCandidates))
+    for (let i = 0; i < numCandidates; i++) {
+        prng.restart()
+        const path = $.cbox.pathtrace(() =>
+            prng.nextFloat(), {
+                useNEE: false,
+                maxDepth: 3,
+            }
+        )[0]
+        if (path[path.length - 1].type !== PathVertexType.Light) continue
+        if (path[1].type !== PathVertexType.Diffuse) continue
+        if (path[1].p.y > 100) continue
+        
+        if (pathIds.length === 0) {
+            // first path, show extra path for camera segment
+            hitpoint(path[1].p)
+            const helpId = pathvis.showPath(path.slice(0, 2))
+            yield* pathvis.fadeInPath(helpId, 1)
+        }
+        pathIds.push(pathvis.showPath(path.slice(1), { opacity: 0.3 }))
+    }
+
+    yield* pathvis.fadeInPaths(pathIds, 1)
+    yield* waitFor(1)
+
+    yield* waitUntil('guiding/dist')
+    const guidingDistRes = 512
+    const guidingUniform = createSignal(1)
+    const guidingDist = createSignal<number[]>(() => {
+        const targets = [
+            { d: vec2f_normalized(vec2f(-1, -1.15)), exp: 120, w: 1 },
+            { d: vec2f_normalized(vec2f(-1, -0.48)), exp: 120, w: 1 },
+            { d: vec2f_normalized(vec2f(-1,  1.60)), exp: 6  , w: 0.5 },
+        ]
+        const normal = vec2f(-1, 0)
+        let pdfs: number[] = []
+        for (let i = 0; i <= guidingDistRes; i++) {
+            const theta = theta_linspace(i, guidingDistRes)
+            const wo = vec2f_polar(theta)
+
+            let r = 0
+            for (const { d, exp, w } of targets) {
+                const cosThetaWr = Math.max(vec2f_dot(wo, d), 0)
+                r += w * Math.pow(cosThetaWr, exp) * (Math.sqrt(exp) + 2) / (2 * Math.PI)
+            }
+            r += 0.1
+            r = (1 - guidingUniform()) * (r - 1) + 1
+            //r *= 1 - guidingUniform()
+            r *= vec2f_dot(normal, wo) > 0 ? 1 : 0//Math.max(vec2f_dot(normal, wo), 0)
+            //if (i / guidingDistRes < guidingUniform()) r = 0
+            if (r < 1e-8) r = 0
+
+            pdfs.push(r)
+        }
+        return pdfs
+    })
+
+    const guidingPlot = <Line
+        points={() => polar_plot(guidingDist(), 100)}
+        stroke="rgb(10, 103, 255)"
+        lineWidth={4}
+        fill="rgba(10, 103, 255, 0.7)"
+        position={hitpoint}
+        opacity={0}
+    />
+    view.add(guidingPlot)
+    yield* all(
+        guidingPlot.opacity(1, 1),
+        pathvis.opacity(0.3, 1),
+    )
+    yield* guidingUniform(0, 2)
+
+    yield* waitUntil('guiding/sampling')
+    const sampleT = createSignal(-1)
+    const numGuidingSamples = 10 // or 6
+    const guidingSamples = createSignal(() => {
+        const rngs = linspace(numGuidingSamples)
+        return sample(guidingDist(), rngs).map(i => vec2f_polar(
+            theta_linspace(i, guidingDistRes), Math.sqrt(
+                linear_lookup(guidingDist(), i)
+            )
+        ))
+    })
+    for (let i = 0; i < numGuidingSamples; i++) {
+        const t = i / (numGuidingSamples - 1)
+        view.add(<Ray
+            from={[0,0]}
+            to={() => vec2f_multiply(guidingSamples()[i],
+                saturate(2 * sampleT() - (1 - t)) * 150
+            )}
+            stroke="#fff"
+            opacity={0.7}
+            position={hitpoint}
+            lineWidth={4}
+            arrowSize={8}
+            endArrow
+        />)
+    }
+    yield* sampleT(1, 2)
+    yield* sampleT(0, 2)
+
+    yield* waitUntil('guiding/parallax')
+    const hitpointMid    = hitpoint()
+    const hitpointTop    = vec2f_add(hitpoint(), vec2f(0, -90))
+    const hitpointBottom = vec2f_add(hitpoint(), vec2f(0,  90))
+    const spatialExtent = createSignal(0)
+    view.add(<Layout position={vec2f_add(hitpoint(), vec2f(50, 0))}>
+        <Ray
+            from={() => vec2f(0, -Math.max(0, spatialExtent() - 10))}
+            to=  {() => vec2f(0, +Math.max(0, spatialExtent() - 10))}
+            stroke={"#fff"}
+            opacity={0.5}
+            lineWidth={9}
+            arrowSize={12}
+            startArrow
+            endArrow
+        />
+        <Circle
+            size={() => Math.min(spatialExtent(), 20)}
+            fill={"#fff"}
+            stroke={"#000"}
+            lineWidth={4}
+        />
+    </Layout>)
+    yield* spatialExtent(100, 2)
+    yield* hitpoint(hitpointTop, 1).to(hitpointBottom, 2).to(hitpointMid, 1)
+
+    yield* all(
+        view.opacity(0, 2),
+        pathvis.fadeAndRemove(2),
+    )
+    
+    view.remove()
 }
 
 export default makeScene2D(function* (originalView) {
@@ -547,19 +704,13 @@ export default makeScene2D(function* (originalView) {
     )
     yield* pathtraceSingle({ cbox })
     yield* pathtrace({ cbox, useNEE: true, numPaths: 16 })
-    yield* all(
-        captions().updateTitle(),
-        captions().updateReference(),
-    )
+    yield* captions().reset()
 
     yield* waitUntil('lts/lt')
     yield* captions().updateTitle("Light tracing")
     yield* lighttraceSingle({ cbox })
     yield* lighttrace({ cbox, numPaths: 18 })
-    yield* all(
-        captions().updateTitle(),
-        captions().updateReference(),
-    )
+    yield* captions().reset()
 
     yield* waitUntil('lts/bdpt')
     yield* all(
@@ -567,10 +718,7 @@ export default makeScene2D(function* (originalView) {
         captions().updateReference("[Lafortune and Willems 1993; Veach and Guibas 1995a]")
     )
     yield* bdptSingle({ cbox })
-    yield* all(
-        captions().updateTitle(),
-        captions().updateReference(),
-    )
+    yield* captions().reset()
 
     yield* waitUntil('lts/vm')
     yield* vertexMerging({ cbox, view })
@@ -581,6 +729,15 @@ export default makeScene2D(function* (originalView) {
         captions().updateReference("[Metropolis et al. 1953; Veach and Guibas 1997; Kelemen et al. 2002]")
     )
     yield* pssmlt({ cbox })
+    yield* captions().reset()
+
+    yield* waitUntil('lts/guiding')
+    yield* all(
+        captions().updateTitle("Path guiding"),
+        captions().updateReference("[Vorba et al. 2014; Müller et al. 2017]")
+    )
+    yield* guiding({ cbox, view })
+    yield* captions().reset()
 
     yield* waitUntil('lts/done')
     yield* waitFor(100)

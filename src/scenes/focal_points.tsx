@@ -278,7 +278,7 @@ class Obstruction {
     }
 
     private *drawSuccessfulPaths() {
-        const previousPaths = [ ...this.pathvis.all() ]
+        const previousPaths = this.pathvis.all()
 
         const ids: number[] = []
         const focalPoint = line2f_evaluate(this.line, 0.5)
@@ -344,7 +344,7 @@ class Obstruction {
 
     *hide() {
         yield* all(
-            ...[ ...this.pathvis.all() ].map(id =>
+            ...this.pathvis.all().map(id =>
                 this.pathvis.getPath(id).opacity(0, 1)
             ),
             this.tree().opacity(0, 1),
@@ -679,7 +679,7 @@ export default makeScene2D(function* (originalView) {
     yield* all(
         cbox.cameraNode.scale(0, 1),
         cbox.lightNode.scale(0, 1),
-        captions().updateTitle(),
+        captions().reset(),
         knownBeforehand.opacity(0, 1),
         pathRemove,
     );
@@ -715,7 +715,7 @@ export default makeScene2D(function* (originalView) {
     yield* waitUntil('obs/done')
     yield* all(
         obstruction.hide(),
-        delay(1, captions().updateTitle()),
+        delay(1, captions().reset()),
         view.x(viewOriginalX, 2),
     )
 
@@ -743,6 +743,6 @@ export default makeScene2D(function* (originalView) {
     yield* all(
         viLensView.opacity(0, 2),
         viMirrorView.opacity(0, 2),
-        delay(1, captions().updateTitle())
+        delay(1, captions().reset())
     )
 });

@@ -170,8 +170,14 @@ export class PathVisualizer {
         return id
     }
 
+    *opacity(factor: number, time: number) {
+        yield* all(...[...this.shownPaths.values()].map(p =>
+            p.root.opacity(p.root.opacity() * factor, time)
+        ))
+    }
+
     all() {
-        return this.shownPaths.keys()
+        return [...this.shownPaths.keys()]
     }
 
     *fadeInPath(id: number, time: number, constSpeed = false) {

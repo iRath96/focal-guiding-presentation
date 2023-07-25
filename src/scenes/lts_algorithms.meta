@@ -98,8 +98,24 @@
       "targetTime": 88.25260711249285
     },
     {
+      "name": "lts/guiding",
+      "targetTime": 107.53779111249274
+    },
+    {
+      "name": "guiding/dist",
+      "targetTime": 111.53779111249274
+    },
+    {
+      "name": "guiding/sampling",
+      "targetTime": 120.11410979679353
+    },
+    {
+      "name": "guiding/parallax",
+      "targetTime": 126.96185163563811
+    },
+    {
       "name": "lts/done",
-      "targetTime": 96.0859404458258
+      "targetTime": 136.6379757388296
     }
   ],
   "seed": 3292355136
