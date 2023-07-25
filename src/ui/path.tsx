@@ -1,6 +1,19 @@
 import { Line, View2D, Node, Layout, Img, Rect, Circle, LineProps } from '@motion-canvas/2d'
 import { Circle2f, Vector2f, vec2f, vec2f_add, vec2f_direction, vec2f_distance, vec2f_lerp, vec2f_multiply, vec2f_polar } from '../rt/math'
-import { SignalValue, SimpleSignal, all, createRef, createSignal, sequence } from '@motion-canvas/core'
+import { Random, SignalValue, SimpleSignal, all, createRef, createSignal, sequence } from '@motion-canvas/core'
+
+/**
+ * Shuffles array in place.
+ * @param a items An array containing the items.
+ * @note Taken from https://stackoverflow.com/a/6274381
+ */
+export function shuffle<T>(a: T[], random = new Random(42)): T[] {
+    for (let i = a.length - 1; i > 0; i--) {
+        const j = random.nextInt(0, i + 1);
+        [a[i], a[j]] = [a[j], a[i]];
+    }
+    return a;
+}
 
 export enum PathVertexType {
     Camera,
@@ -170,9 +183,9 @@ export class PathVisualizer {
         return id
     }
 
-    *opacity(factor: number, time: number) {
+    *opacity(opacity: number, time: number) {
         yield* all(...[...this.shownPaths.values()].map(p =>
-            p.root.opacity(p.root.opacity() * factor, time)
+            p.root.opacity(opacity, time)
         ))
     }
 
@@ -243,6 +256,12 @@ export class PathVisualizer {
         if (!this.shownPaths.has(id)) return
         this.shownPaths.get(id).root.remove()
         this.shownPaths.delete(id)
+    }
+
+    removePaths(ids: number[]) {
+        for (const id of ids) {
+            this.removePath(id)
+        }
     }
 
     removeAll() {

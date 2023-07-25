@@ -1,7 +1,7 @@
 import { Circle, Layout, Line, makeScene2D, Node, Ray } from '@motion-canvas/2d';
 import { Random, Vector2, all, chain, createRef, createSignal, debug, delay, sequence, tween, waitFor, waitUntil } from '@motion-canvas/core';
 import { CBox } from '../common/cbox';
-import { path_length, path_segments, PathVertex, PathVertexType, PathVisualizer } from '../ui/path';
+import { path_length, path_segments, PathVertex, PathVertexType, PathVisualizer, shuffle } from '../ui/path';
 import { Ray2f, ray2f_evaluate, vec2f, vec2f_add, vec2f_direction, vec2f_distance, vec2f_dot, vec2f_lerp, vec2f_multiply, vec2f_normalized, vec2f_polar, vec2f_sub, Vector2f } from '../rt/math';
 import { PSSMLT } from '../rt/pssmlt';
 import { Captions } from '../common/captions';
@@ -534,15 +534,14 @@ function* guiding($: {
     cbox: CBox
     view: Node
 }) {
-    function findGuidePaths(spread = 0) {
+    function findGuidePaths(spread = 0, numCandidates = 1000, seed = 1234) {
         const prevCameraSpread = $.cbox.cameraSpread
         const prevCameraDir = $.cbox.cameraDir
         $.cbox.cameraSpread = spread
         $.cbox.cameraDir = -4.5
 
         const paths: PathVertex[][] = []
-        const numCandidates = 1000
-        const prng = new StratifiedRandom(new Random(1234), numCandidates)
+        const prng = new StratifiedRandom(new Random(seed), numCandidates)
         for (let i = 0; i < numCandidates; i++) {
             const path = $.cbox.pathtrace(() =>
                 prng.nextFloat(), {
@@ -573,26 +572,32 @@ function* guiding($: {
     $.view.add(view)
 
     const hitpoint = createSignal<Vector2f>()
-    const pathIds: number[] = []
+    const centralPaths: number[] = []
     for (const path of findGuidePaths()) {
-        if (pathIds.length === 0) {
+        if (centralPaths.length === 0) {
             // first path, show extra path for camera segment
             hitpoint(path[1].p)
             const helpId = pathvis.showPath(path.slice(0, 2))
             yield* pathvis.fadeInPath(helpId, 1)
         }
 
-        pathIds.push(pathvis.showPath(path.slice(1), { opacity: 0.3 }))
+        centralPaths.push(pathvis.showPath(path.slice(1), { opacity: 0.3 }))
     }
 
-    yield* pathvis.fadeInPaths(pathIds, 1)
+    yield* pathvis.fadeInPaths(centralPaths, 1)
     yield* waitFor(1)
 
     yield* waitUntil('guiding/dist')
     const guidingDistRes = 512
     const guidingUniform = createSignal(1)
+    const guidingBrokenTarget = createSignal(false)
     const guidingDist = createSignal<number[]>(() => {
-        const targets = [
+        const targets = guidingBrokenTarget() ?
+        [
+            { d: vec2f_normalized(vec2f(-1, -0.80)), exp: 10, w: 1.7 },
+            { d: vec2f_normalized(vec2f(-1,  1.60)), exp: 6 , w: 0.5 },
+        ] :
+        [
             { d: vec2f_normalized(vec2f(-1, -1.15)), exp: 180, w: 1 },
             { d: vec2f_normalized(vec2f(-1, -0.48)), exp: 180, w: 1 },
             { d: vec2f_normalized(vec2f(-1,  1.60)), exp: 6  , w: 0.5 },
@@ -625,7 +630,7 @@ function* guiding($: {
         points={() => polar_plot(guidingDist(), 100)}
         stroke="rgb(10, 103, 255)"
         lineWidth={4}
-        fill="rgba(10, 103, 255, 0.7)"
+        fill="rgba(10, 103, 255, 0.5)"
         position={hitpoint}
         opacity={0}
     />
@@ -689,20 +694,59 @@ function* guiding($: {
         />
     </Layout>)
 
-    const newPathIds: number[] = []
-    for (const path of findGuidePaths(15)) {
+    yield* all(
+        pathvis.opacity(1, 1),
+        guidingPlot.opacity(0, 1),
+    )
+    const pathsToBeHidden = shuffle([...centralPaths]).slice(2)
+    yield* sequence(0.05,
+        ...pathsToBeHidden.map(id =>
+            pathvis.getPath(id).opacity(0, 0.2))
+    )
+    pathvis.removePaths(pathsToBeHidden)
+    const neighboringPaths: number[] = []
+    const directionsView = <Layout opacity={0} />
+    const directionsMerge = createSignal(0)
+    for (const path of findGuidePaths(15, 350, 10)) {
         const id = pathvis.showPath(path, { opacity: 0.2, visible: true })
         const dist = vec2f_distance(path[1].p, hitpoint())
         pathvis.getPath(id).opacity(createSignal(() =>
             saturate((spatialExtent() - dist) / 10)
         ))
-        newPathIds.push(id)
+        neighboringPaths.push(id)
+
+        const direction = vec2f_direction(path[1].p, path[2].p)
+        directionsView.add(<Ray
+            from={[0,0]}
+            to={() =>
+                vec2f_multiply(direction, 80)}
+            position={() =>
+                vec2f_lerp(path[1].p, hitpointMid, directionsMerge())}
+            stroke={"#fff"}
+            lineWidth={3}
+            arrowSize={8}
+            opacity={0.8}
+            endArrow
+        />)
     }
-    yield* pathvis.fadeOutPaths(pathIds, 1)
     yield* spatialExtent(20, 2)
     yield* spatialExtent(120, 2)
+    //yield* pathvis.opacity(0.5, 1)
+    view.add(directionsView)
+    yield* directionsView.opacity(1, 1)
+    yield* directionsMerge(1, 2)
 
-    yield* hitpoint(hitpointTop, 1).to(hitpointBottom, 2).to(hitpointMid, 1)
+    guidingBrokenTarget(true)
+    guidingUniform(1)
+    yield* guidingPlot.opacity(1, 1)
+    yield* guidingUniform(0, 1)
+    yield* waitFor(1)
+    yield* all(
+        guidingPlot.opacity(0, 1),
+        directionsMerge(0, 1)
+    )
+
+    //yield* hitpoint(hitpointTop, 1).to(hitpointBottom, 2).to(hitpointMid, 1)
 
     yield* all(
         view.opacity(0, 2),
