@@ -1,4 +1,4 @@
-import { Circle, Layout, Line, makeScene2D, Node, Ray } from '@motion-canvas/2d';
+import { Circle, Filter, Img, Layout, Line, makeScene2D, Node, Ray, Txt } from '@motion-canvas/2d';
 import { Random, Vector2, all, chain, createRef, createSignal, debug, delay, sequence, tween, waitFor, waitUntil } from '@motion-canvas/core';
 import { CBox } from '../common/cbox';
 import { path_length, path_segments, PathVertex, PathVertexType, PathVisualizer, shuffle } from '../ui/path';
@@ -671,26 +671,7 @@ function* guiding($: {
     yield* sampleT(0, 2)
 
     yield* waitUntil('guiding/parallax')
-    const hitpointMid   = hitpoint()
     const spatialExtent = createSignal(0)
-    view.add(<Layout position={vec2f_add(hitpoint(), vec2f(50, 0))}>
-        <Ray
-            from={() => vec2f(0, -Math.max(0, spatialExtent() - 10))}
-            to=  {() => vec2f(0, +Math.max(0, spatialExtent() - 10))}
-            stroke={"#69C53E"}
-            opacity={0.5}
-            lineWidth={9}
-            arrowSize={12}
-            startArrow
-            endArrow
-        />
-        <Circle
-            size={() => Math.min(spatialExtent(), 20)}
-            fill={"#69C53E"}
-            stroke={"#000"}
-            lineWidth={4}
-        />
-    </Layout>)
 
     yield* all(
         pathvis.opacity(1, 1),
@@ -723,7 +704,7 @@ function* guiding($: {
         const parallaxPoint = ray2f_evaluate(
             { o: path[1].p, d: direction }, parallaxDistance
         )
-        const rayPos = () => vec2f_lerp(path[1].p, hitpointMid, directionsMerge())
+        const rayPos = () => vec2f_lerp(path[1].p, hitpoint(), directionsMerge())
         const parallaxDirection = () => vec2f_direction(rayPos(), parallaxPoint)
         const rayTo = () => vec2f_multiply(
             vec2f_lerp(direction, parallaxDirection(), parallaxCompensation())
@@ -759,19 +740,41 @@ function* guiding($: {
     guidingUniform(1)
     yield* guidingPlot.opacity(1, 1)
     yield* guidingUniform(0, 1)
-    yield* waitFor(1)
+    yield* waitFor(2)
     yield* all(
         guidingPlot.opacity(0, 1),
-        directionsMerge(0, 1)
+        directionsMerge(0, 1),
+        captions().updateReference("Parallax compensation [Ruppert et al. 2020]"),
     )
     yield* all(
         parallaxCompensation(1, 1),
         pathvis.opacity(0.5, 1),
     )
+    const distanceLabel = <Layout
+        rotation={48}
+        position={[185,-245]}
+        opacity={0}
+    >
+        <Img
+            src={"svg/ThinBraceDown.svg"}
+            size={[425,20]}
+            rotation={180}
+        />
+        <Txt
+            text={"?"}
+            scaleX={-1}
+            y={-40}
+            fontSize={40}
+            fill={"#69C63D"}
+        />
+    </Layout>;
+    view.add(distanceLabel)
     yield* directionsMerge(1, 3)
 
     guidingBrokenTarget(false)
     yield* guidingPlot.opacity(1, 1)
+    yield* waitFor(1)
+    yield* distanceLabel.opacity(1, 1)
 
     yield* all(
         view.opacity(0, 2),

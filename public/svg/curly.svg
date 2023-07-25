@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   width="90"
+   height="10"
+   id="svg2"
+   version="1.1"
+   inkscape:version="0.48.1 r9760"
+   sodipodi:docname="Accolade H9.svg"
+   style="display:inline">
+  <title
+     id="title3763">Accolade H9</title>
+  <sodipodi:namedview
+     id="base"
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1.0"
+     inkscape:pageopacity="0.0"
+     inkscape:pageshadow="2"
+     inkscape:zoom="15.155556"
+     inkscape:cx="45.000001"
+     inkscape:cy="5.0000001"
+     inkscape:document-units="px"
+     inkscape:current-layer="layer2"
+     showgrid="true"
+     inkscape:window-width="1495"
+     inkscape:window-height="735"
+     inkscape:window-x="2"
+     inkscape:window-y="0"
+     inkscape:window-maximized="0"
+     fit-margin-top="0"
+     fit-margin-left="0"
+     fit-margin-right="0"
+     fit-margin-bottom="0"
+     units="px"
+     inkscape:snap-grids="true"
+     inkscape:snap-center="true"
+     inkscape:snap-global="false">
+    <inkscape:grid
+       type="xygrid"
+       id="grid3876"
+       units="px"
+       empspacing="5"
+       visible="true"
+       enabled="true"
+       snapvisiblegridlinesonly="true"
+       spacingx="0.5px"
+       spacingy="0.5px" />
+  </sodipodi:namedview>
+  <defs
+     id="defs4">
+    <inkscape:path-effect
+       effect="spiro"
+       id="path-effect2988"
+       is_visible="true" />
+  </defs>
+  <metadata
+     id="metadata7">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+        <dc:title>Math car interaction</dc:title>
+        <cc:license
+           rdf:resource="http://creativecommons.org/licenses/publicdomain/" />
+        <dc:date>04 mars 2012</dc:date>
+        <dc:description>caractère pour fr.wikisource.org</dc:description>
+      </cc:Work>
+      <cc:License
+         rdf:about="http://creativecommons.org/licenses/publicdomain/">
+        <cc:permits
+           rdf:resource="http://creativecommons.org/ns#Reproduction" />
+        <cc:permits
+           rdf:resource="http://creativecommons.org/ns#Distribution" />
+        <cc:permits
+           rdf:resource="http://creativecommons.org/ns#DerivativeWorks" />
+      </cc:License>
+    </rdf:RDF>
+  </metadata>
+  <g
+     inkscape:groupmode="layer"
+     id="layer2"
+     inkscape:label="vectoriel"
+     style="display:inline">
+    <path
+       sodipodi:nodetypes="zsszczsszcsszzczzszcz"
+       inkscape:connector-curvature="0"
+       inkscape:original-d="m 50.0087,3.0227061 c 1.292036,0.5024419 4.985995,0.399272 7.550759,0.6849483 1.282382,0.1428382 18.039431,-0.09915 22.426897,-0.020646 4.387466,0.078504 5.444938,0.5434835 6.075969,0.9125736 C 86.693356,4.9686721 90,10 90,10 90,10 88.182447,8.402454 87.576557,8.1974158 86.970666,7.9923776 84.200716,7.0362075 80.107536,6.9734277 76.014356,6.9106479 60.964516,7.0154518 59.816442,6.9528892 57.520294,6.8277642 51.410387,6.1064871 50.134192,5.5698678 48.857997,5.0332484 45,1 45,1 45,1 38.478896,4.5713892 40.032465,5.4662944 40.895198,5.9632565 37.997093,6.5135007 29.962552,7.0265398 21.92801,7.5395789 11.000434,6.893712 10.056424,6.9779241 9.1124136,7.0621362 3.8409013,7.4088488 2.4647757,8.1914576 1.0886501,8.9740664 0,10 0,10 0,10 5.3337905,6.777155 3.9777757,4.5709333 2.6217609,2.3647115 9.6174962,4.4378151 9.9615558,3.5550337 10.305615,2.6722522 24.999056,3.8199992 32.562597,3.4954066 40.126138,3.1708139 39.372095,2.0337056 39.964882,2.9155242 40.55767,3.7973429 42.243915,0.48797044 45,0 c 2.635001,0.50646149 3.716664,2.5202643 5.0087,3.0227061 z"
+       inkscape:path-effect="#path-effect2988"
+       id="path3774"
+       d="m 50.0087,3.0227061 c 2.425745,0.746744 5.012823,0.7122008 7.550759,0.6849483 7.475267,-0.08027 14.951223,-0.039342 22.426897,-0.020646 2.065866,0.00517 4.210218,0.025554 6.075969,0.9125736 C 88.159639,5.5966914 89.691972,7.6982458 90,10 89.307261,9.262159 88.482465,8.6486667 87.576557,8.1974158 85.297754,7.0622986 82.653275,6.9988553 80.107536,6.9734277 73.344129,6.9058728 66.580182,6.9450812 59.816442,6.9528892 56.529683,6.9566834 53.126722,6.929119 50.134192,5.5698678 48.016335,4.607906 46.200968,2.9920752 45,1 43.815115,2.9213533 42.068558,4.4916771 40.032465,5.4662944 36.941889,6.9456618 33.388933,7.0165354 29.962552,7.0265398 23.327154,7.0459139 16.691754,6.9420887 10.056424,6.9779241 7.4704959,6.9918899 4.7850487,7.0497254 2.4647757,8.1914576 1.5457144,8.6436983 0.70717095,9.258984 0,10 0.34151794,7.6910633 1.8791292,5.5924547 3.9777757,4.5709333 5.8118098,3.6782126 7.9223541,3.6028644 9.9615558,3.5550337 17.49377,3.3783611 25.029743,3.3485189 32.562597,3.4954066 35.047171,3.5438548 37.577655,3.6058885 39.964882,2.9155242 41.846492,2.3713797 43.59139,1.3610173 45,0 c 1.390009,1.3953906 3.126297,2.443225 5.0087,3.0227061"
+       style="fill:#ffffff;fill-opacity:1;stroke:none" />
+  </g>
+</svg>
