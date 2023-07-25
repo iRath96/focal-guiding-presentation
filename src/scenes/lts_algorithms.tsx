@@ -671,15 +671,13 @@ function* guiding($: {
     yield* sampleT(0, 2)
 
     yield* waitUntil('guiding/parallax')
-    const hitpointMid    = hitpoint()
-    const hitpointTop    = vec2f_add(hitpoint(), vec2f(0, -110))
-    const hitpointBottom = vec2f_add(hitpoint(), vec2f(0,  110))
+    const hitpointMid   = hitpoint()
     const spatialExtent = createSignal(0)
     view.add(<Layout position={vec2f_add(hitpoint(), vec2f(50, 0))}>
         <Ray
             from={() => vec2f(0, -Math.max(0, spatialExtent() - 10))}
             to=  {() => vec2f(0, +Math.max(0, spatialExtent() - 10))}
-            stroke={"#fff"}
+            stroke={"#69C53E"}
             opacity={0.5}
             lineWidth={9}
             arrowSize={12}
@@ -688,7 +686,7 @@ function* guiding($: {
         />
         <Circle
             size={() => Math.min(spatialExtent(), 20)}
-            fill={"#fff"}
+            fill={"#69C53E"}
             stroke={"#000"}
             lineWidth={4}
         />
@@ -707,6 +705,7 @@ function* guiding($: {
     const neighboringPaths: number[] = []
     const directionsView = <Layout opacity={0} />
     const directionsMerge = createSignal(0)
+    const parallaxCompensation = createSignal(0)
     for (const path of findGuidePaths(15, 350, 10)) {
         const id = pathvis.showPath(path, { opacity: 0.2, visible: true })
         const dist = vec2f_distance(path[1].p, hitpoint())
@@ -716,22 +715,42 @@ function* guiding($: {
         neighboringPaths.push(id)
 
         const direction = vec2f_direction(path[1].p, path[2].p)
+        let parallaxDistance = 0
+        for (let i = 2; i < path.length; i++) {
+            parallaxDistance += vec2f_distance(path[i-1].p, path[i].p)
+            if (path[i].type === PathVertexType.Diffuse) break
+        }
+        const parallaxPoint = ray2f_evaluate(
+            { o: path[1].p, d: direction }, parallaxDistance
+        )
+        const rayPos = () => vec2f_lerp(path[1].p, hitpointMid, directionsMerge())
+        const parallaxDirection = () => vec2f_direction(rayPos(), parallaxPoint)
+        const rayTo = () => vec2f_multiply(
+            vec2f_lerp(direction, parallaxDirection(), parallaxCompensation())
+        , 80)
+        const rayTarget = () => vec2f_add(rayTo(), rayPos())
         directionsView.add(<Ray
             from={[0,0]}
-            to={() =>
-                vec2f_multiply(direction, 80)}
-            position={() =>
-                vec2f_lerp(path[1].p, hitpointMid, directionsMerge())}
+            to={rayTo}
+            position={rayPos}
             stroke={"#fff"}
             lineWidth={3}
             arrowSize={8}
             opacity={0.8}
             endArrow
         />)
+        directionsView.add(<Ray
+            from={rayTarget}
+            to={() => vec2f_lerp(rayTarget(), parallaxPoint, parallaxCompensation())}
+            stroke={"#fff"}
+            lineWidth={3}
+            arrowSize={8}
+            opacity={() => 0.4 * parallaxCompensation()}
+            lineDash={[3,3]}
+        />)
     }
     yield* spatialExtent(20, 2)
     yield* spatialExtent(120, 2)
-    //yield* pathvis.opacity(0.5, 1)
     view.add(directionsView)
     yield* directionsView.opacity(1, 1)
     yield* directionsMerge(1, 2)
@@ -745,8 +764,14 @@ function* guiding($: {
         guidingPlot.opacity(0, 1),
         directionsMerge(0, 1)
     )
+    yield* all(
+        parallaxCompensation(1, 1),
+        pathvis.opacity(0.5, 1),
+    )
+    yield* directionsMerge(1, 3)
 
-    //yield* hitpoint(hitpointTop, 1).to(hitpointBottom, 2).to(hitpointMid, 1)
+    guidingBrokenTarget(false)
+    yield* guidingPlot.opacity(1, 1)
 
     yield* all(
         view.opacity(0, 2),
