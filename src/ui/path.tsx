@@ -121,7 +121,7 @@ export class PathVisualizer {
         )
         const node = <Line
             points={() => [ lerp(pvp.t0()), lerp(pvp.t1()) ]}
-            stroke="#fff"
+            stroke="#ffbb22"
             lineWidth={4}
             arrowSize={12}
             endArrow={
