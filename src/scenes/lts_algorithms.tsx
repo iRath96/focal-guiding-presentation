@@ -534,34 +534,54 @@ function* guiding($: {
     cbox: CBox
     view: Node
 }) {
-    const view = <Layout />
-    $.view.add(view)
+    function findGuidePaths(spread = 0) {
+        const prevCameraSpread = $.cbox.cameraSpread
+        const prevCameraDir = $.cbox.cameraDir
+        $.cbox.cameraSpread = spread
+        $.cbox.cameraDir = -4.5
+
+        const paths: PathVertex[][] = []
+        const numCandidates = 1000
+        const prng = new StratifiedRandom(new Random(1234), numCandidates)
+        for (let i = 0; i < numCandidates; i++) {
+            const path = $.cbox.pathtrace(() =>
+                prng.nextFloat(), {
+                    useNEE: false,
+                    maxDepth: 3,
+                }
+            )[0]
+            if (path[path.length - 1].type !== PathVertexType.Light) continue
+            
+            const cosLight = -vec2f_dot(
+                vec2f_direction(path[path.length-2].p, path[path.length-1].p),
+                path[path.length-1].n
+            )
+            if (cosLight < 0.9) continue
+            if (path[1].type !== PathVertexType.Diffuse) continue
+            if (path[1].p.y > 100) continue
+            
+            paths.push(path)
+        }
+
+        $.cbox.cameraSpread = prevCameraSpread
+        $.cbox.cameraDir = prevCameraDir
+        return paths
+    }
 
     const pathvis = $.cbox.pathvis
+    const view = <Layout zIndex={10} />
+    $.view.add(view)
 
     const hitpoint = createSignal<Vector2f>()
     const pathIds: number[] = []
-    const numCandidates = 500
-    const prng = new FakeRandom([ 0.45 ],
-        new StratifiedRandom(new Random(1234), numCandidates))
-    for (let i = 0; i < numCandidates; i++) {
-        prng.restart()
-        const path = $.cbox.pathtrace(() =>
-            prng.nextFloat(), {
-                useNEE: false,
-                maxDepth: 3,
-            }
-        )[0]
-        if (path[path.length - 1].type !== PathVertexType.Light) continue
-        if (path[1].type !== PathVertexType.Diffuse) continue
-        if (path[1].p.y > 100) continue
-        
+    for (const path of findGuidePaths()) {
         if (pathIds.length === 0) {
             // first path, show extra path for camera segment
             hitpoint(path[1].p)
             const helpId = pathvis.showPath(path.slice(0, 2))
             yield* pathvis.fadeInPath(helpId, 1)
         }
+
         pathIds.push(pathvis.showPath(path.slice(1), { opacity: 0.3 }))
     }
 
@@ -573,8 +593,8 @@ function* guiding($: {
     const guidingUniform = createSignal(1)
     const guidingDist = createSignal<number[]>(() => {
         const targets = [
-            { d: vec2f_normalized(vec2f(-1, -1.15)), exp: 120, w: 1 },
-            { d: vec2f_normalized(vec2f(-1, -0.48)), exp: 120, w: 1 },
+            { d: vec2f_normalized(vec2f(-1, -1.15)), exp: 180, w: 1 },
+            { d: vec2f_normalized(vec2f(-1, -0.48)), exp: 180, w: 1 },
             { d: vec2f_normalized(vec2f(-1,  1.60)), exp: 6  , w: 0.5 },
         ]
         const normal = vec2f(-1, 0)
@@ -592,6 +612,7 @@ function* guiding($: {
             r = (1 - guidingUniform()) * (r - 1) + 1
             //r *= 1 - guidingUniform()
             r *= vec2f_dot(normal, wo) > 0 ? 1 : 0//Math.max(vec2f_dot(normal, wo), 0)
+            r *= 0.8
             //if (i / guidingDistRes < guidingUniform()) r = 0
             if (r < 1e-8) r = 0
 
@@ -646,8 +667,8 @@ function* guiding($: {
 
     yield* waitUntil('guiding/parallax')
     const hitpointMid    = hitpoint()
-    const hitpointTop    = vec2f_add(hitpoint(), vec2f(0, -90))
-    const hitpointBottom = vec2f_add(hitpoint(), vec2f(0,  90))
+    const hitpointTop    = vec2f_add(hitpoint(), vec2f(0, -110))
+    const hitpointBottom = vec2f_add(hitpoint(), vec2f(0,  110))
     const spatialExtent = createSignal(0)
     view.add(<Layout position={vec2f_add(hitpoint(), vec2f(50, 0))}>
         <Ray
@@ -667,7 +688,20 @@ function* guiding($: {
             lineWidth={4}
         />
     </Layout>)
-    yield* spatialExtent(100, 2)
+
+    const newPathIds: number[] = []
+    for (const path of findGuidePaths(15)) {
+        const id = pathvis.showPath(path, { opacity: 0.2, visible: true })
+        const dist = vec2f_distance(path[1].p, hitpoint())
+        pathvis.getPath(id).opacity(createSignal(() =>
+            saturate((spatialExtent() - dist) / 10)
+        ))
+        newPathIds.push(id)
+    }
+    yield* pathvis.fadeOutPaths(pathIds, 1)
+    yield* spatialExtent(20, 2)
+    yield* spatialExtent(120, 2)
+
     yield* hitpoint(hitpointTop, 1).to(hitpointBottom, 2).to(hitpointMid, 1)
 
     yield* all(
