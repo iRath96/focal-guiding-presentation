@@ -1,4 +1,84 @@
-import { Vector2f, vec2f_polar } from '../rt/math'
+import { Path, PathVertexType } from '../ui/path'
+import { Vector2f, vec2f_direction, vec2f_dot, vec2f_polar } from '../rt/math'
+import { CBox } from './cbox'
+import { Random } from '@motion-canvas/core'
+
+export class StratifiedRandom {
+    private dim = 0
+    private index = -1
+    constructor(
+        public prng: Random,
+        public count: number
+    ) {}
+
+    start() {
+        this.dim = 0
+        this.index++
+    }
+
+    nextFloat() {
+        if (this.dim++ == 0) {
+            return this.index / (this.count - 1)
+        }
+        return this.prng.nextFloat()
+    }
+}
+
+interface Rnd {
+    nextFloat(): number
+}
+
+export class FakeRandom {
+    private dim = 0
+    constructor(
+        public initial: number[],
+        public prng: Rnd = new Random(1234),
+    ) {}
+
+    restart() {
+        this.dim = 0
+    }
+
+    nextFloat() {
+        if (this.dim < this.initial.length) {
+            return this.initial[this.dim++]
+        }
+        return this.prng.nextFloat()
+    }
+}
+
+export function findGuidePaths(cbox: CBox, spread = 0, numCandidates = 1000, seed = 1234) {
+    const prevCameraSpread = cbox.cameraSpread
+    const prevCameraDir = cbox.cameraDir
+    cbox.cameraSpread = spread
+    cbox.cameraDir = -4.5
+
+    const paths: Path[] = []
+    const prng = new StratifiedRandom(new Random(seed), numCandidates)
+    for (let i = 0; i < numCandidates; i++) {
+        const path = cbox.pathtrace(() =>
+            prng.nextFloat(), {
+                useNEE: false,
+                maxDepth: 3,
+            }
+        )[0]
+        if (path[path.length - 1].type !== PathVertexType.Light) continue
+        
+        const cosLight = -vec2f_dot(
+            vec2f_direction(path[path.length-2].p, path[path.length-1].p),
+            path[path.length-1].n
+        )
+        if (cosLight < 0.9) continue
+        if (path[1].type !== PathVertexType.Diffuse) continue
+        if (path[1].p.y > 100) continue
+        
+        paths.push(path)
+    }
+
+    cbox.cameraSpread = prevCameraSpread
+    cbox.cameraDir = prevCameraDir
+    return paths
+}
 
 export function saturate(v: number) {
     return Math.max(0, Math.min(1, v))

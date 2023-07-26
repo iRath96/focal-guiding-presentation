@@ -1,58 +1,14 @@
-import { Circle, Filter, Gradient, Img, Layout, Line, makeScene2D, Node, Ray, Txt } from '@motion-canvas/2d';
-import { Random, Vector2, all, chain, createRef, createSignal, debug, delay, sequence, tween, waitFor, waitUntil } from '@motion-canvas/core';
+import { Circle, Gradient, Img, Layout, Line, makeScene2D, Node, Ray, Txt } from '@motion-canvas/2d';
+import { Random, all, chain, createRef, createSignal, sequence, waitFor, waitUntil } from '@motion-canvas/core';
 import { CBox } from '../common/cbox';
 import { Path, path_length, path_segments, PathVertex, PathVertexType, PathVisualizer, shuffle } from '../ui/path';
 import { Ray2f, ray2f_evaluate, vec2f, vec2f_add, vec2f_direction, vec2f_distance, vec2f_dot, vec2f_lerp, vec2f_multiply, vec2f_normalized, vec2f_polar, vec2f_sub, Vector2f } from '../rt/math';
 import { PSSMLT } from '../rt/pssmlt';
 import { Captions } from '../common/captions';
-import { linear_lookup, linspace, polar_plot, sample, saturate, theta_linspace } from '../common/guiding';
+import { FakeRandom, findGuidePaths, linear_lookup, linspace, polar_plot, sample, saturate, StratifiedRandom, theta_linspace } from '../common/guiding';
 import { colors } from '../common';
 
 const captions = createRef<Captions>()
-
-class StratifiedRandom {
-    private dim = 0
-    private index = -1
-    constructor(
-        public prng: Random,
-        public count: number
-    ) {}
-
-    start() {
-        this.dim = 0
-        this.index++
-    }
-
-    nextFloat() {
-        if (this.dim++ == 0) {
-            return this.index / (this.count - 1)
-        }
-        return this.prng.nextFloat()
-    }
-}
-
-interface Rnd {
-    nextFloat(): number
-}
-
-class FakeRandom {
-    private dim = 0
-    constructor(
-        public initial: number[],
-        public prng: Rnd = new Random(1234),
-    ) {}
-
-    restart() {
-        this.dim = 0
-    }
-
-    nextFloat() {
-        if (this.dim < this.initial.length) {
-            return this.initial[this.dim++]
-        }
-        return this.prng.nextFloat()
-    }
-}
 
 function* pathtraceSingle($: {
     cbox: CBox
@@ -538,45 +494,12 @@ function* guiding($: {
     cbox: CBox
     view: Node
 }) {
-    function findGuidePaths(spread = 0, numCandidates = 1000, seed = 1234) {
-        const prevCameraSpread = $.cbox.cameraSpread
-        const prevCameraDir = $.cbox.cameraDir
-        $.cbox.cameraSpread = spread
-        $.cbox.cameraDir = -4.5
-
-        const paths: Path[] = []
-        const prng = new StratifiedRandom(new Random(seed), numCandidates)
-        for (let i = 0; i < numCandidates; i++) {
-            const path = $.cbox.pathtrace(() =>
-                prng.nextFloat(), {
-                    useNEE: false,
-                    maxDepth: 3,
-                }
-            )[0]
-            if (path[path.length - 1].type !== PathVertexType.Light) continue
-            
-            const cosLight = -vec2f_dot(
-                vec2f_direction(path[path.length-2].p, path[path.length-1].p),
-                path[path.length-1].n
-            )
-            if (cosLight < 0.9) continue
-            if (path[1].type !== PathVertexType.Diffuse) continue
-            if (path[1].p.y > 100) continue
-            
-            paths.push(path)
-        }
-
-        $.cbox.cameraSpread = prevCameraSpread
-        $.cbox.cameraDir = prevCameraDir
-        return paths
-    }
-
     const pathvis = $.cbox.pathvis
     const view = <Layout zIndex={10} />
     $.view.add(view)
 
     const centralPaths: number[] = []
-    for (const path of findGuidePaths()) {
+    for (const path of findGuidePaths($.cbox)) {
         if (centralPaths.length === 0) {
             // first path, show extra path for camera segment
             hitpoint(path[1].p)
@@ -690,7 +613,7 @@ function* guiding($: {
     const directionsView = <Layout opacity={0} />
     const directionsMerge = createSignal(0)
     const parallaxCompensation = createSignal(0)
-    guidePaths = findGuidePaths(15, 350, 10)
+    guidePaths = findGuidePaths($.cbox, 15, 350, 10)
     for (const path of guidePaths) {
         const id = pathvis.showPath(path, { opacity: 0.2, visible: true })
         const dist = vec2f_distance(path[1].p, hitpoint())
@@ -969,5 +892,4 @@ export default makeScene2D(function* (originalView) {
     yield* captions().reset()
 
     yield* waitUntil('lts/done')
-    yield* waitFor(100)
 });

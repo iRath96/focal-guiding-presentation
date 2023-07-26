@@ -6,12 +6,12 @@ import { ThreadGenerator, all, createEaseOutBack, delay } from "@motion-canvas/c
 export class QuadtreeVisualizer {
     private shownPatches = new Map<number, Node>()
     private previousMaxId = 0
-    public maxDensity = 0
+    public maxDensity = 1
     public gridOpacity = 1
     public gridLineWidth = 1
 
     constructor(
-        private view: View2D,
+        private view: Node,
         private quadtree: QuadTree
     ) {}
 
@@ -40,7 +40,7 @@ export class QuadtreeVisualizer {
         let maxTime = -Infinity
         for (const patch of this.quadtree.visualize()) {
             const center = bounds2f_center(patch.bounds)
-            const time = center.x - center.y
+            const time = -(center.x + center.y)
             minTime = Math.min(minTime, time)
             maxTime = Math.max(maxTime, time)
 

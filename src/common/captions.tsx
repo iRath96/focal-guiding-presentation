@@ -1,5 +1,6 @@
-import { Gradient, Node, NodeProps, Rect, Txt, initial, signal } from '@motion-canvas/2d'
-import { SimpleSignal, all, createRef } from '@motion-canvas/core'
+import { Circle, Gradient, Node, NodeProps, Rect, Txt, initial, signal } from '@motion-canvas/2d'
+import { SimpleSignal, all, createRef, delay, waitFor } from '@motion-canvas/core'
+import { colors } from '../common';
 
 export interface CaptionsProps extends NodeProps {
     chapter?: SimpleSignal<string> | string
@@ -15,6 +16,12 @@ export class Captions extends Node {
     @initial("") @signal()
     private declare readonly references: SimpleSignal<string, this>;
 
+    @initial("") @signal()
+    private declare readonly transitionText: SimpleSignal<string, this>;
+
+    @initial("") @signal()
+    private declare readonly transitionOpacity: SimpleSignal<number, this>;
+
     private refText = createRef<Txt>()
     private refTextY = {
         shown: 500,
@@ -26,6 +33,21 @@ export class Captions extends Node {
             zIndex: 100,
             ...props,
         })
+
+        this.add(<Rect
+            size={[1920,1080]}
+            opacity={this.transitionOpacity}
+            fill={colors.background}
+            zIndex={10}
+        >
+            <Txt
+                text={this.transitionText}
+                position={[0,0]}
+                width={1920-240}
+                fill={colors.white}
+                fontSize={80}
+            />
+        </Rect>)
 
         this.add(<Txt
             text={this.chapter}
@@ -66,6 +88,17 @@ export class Captions extends Node {
             })}
             zIndex={1}
         />)
+    }
+
+    *showTransition(text: string, time: number) {
+        this.transitionOpacity(1)
+        this.transitionText("")
+        yield* this.transitionText(text, 2)
+        yield* waitFor(time)
+        yield* all(
+            this.transitionText("", 2),
+            delay(1, this.transitionOpacity(0, 1)),
+        )
     }
 
     *reset() {
