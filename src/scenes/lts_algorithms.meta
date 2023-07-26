@@ -114,6 +114,10 @@
       "targetTime": 126.48610823705523
     },
     {
+      "name": "lts/psGuiding",
+      "targetTime": 151.73610823705542
+    },
+    {
       "name": "lts/done",
       "targetTime": 151.73610823705542
     }

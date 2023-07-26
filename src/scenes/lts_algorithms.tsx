@@ -1,11 +1,12 @@
-import { Circle, Filter, Img, Layout, Line, makeScene2D, Node, Ray, Txt } from '@motion-canvas/2d';
+import { Circle, Filter, Gradient, Img, Layout, Line, makeScene2D, Node, Ray, Txt } from '@motion-canvas/2d';
 import { Random, Vector2, all, chain, createRef, createSignal, debug, delay, sequence, tween, waitFor, waitUntil } from '@motion-canvas/core';
 import { CBox } from '../common/cbox';
-import { path_length, path_segments, PathVertex, PathVertexType, PathVisualizer, shuffle } from '../ui/path';
+import { Path, path_length, path_segments, PathVertex, PathVertexType, PathVisualizer, shuffle } from '../ui/path';
 import { Ray2f, ray2f_evaluate, vec2f, vec2f_add, vec2f_direction, vec2f_distance, vec2f_dot, vec2f_lerp, vec2f_multiply, vec2f_normalized, vec2f_polar, vec2f_sub, Vector2f } from '../rt/math';
 import { PSSMLT } from '../rt/pssmlt';
 import { Captions } from '../common/captions';
 import { linear_lookup, linspace, polar_plot, sample, saturate, theta_linspace } from '../common/guiding';
+import { colors } from '../common';
 
 const captions = createRef<Captions>()
 
@@ -101,7 +102,7 @@ function* bdptSingle($: {
         maxDepth: 3,
     })[0]
 
-    function* showSubpath(subPath: PathVertex[]) {
+    function* showSubpath(subPath: Path) {
         const segments: number[] = []
         yield* chain(...[...path_segments(subPath)].map(segment => {
             const id = pathvis.showPath(segment)
@@ -530,6 +531,9 @@ function* pssmlt($: {
     pathvis.removeAll()
 }
 
+let guidePaths: Path[]
+const hitpoint = createSignal<Vector2f>()
+
 function* guiding($: {
     cbox: CBox
     view: Node
@@ -540,7 +544,7 @@ function* guiding($: {
         $.cbox.cameraSpread = spread
         $.cbox.cameraDir = -4.5
 
-        const paths: PathVertex[][] = []
+        const paths: Path[] = []
         const prng = new StratifiedRandom(new Random(seed), numCandidates)
         for (let i = 0; i < numCandidates; i++) {
             const path = $.cbox.pathtrace(() =>
@@ -571,7 +575,6 @@ function* guiding($: {
     const view = <Layout zIndex={10} />
     $.view.add(view)
 
-    const hitpoint = createSignal<Vector2f>()
     const centralPaths: number[] = []
     for (const path of findGuidePaths()) {
         if (centralPaths.length === 0) {
@@ -687,7 +690,8 @@ function* guiding($: {
     const directionsView = <Layout opacity={0} />
     const directionsMerge = createSignal(0)
     const parallaxCompensation = createSignal(0)
-    for (const path of findGuidePaths(15, 350, 10)) {
+    guidePaths = findGuidePaths(15, 350, 10)
+    for (const path of guidePaths) {
         const id = pathvis.showPath(path, { opacity: 0.2, visible: true })
         const dist = vec2f_distance(path[1].p, hitpoint())
         pathvis.getPath(id).opacity(createSignal(() =>
@@ -778,10 +782,121 @@ function* guiding($: {
 
     yield* all(
         view.opacity(0, 2),
-        pathvis.fadeAndRemove(2),
+        //pathvis.fadeAndRemove(2),
     )
     
     view.remove()
+}
+
+function* psGuiding($: {
+    cbox: CBox
+    view: Node
+}) {
+    function add(n: Node) {
+        $.view.add(n)
+        return n
+    }
+
+    const dots: Node[] = []
+    for (const path of guidePaths) {
+        for (let i = 1; i < path.length; i++) {
+            const dot = <Layout position={path[i].p} opacity={0}>
+                <Circle
+                    size={20}
+                    fill={colors.white}
+                    opacity={0.3}
+                />
+                <Circle
+                    size={9}
+                    fill={colors.white}
+                />
+            </Layout>
+            dots.push(dot)
+            $.view.add(dot)
+        }
+    }
+    yield* sequence(0.05, ...dots.map(dot => dot.opacity(1, 0.5)))
+
+    const hitpointCeiling = vec2f(100, -300)
+    const distributionT = createSignal(0)
+    const conditionalT = createSignal(0)
+    const hitpointT = createSignal(0.5)
+    const hitpointConditional = createSignal<Vector2f>(() =>
+        vec2f_add(hitpointCeiling, vec2f(hitpointT() * 80 - 40, 0))
+    )
+
+    const p0 = (x: number) => vec2f( 25 * Math.exp(-7 * Math.pow(x, 2)) + 10, 200 * x)
+    const p1 = (x: number) => vec2f(150 * x, - 40 * Math.exp(-7 * Math.pow(x, 2)) - 10)
+    const pc = (x: number) => vec2f( 20 * x, -120 * Math.exp(-7 * Math.pow(x, 2)) - 10)
+
+    const gaussX = linspace(256).map(x => 2 * x - 1)
+    const distP0 = add(<Line
+        position={hitpoint()}
+        opacity={distributionT}
+        scaleX={distributionT}
+        points={gaussX.map(p0)}
+        stroke={new Gradient({
+            from: [ 0, -150 ],
+            to: [ 0, 150 ],
+            stops: [
+                { color: "rgba(0,0,0,0)", offset: 0 },
+                { color: colors.red, offset: 0.3 },
+                { color: colors.red, offset: 0.7 },
+                { color: "rgba(0,0,0,0)", offset: 1 },
+            ]
+        })}
+        lineWidth={4}
+        fill={"rgba(255,0,0,0.2)"}
+    />)
+    const distP1 = add(<Line
+        position={hitpointCeiling}
+        opacity={() => distributionT() - 0.2 * conditionalT()}
+        scaleY={distributionT}
+        points={gaussX.map(p1)}
+        stroke={new Gradient({
+            from: [ -120, 0 ],
+            to: [ 120, 0 ],
+            stops: [
+                { color: "rgba(0,0,0,0)", offset: 0 },
+                { color: colors.red, offset: 0.3 },
+                { color: colors.red, offset: 0.7 },
+                { color: "rgba(0,0,0,0)", offset: 1 },
+            ]
+        })}
+        lineWidth={4}
+        fill={"rgba(255,0,0,0.2)"}
+    />)
+    const distPcond = add(<Line
+        position={hitpointConditional}
+        opacity={conditionalT}
+        points={() => gaussX.map(x => vec2f_lerp(p1(x), pc(x), conditionalT()))}
+        stroke={new Gradient({
+            from: [ -25 - (1 - conditionalT()) * 50, 0 ],
+            to: [ 25 + (1 - conditionalT()) * 50, 0 ],
+            stops: [
+                { color: "rgba(0,0,0,0)", offset: 0 },
+                { color: colors.green, offset: 0.3 },
+                { color: colors.green, offset: 0.7 },
+                { color: "rgba(0,0,0,0)", offset: 1 },
+            ]
+        })}
+        lineWidth={4}
+        fill={"rgba(0,255,0,0.2)"}
+    />)
+    yield* distributionT(1, 2)
+    yield* conditionalT(1, 1)
+
+    const hitpointQuery = createSignal<Vector2f>(() =>
+        vec2f_add(hitpoint(), vec2f(0, 100 - hitpointT() * 200)))
+    const cameraSegment = add(<Ray
+        from={$.cbox.camera.center}
+        to={hitpointQuery}
+        stroke={colors.yellow}
+        lineWidth={4}
+        arrowSize={12}
+        endArrow
+    />)
+    yield* hitpointT(1, 1).to(0, 2).to(0.5, 1)
 }
 
 export default makeScene2D(function* (originalView) {
@@ -843,6 +958,14 @@ export default makeScene2D(function* (originalView) {
         captions().updateReference("[Vorba et al. 2014; Müller et al. 2017]")
     )
     yield* guiding({ cbox, view })
+    yield* captions().reset()
+
+    yield* waitUntil('lts/psGuiding')
+    yield* all(
+        captions().updateTitle("Path space guiding"),
+        captions().updateReference("[Reibold et al. 2018; Schüßler et al. 2022; Li et al. 2022]")
+    )
+    yield* psGuiding({ cbox, view })
     yield* captions().reset()
 
     yield* waitUntil('lts/done')

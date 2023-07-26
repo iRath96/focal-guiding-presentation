@@ -30,6 +30,8 @@ export interface PathVertex {
     nee?: boolean
 }
 
+export type Path = PathVertex[]
+
 interface PVSegment {
     a: SimpleSignal<Vector2f>
     b: SimpleSignal<Vector2f>
@@ -46,14 +48,14 @@ interface PVPath {
     segments: PVSegment[]
 }
 
-export function* path_segments(path: PathVertex[]):
+export function* path_segments(path: Path):
     Generator<[PathVertex, PathVertex]> {
     for (let i = 1; i < path.length; i++) {
         yield [ path[i-1], path[i] ]
     }
 }
 
-export function path_length(path: PathVertex[]): number {
+export function path_length(path: Path): number {
     return [ ...path_segments(path) ].reduce((len, [a,b]) =>
         vec2f_distance(a.p, b.p)
     , 0)
@@ -156,7 +158,7 @@ export class PathVisualizer {
         return segment
     }
 
-    showPath(path: PathVertex[], props: ShowPathProps = {}) {
+    showPath(path: Path, props: ShowPathProps = {}) {
         let { length, visible, ...lineProps } = {
             length: 0,
             visible: false,
@@ -221,7 +223,7 @@ export class PathVisualizer {
         return this.shownPaths.get(id).root
     }
 
-    *updatePath(id: number, path: PathVertex[], time = 1) {
+    *updatePath(id: number, path: Path, time = 1) {
         const pvp = this.shownPaths.get(id);
         if (!pvp) return
         const newSegments: PVSegment[] = []
