@@ -1,10 +1,10 @@
 import { Rect, View2D, Node } from "@motion-canvas/2d"
 import { QuadTree, QuadTreePatch } from "../rt/quadtree"
 import { bounds2f_center, vec2f_sub } from "../rt/math"
-import { ThreadGenerator, all, createEaseOutBack, delay } from "@motion-canvas/core"
+import { ThreadGenerator, all, createEaseOutBack, createRef, delay } from "@motion-canvas/core"
 
 export class QuadtreeVisualizer {
-    private shownPatches = new Map<number, Node>()
+    private shownPatches = new Map<number, Rect>()
     private previousMaxId = 0
     public maxDensity = 1
     public gridOpacity = 1
@@ -17,15 +17,27 @@ export class QuadtreeVisualizer {
 
     private createRect(patch: QuadTreePatch) {
         const center = bounds2f_center(patch.bounds)
-        return <Rect
+        const ref = createRef<Rect>()
+        const node = <Rect
+            ref={ref}
             position={center}
             size={vec2f_sub(patch.bounds.max, patch.bounds.min)}
             stroke={`rgba(255, 255, 255, ${this.gridOpacity})`}
             lineWidth={this.gridLineWidth}
         />
+        return ref()
     }
 
-    public* show() {
+    getRect(id: number) {
+        return this.shownPatches.get(id)
+    }
+
+    *colorRect(id: number, density: number, time = 1) {
+        yield* this.shownPatches.get(id).fill(
+            `rgba(255, 127, 0, ${density.toFixed(2)})`, time)
+    }
+
+    *show() {
         const elementAnimationTime = 0.1
 
         const unusedPatches = new Set(this.shownPatches.keys())
@@ -72,15 +84,13 @@ export class QuadtreeVisualizer {
             // update density
             const a = Math.min(patch.density / this.maxDensity, 1)
             const rect = this.shownPatches.get(id);
-            rect.applyState({
-                fill: `rgba(255, 127, 0, ${a.toFixed(2)})`
-            })
+            rect.fill(`rgba(255, 127, 0, ${a.toFixed(2)})`)
         }
 
         for (const id of unusedPatches) {
             const rect = this.shownPatches.get(id);
             const center = rect.position()
-            const time = center.x - center.y
+            const time = -(center.x + center.y)
             minTime = Math.min(minTime, time)
             maxTime = Math.max(maxTime, time)
 

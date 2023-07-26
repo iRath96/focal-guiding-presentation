@@ -613,7 +613,7 @@ function* guiding($: {
     const directionsView = <Layout opacity={0} />
     const directionsMerge = createSignal(0)
     const parallaxCompensation = createSignal(0)
-    guidePaths = findGuidePaths($.cbox, 15, 350, 10)
+    guidePaths = findGuidePaths($.cbox, 15, 350, 42)
     for (const path of guidePaths) {
         const id = pathvis.showPath(path, { opacity: 0.2, visible: true })
         const dist = vec2f_distance(path[1].p, hitpoint())

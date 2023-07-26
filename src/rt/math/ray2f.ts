@@ -18,6 +18,13 @@ export interface Ray2f {
     d: Vector2f
 }
 
+export function ray2f_targeting(from: Vector2f, to: Vector2f): Ray2f {
+    return {
+        o: from,
+        d: vec2f_direction(from, to),
+    }
+}
+
 export function ray2f_evaluate(ray: Ray2f, t: number) {
     return vec2f_add(ray.o, vec2f_multiply(ray.d, t))
 }

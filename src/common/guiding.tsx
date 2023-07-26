@@ -56,6 +56,7 @@ export function findGuidePaths(cbox: CBox, spread = 0, numCandidates = 1000, see
     const paths: Path[] = []
     const prng = new StratifiedRandom(new Random(seed), numCandidates)
     for (let i = 0; i < numCandidates; i++) {
+        prng.start()
         const path = cbox.pathtrace(() =>
             prng.nextFloat(), {
                 useNEE: false,
