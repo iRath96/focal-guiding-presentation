@@ -69,7 +69,8 @@ export function findGuidePaths(cbox: CBox, spread = 0, numCandidates = 1000, see
             path[path.length-1].n
         )
         if (cosLight < 0.9) continue
-        if (path[1].type !== PathVertexType.Diffuse) continue
+        //if (path[1].type !== PathVertexType.Diffuse) continue
+        if (path[1].type === PathVertexType.Light) continue
         if (path[1].p.y > 100) continue
         
         paths.push(path)
