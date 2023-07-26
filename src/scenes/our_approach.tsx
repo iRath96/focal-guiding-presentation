@@ -31,10 +31,11 @@ export default makeScene2D(function* (originalView) {
     }
 
     const quadtree = new QuadTree({
-        min: vec2f(-480, -480),
-        max: vec2f(480, 480),
+        min: vec2f(-435-82, -435-55),
+        max: vec2f( 435-82,  435-55),
     }, 4, 16, 0.02);
     const visualizer = new QuadtreeVisualizer(view, quadtree);
+    visualizer.gridOpacity = 0.5
 
     yield* captions().showTransition("Our approach", 8)
     yield* visualizer.show()
