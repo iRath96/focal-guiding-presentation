@@ -57,7 +57,8 @@ export class QuadtreeVisualizer {
             maxTime = Math.max(maxTime, time)
 
             const { id } = patch.node
-            if (this.shownPatches.has(id)) {
+            const isExisting = this.shownPatches.has(id)
+            if (isExisting) {
                 unusedPatches.delete(id)
             } else {
                 newPatches.add(id)
@@ -84,7 +85,11 @@ export class QuadtreeVisualizer {
             // update density
             const a = Math.min(patch.density / this.maxDensity, 1)
             const rect = this.shownPatches.get(id);
-            rect.fill(`rgba(255, 127, 0, ${a.toFixed(2)})`)
+            tasks.push({
+                time,
+                task: rect.fill(`rgba(255, 127, 0, ${a.toFixed(2)})`, isExisting ?
+                    0.5 : 0)
+            })
         }
 
         for (const id of unusedPatches) {

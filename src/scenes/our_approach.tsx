@@ -4,7 +4,7 @@ import { CBox } from '../common/cbox';
 import { Captions } from '../common/captions';
 import { findGuidePaths } from '../common/guiding';
 import { QuadTree } from '../rt/quadtree';
-import { Ray2f, ray2f_targeting, vec2f, vec2f_direction, vec2f_distance } from '../rt/math';
+import { Ray2f, bounds2f_center, ray2f_targeting, vec2f, vec2f_direction, vec2f_distance } from '../rt/math';
 import { QuadtreeVisualizer } from '../ui/quadtree';
 import { PathVertexType, path_segments } from '../ui/path';
 
@@ -107,7 +107,11 @@ export default makeScene2D(function* (originalView) {
                     const pdfW = iter == 1 ?
                         t.t1 - Math.max(t.t0, 0) :
                         t.patch.density * sgmt(t.t1, Math.max(t.t0, 0)) / pdf
-                    const contrib = misF * pdfW
+                    const fakeW = 1 / (10 + vec2f_distance(
+                        bounds2f_center(t.patch.bounds),
+                        cbox.mirroredLight.center
+                    )) + 1 / Math.pow(iter, 5)
+                    const contrib = misF * pdfW * fakeW
                     t.patch.node.accumulator += contrib
                 }
             }
