@@ -1,6 +1,6 @@
 import * as quartic from 'quartic'
 import { Matrix33f, mat33f_inverse, mat33f_multiply } from './mat33f'
-import { Vector2f, vec2f, vec2f_add, vec2f_angle, vec2f_copy, vec2f_direction, vec2f_dot, vec2f_length, vec2f_lerp, vec2f_multiply, vec2f_normalized, vec2f_polar, vec2f_squared_length, vec2f_sub } from './vec2f'
+import { Vector2f, vec2f, vec2f_add, vec2f_angle, vec2f_copy, vec2f_direction, vec2f_dot, vec2f_length, vec2f_lerp, vec2f_multiply, vec2f_normalized, vec2f_plerp, vec2f_polar, vec2f_squared_length, vec2f_sub } from './vec2f'
 import { vec3f, vec3f_homogeneous_project } from './vec3f'
 
 const eps = 1e-3
@@ -41,8 +41,16 @@ export interface Bounds2f {
     max: Vector2f
 }
 
+export function bounds2f_evaluate(bounds: Bounds2f, p: Vector2f) {
+    return vec2f_plerp(bounds.min, bounds.max, p)
+}
+
+export function bounds2f_diagonal(bounds: Bounds2f) {
+    return vec2f_sub(bounds.max, bounds.min)
+}
+
 export function bounds2f_center(bounds: Bounds2f) {
-    return vec2f_multiply(vec2f_add(bounds.min, bounds.max), 0.5)
+    return vec2f_lerp(bounds.min, bounds.max, 0.5)
 }
 
 export function bounds2f_copy(a: Bounds2f): Bounds2f {

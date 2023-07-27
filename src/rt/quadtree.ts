@@ -1,6 +1,7 @@
+import { debug } from '@motion-canvas/core'
 import {
     Bounds2f, Ray2f, Vector2f,
-    bounds2f_center, bounds2f_copy, vec2f, vec2f_copy
+    bounds2f_center, bounds2f_copy, bounds2f_diagonal, vec2f, vec2f_add, vec2f_copy, vec2f_multiply, vec2f_pmultiply
 } from './math'
 
 export interface QuadTreeNode {
@@ -37,6 +38,49 @@ export class QuadTree {
         public splitThreshold: number,
     ) {
         this.refine()
+    }
+
+    private* warpWithNode(
+        uv: Vector2f, node: QuadTreeNode, offset: Vector2f, size: Vector2f
+    ): Generator<Vector2f> {
+        yield vec2f_add(offset, vec2f_pmultiply(uv, size))
+        if (!node.children) return
+
+        const n00 = node.children[0].density
+        const n10 = node.children[1].density
+        const n01 = node.children[2].density
+        const n11 = node.children[3].density
+        const sum = n00 + n01 + n10 + n11
+
+        const pTop = sum > 0 ? (n00 + n10) / sum : 0.5
+        let pLeft: number
+        let index = 0
+
+        if (uv.y < pTop) {
+            uv.y /= pTop
+            pLeft = sum > 0 ? n00 / (n00 + n10) : 0.5
+        } else {
+            uv.y = (uv.y - pTop) / (1 - pTop)
+            pLeft = sum > 0 ? n01 / (n01 + n11) : 0.5
+            offset.y += size.y / 2
+            index += 2
+        }
+
+        if (uv.x < pLeft) {
+            uv.x /= pLeft
+        } else {
+            uv.x = (uv.x - pLeft) / (1 - pLeft)
+            offset.x += size.x / 2
+            index += 1
+        }
+
+        yield* this.warpWithNode(uv, node.children[index], offset,
+            vec2f_multiply(size, 0.5))
+    }
+
+    *warp(uv: Vector2f) {
+        yield* this.warpWithNode(vec2f_copy(uv), this.root,
+            vec2f_copy(this.bounds.min), bounds2f_diagonal(this.bounds))
     }
 
     private rebuildNode(node: QuadTreeNode, rootWeight: number, invarea: number) {

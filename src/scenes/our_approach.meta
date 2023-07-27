@@ -2,8 +2,12 @@
   "version": 0,
   "timeEvents": [
     {
+      "name": "hierarchical",
+      "targetTime": 52.193979008278276
+    },
+    {
       "name": "ours/done",
-      "targetTime": 100
+      "targetTime": 55.193979008278276
     }
   ],
   "seed": 2128447463

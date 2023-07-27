@@ -1,17 +1,67 @@
-import { Layout, makeScene2D } from '@motion-canvas/2d';
-import { all, createRef, delay, waitFor, waitUntil } from '@motion-canvas/core';
+import { Circle, Layout, makeScene2D, Node } from '@motion-canvas/2d';
+import { all, chain, createRef, debug, delay, Random, Reference, sequence, waitFor, waitUntil } from '@motion-canvas/core';
 import { CBox } from '../common/cbox';
 import { Captions } from '../common/captions';
 import { findGuidePaths } from '../common/guiding';
 import { QuadTree } from '../rt/quadtree';
-import { Ray2f, bounds2f_center, ray2f_targeting, vec2f, vec2f_direction, vec2f_distance } from '../rt/math';
+import { Ray2f, Vector2f, bounds2f_center, bounds2f_evaluate, ray2f_targeting, vec2f, vec2f_add, vec2f_copy, vec2f_direction, vec2f_distance, vec2f_multiply } from '../rt/math';
 import { QuadtreeVisualizer } from '../ui/quadtree';
 import { PathVertexType, path_segments } from '../ui/path';
+import { colors } from '../common';
 
 const captions = createRef<Captions>()
 
 function sgmt(tFar: number, tNear: number) {
     return tFar * tFar - tNear * tNear
+}
+
+function* hierarchical($: {
+    quadtree: QuadTree
+    view: Node
+}) {
+    const prng = new Random(1234)
+    const points: Vector2f[] = []
+    const Nres = 16
+    for (let x = 0; x < Nres; x++) {
+        for (let y = 0; y < Nres; y++) {
+            const jitter = vec2f(prng.nextFloat(), prng.nextFloat())
+            points.push(vec2f_multiply(vec2f_add(vec2f(x, y), jitter), 1 / Nres))
+        }
+    }
+    //debug([...$.quadtree.warp(vec2f(0.5, 0.5))])
+    const unimportant: Node[] = [];
+    let sampled: Vector2f;
+    yield* all(...points.map((point, i) => {
+        const highlight = i === 136
+        const size = highlight ? 32 : 6
+        const circle = createRef<Circle>()
+        const node = <Circle
+            ref={circle}
+            position={bounds2f_evaluate($.quadtree.bounds, point)}
+            size={size}
+            opacity={1}//highlight ? 1 : 0.7}
+            fill={highlight ? colors.white : colors.green}
+            stroke={colors.black}
+            lineWidth={highlight ? 4 : 0}
+            zIndex={highlight ? 10 : 0}
+        />;
+        $.view.add(node);
+        const trajectory = [...$.quadtree.warp(point)];
+        if (highlight) {
+            sampled = trajectory[trajectory.length - 1];
+        } else {
+            unimportant.push(node)
+        }
+        //return waitFor(5)
+        return sequence(1.5, ...trajectory.map((p, i) =>
+            all(circle().position(p, 1), circle().size(size * Math.pow(0.83, i), 1))
+        ))
+    }))
+
+    yield* all(...unimportant.map(c => c.opacity(0, 1)))
+    for (const circle of unimportant) circle.remove();
+
+    // TODO: do something with 'sampled'
 }
 
 export default makeScene2D(function* (originalView) {
@@ -39,7 +89,9 @@ export default makeScene2D(function* (originalView) {
         min: vec2f(-435-82, -435-55),
         max: vec2f( 435-82,  435-55),
     }, 4, 6, 0.04);
-    const visualizer = new QuadtreeVisualizer(view, quadtree);
+    const quadtreeView = <Layout />
+    view.add(quadtreeView)
+    const visualizer = new QuadtreeVisualizer(quadtreeView, quadtree);
     visualizer.gridOpacity = 0.4
     visualizer.maxDensity = 1
 
@@ -88,8 +140,8 @@ export default makeScene2D(function* (originalView) {
     }
     yield* pathvis.fadeAndRemove(1)
 
-    for (let iter = 1; iter <= 5; iter++) {
-        visualizer.maxDensity = 20 * Math.pow(iter - 0.3, 2)
+    for (let iter = 1; iter <= 3; iter++) {
+        visualizer.maxDensity = 20 * Math.pow(iter - 0.2, 3)
         for (const path of paths) {
             for (const [a,b] of path_segments(path)) {
                 const misF = (a.type === PathVertexType.Camera || b.type === PathVertexType.Light) ?
@@ -110,7 +162,7 @@ export default makeScene2D(function* (originalView) {
                     const fakeW = 1 / (10 + vec2f_distance(
                         bounds2f_center(t.patch.bounds),
                         cbox.mirroredLight.center
-                    )) + 1 / Math.pow(iter, 5)
+                    )) + 1 / Math.pow(iter, 7)
                     const contrib = misF * pdfW * fakeW
                     t.patch.node.accumulator += contrib
                 }
@@ -126,6 +178,9 @@ export default makeScene2D(function* (originalView) {
         yield* waitFor(1)
     }
     
-    yield* waitFor(100)
+    yield* waitUntil('hierarchical')
+    yield* quadtreeView.opacity(0.5, 1)
+    yield* hierarchical({ quadtree, view })
     yield* waitUntil('ours/done')
+    yield* waitFor(100)
 });

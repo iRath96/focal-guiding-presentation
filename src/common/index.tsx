@@ -6,4 +6,5 @@ export const colors = {
     olive:      "#09A790",
     blue:       "#06B2DF",
     white:      "#FFFFFF",
+    black:      "#000000",
 }

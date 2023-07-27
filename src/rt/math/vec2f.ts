@@ -7,6 +7,10 @@ export function vec2f(x: number, y: number): Vector2f {
     return { x, y }
 }
 
+export function vec2f_zero(): Vector2f {
+    return { x: 0, y: 0 }
+}
+
 export function vec2f_angle(a: Vector2f) {
     return Math.atan2(a.y, a.x)
 }
@@ -26,6 +30,13 @@ export function vec2f_lerp(a: Vector2f, b: Vector2f, t: number) {
     }
 }
 
+export function vec2f_plerp(a: Vector2f, b: Vector2f, t: Vector2f) {
+    return {
+        x: (1 - t.x) * a.x + t.x * b.x,
+        y: (1 - t.y) * a.y + t.y * b.y,
+    }
+}
+
 export function vec2f_squared_length(a: Vector2f): number {
     return vec2f_dot(a, a)
 }
@@ -42,6 +53,13 @@ export function vec2f_multiply(a: Vector2f, b: number): Vector2f {
     return {
         x: a.x * b,
         y: a.y * b,
+    }
+}
+
+export function vec2f_pmultiply(a: Vector2f, b: Vector2f): Vector2f {
+    return {
+        x: a.x * b.x,
+        y: a.y * b.y,
     }
 }
 
