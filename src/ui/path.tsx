@@ -141,6 +141,7 @@ export class PathVisualizer {
             arrowSize={12}
             endArrow={
                 v1.type === PathVertexType.Diffuse ||
+                v1.type === PathVertexType.Light ||
                 v1.type === PathVertexType.Miss
             }
             zIndex={2}

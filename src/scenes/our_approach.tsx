@@ -4,9 +4,9 @@ import { CBox } from '../common/cbox';
 import { Captions } from '../common/captions';
 import { findGuidePaths } from '../common/guiding';
 import { QuadTree } from '../rt/quadtree';
-import { Ray2f, Vector2f, bounds2f_center, bounds2f_evaluate, ray2f_targeting, vec2f, vec2f_add, vec2f_copy, vec2f_direction, vec2f_distance, vec2f_multiply } from '../rt/math';
+import { Ray2f, Vector2f, bounds2f_center, bounds2f_evaluate, circle2f_towards, ray2f_targeting, vec2f, vec2f_add, vec2f_copy, vec2f_direction, vec2f_distance, vec2f_multiply, vec2f_reflect } from '../rt/math';
 import { QuadtreeVisualizer } from '../ui/quadtree';
-import { PathVertexType, path_segments } from '../ui/path';
+import { Path, PathVertex, PathVertexType, path_segments } from '../ui/path';
 import { colors } from '../common';
 
 const captions = createRef<Captions>()
@@ -16,9 +16,22 @@ function sgmt(tFar: number, tNear: number) {
 }
 
 function* hierarchical($: {
+    cbox: CBox
     quadtree: QuadTree
     view: Node
 }) {
+    const pathvis = $.cbox.pathvis
+
+    // shoot ray
+    const wallHit = vec2f(300, 70)
+    yield* pathvis.fadeInPath(pathvis.showPath([
+        { p: circle2f_towards($.cbox.camera, wallHit) },
+        { p: wallHit, type: PathVertexType.Diffuse }
+    ]), 1)
+
+    yield* waitUntil('warping')
+    yield* pathvis.opacity(0.3, 1)
+
     const prng = new Random(1234)
     const points: Vector2f[] = []
     const Nres = 16
@@ -30,14 +43,14 @@ function* hierarchical($: {
     }
     //debug([...$.quadtree.warp(vec2f(0.5, 0.5))])
     const unimportant: Node[] = [];
-    let sampled: Vector2f;
+    let sampledFocalPoint: Vector2f;
     yield* all(...points.map((point, i) => {
         const highlight = i === 136
         const size = highlight ? 32 : 6
         const circle = createRef<Circle>()
         const node = <Circle
             ref={circle}
-            position={bounds2f_evaluate($.quadtree.bounds, point)}
+            position={bounds2f_evaluate($.quadtree.bounds, vec2f(0.5, 0.5))}
             size={size}
             opacity={1}//highlight ? 1 : 0.7}
             fill={highlight ? colors.white : colors.green}
@@ -48,20 +61,48 @@ function* hierarchical($: {
         $.view.add(node);
         const trajectory = [...$.quadtree.warp(point)];
         if (highlight) {
-            sampled = trajectory[trajectory.length - 1];
+            sampledFocalPoint = trajectory[trajectory.length - 1];
         } else {
             unimportant.push(node)
         }
         //return waitFor(5)
-        return sequence(1.5, ...trajectory.map((p, i) =>
-            all(circle().position(p, 1), circle().size(size * Math.pow(0.83, i), 1))
+        return sequence(1, ...trajectory.map((p, i) =>
+            all(circle().position(p, 0.7), circle().size(size * Math.pow(0.83, i), 1))
         ))
     }))
 
     yield* all(...unimportant.map(c => c.opacity(0, 1)))
     for (const circle of unimportant) circle.remove();
 
-    // TODO: do something with 'sampled'
+    // connect to sampled point
+    yield* waitUntil('shoot ray')
+    yield* pathvis.opacity(1, 1)
+    
+    const ray = ray2f_targeting(wallHit, sampledFocalPoint)
+    const isect = $.cbox.intersect(ray)
+    yield* pathvis.fadeInPath(
+        pathvis.showPath([
+            { p: wallHit, type: PathVertexType.Diffuse },
+            isect,
+        ]), 1
+    )
+    yield* pathvis.fadeInPath(
+        pathvis.showPath([
+            isect,
+            { p: sampledFocalPoint },
+        ], {
+            lineDash: [ 5, 5 ]
+        }), 0.3
+    )
+
+    const ray2 = { o: isect.p, d: vec2f_reflect(isect.n, vec2f_multiply(ray.d, -1)) }
+    const isect2 = $.cbox.intersect(ray2)
+    yield* pathvis.fadeInPath(
+        pathvis.showPath([
+            isect,
+            isect2,
+        ]), 1
+    )
 }
 
 export default makeScene2D(function* (originalView) {
@@ -180,7 +221,7 @@ export default makeScene2D(function* (originalView) {
     
     yield* waitUntil('hierarchical')
     yield* quadtreeView.opacity(0.5, 1)
-    yield* hierarchical({ quadtree, view })
+    yield* hierarchical({ cbox, quadtree, view })
     yield* waitUntil('ours/done')
     yield* waitFor(100)
 });

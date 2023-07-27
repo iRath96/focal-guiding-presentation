@@ -65,6 +65,15 @@ export interface Circle2f {
     radius: number
 }
 
+export function circle2f_towards(circle: Circle2f, target: Vector2f) {
+    return vec2f_add(circle.center,
+        vec2f_multiply(
+            vec2f_direction(circle.center, target),
+            circle.radius
+        )
+    )
+}
+
 export function circle2f_evaluate(circle: Circle2f, t: number) {
     return vec2f_add(circle.center,
         vec2f_polar(2 * Math.PI * t, circle.radius))
