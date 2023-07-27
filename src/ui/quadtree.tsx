@@ -11,9 +11,13 @@ export class QuadtreeVisualizer {
     public gridLineWidth = 1
 
     constructor(
-        private view: Node,
+        public view: Node,
         private quadtree: QuadTree
     ) {}
+
+    private get strokeStyle() {
+        return `rgba(255, 255, 255, ${this.gridOpacity})`
+    }
 
     private createRect(patch: QuadTreePatch) {
         const center = bounds2f_center(patch.bounds)
@@ -22,10 +26,26 @@ export class QuadtreeVisualizer {
             ref={ref}
             position={center}
             size={vec2f_sub(patch.bounds.max, patch.bounds.min)}
-            stroke={`rgba(255, 255, 255, ${this.gridOpacity})`}
+            stroke={this.strokeStyle}
             lineWidth={this.gridLineWidth}
         />
         return ref()
+    }
+
+    *highlight(id: number, time = 0.5) {
+        const rect = this.shownPatches.get(id)
+        yield* all(
+            rect.lineWidth(this.gridLineWidth * 2, time / 2),
+            rect.scale(1.2, time / 2),
+            //rect.stroke("white", time / 2),
+            rect.zIndex(1, time / 2),
+        )
+        yield* all(
+            rect.lineWidth(this.gridLineWidth, time / 2),
+            rect.scale(1.0, time / 2),
+            //rect.stroke(this.strokeStyle, time / 2),
+            rect.zIndex(0, time / 2),
+        )
     }
 
     getRect(id: number) {

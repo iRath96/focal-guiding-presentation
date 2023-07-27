@@ -1,10 +1,10 @@
-import { Circle, Layout, makeScene2D, Node } from '@motion-canvas/2d';
+import { Circle, Layout, Line, makeScene2D, Node, Ray } from '@motion-canvas/2d';
 import { all, chain, createRef, debug, delay, Random, Reference, sequence, waitFor, waitUntil } from '@motion-canvas/core';
 import { CBox } from '../common/cbox';
 import { Captions } from '../common/captions';
 import { findGuidePaths } from '../common/guiding';
 import { QuadTree } from '../rt/quadtree';
-import { Ray2f, Vector2f, bounds2f_center, bounds2f_evaluate, circle2f_towards, ray2f_targeting, vec2f, vec2f_add, vec2f_copy, vec2f_direction, vec2f_distance, vec2f_multiply, vec2f_reflect } from '../rt/math';
+import { Ray2f, Vector2f, bounds2f_center, bounds2f_evaluate, circle2f_towards, ray2f_evaluate, ray2f_targeting, vec2f, vec2f_add, vec2f_copy, vec2f_direction, vec2f_distance, vec2f_multiply, vec2f_reflect } from '../rt/math';
 import { QuadtreeVisualizer } from '../ui/quadtree';
 import { Path, PathVertex, PathVertexType, path_segments } from '../ui/path';
 import { colors } from '../common';
@@ -18,6 +18,7 @@ function sgmt(tFar: number, tNear: number) {
 function* hierarchical($: {
     cbox: CBox
     quadtree: QuadTree
+    qvis: QuadtreeVisualizer
     view: Node
 }) {
     const pathvis = $.cbox.pathvis
@@ -103,6 +104,28 @@ function* hierarchical($: {
             isect2,
         ]), 1
     )
+
+    // show pdf
+    yield* waitUntil('pdf')
+    yield* all(
+        pathvis.opacity(0.3, 1),
+        //$.qvis.view.opacity(1, 1),
+    )
+    const hits = [...$.quadtree.traverse(ray)]
+    yield* chain(...hits.map(function* (hit) {
+        const node = <Ray
+            from={ray2f_evaluate(ray, Math.max(hit.t0, 0))}
+            to={ray2f_evaluate(ray, hit.t1)}
+            stroke={colors.white}
+            lineWidth={8}
+            opacity={0}
+        />
+        $.view.add(node)
+        yield* all(
+            node.opacity(1, 0.25).to(0.3, 0.25),
+            $.qvis.highlight(hit.patch.node.id)
+        )
+    }))
 }
 
 export default makeScene2D(function* (originalView) {
@@ -137,9 +160,11 @@ export default makeScene2D(function* (originalView) {
     visualizer.maxDensity = 1
 
     yield* captions().showTransition("Our approach", 8)
+
+    yield* waitUntil('show grid')
     yield* visualizer.show()
 
-    // show splatting
+    yield* waitUntil('splatting')
     const pathvis = cbox.pathvis
     const splatExamples = [
         paths[4],
@@ -168,8 +193,7 @@ export default makeScene2D(function* (originalView) {
                 ...hits.map(hit => delay(
                     hit.t0 / speed,
                     all(
-                        visualizer.getRect(hit.patch.node.id)
-                            .scale(1.2, 0.5).to(1, 0.5),
+                        visualizer.highlight(hit.patch.node.id),
                         visualizer.colorRect(hit.patch.node.id,
                             splatMass(hit.patch.node.id,
                                 Math.max(0.003 * (hit.t1 - hit.t0), 0)
@@ -221,7 +245,7 @@ export default makeScene2D(function* (originalView) {
     
     yield* waitUntil('hierarchical')
     yield* quadtreeView.opacity(0.5, 1)
-    yield* hierarchical({ cbox, quadtree, view })
+    yield* hierarchical({ cbox, quadtree, qvis: visualizer, view })
     yield* waitUntil('ours/done')
     yield* waitFor(100)
 });

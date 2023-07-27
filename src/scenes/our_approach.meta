@@ -2,20 +2,32 @@
   "version": 0,
   "timeEvents": [
     {
+      "name": "show grid",
+      "targetTime": 16.31612267570587
+    },
+    {
+      "name": "splatting",
+      "targetTime": 23.996440853421372
+    },
+    {
       "name": "hierarchical",
-      "targetTime": 52.193979008278276
+      "targetTime": 53.090419861699644
     },
     {
       "name": "warping",
-      "targetTime": 57.51951615185493
+      "targetTime": 55.090419861699644
     },
     {
       "name": "shoot ray",
-      "targetTime": 67.91951615185495
+      "targetTime": 65.49041986169966
+    },
+    {
+      "name": "pdf",
+      "targetTime": 68.79041986169966
     },
     {
       "name": "ours/done",
-      "targetTime": 71.21951615185495
+      "targetTime": 68.79041986169966
     }
   ],
   "seed": 2128447463
