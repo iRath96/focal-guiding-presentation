@@ -3,123 +3,155 @@
   "timeEvents": [
     {
       "name": "lts/pt",
-      "targetTime": 5.253602846360232
+      "targetTime": 4.654436155549537
     },
     {
       "name": "pt/all",
-      "targetTime": 10.75360284636023
+      "targetTime": 10.154436155549536
     },
     {
       "name": "pt/cam",
-      "targetTime": 12.832835289234946
+      "targetTime": 13.621212513985867
     },
     {
       "name": "pt/virt",
-      "targetTime": 15.667878338779904
+      "targetTime": 16.456255563530824
     },
     {
       "name": "pt/nee",
-      "targetTime": 20.698859782689407
+      "targetTime": 21.487237007440328
     },
     {
       "name": "pt/mnee",
-      "targetTime": 26.915715901572522
+      "targetTime": 26.406614862932
     },
     {
       "name": "pt/done",
-      "targetTime": 31.371363407055807
+      "targetTime": 30.39232294813172
     },
     {
       "name": "lts/lt",
-      "targetTime": 33.91693621607242
+      "targetTime": 32.39232294813172
     },
     {
       "name": "lt/all",
-      "targetTime": 39.41693621607242
+      "targetTime": 36.99232294813173
     },
     {
       "name": "lt/light",
-      "targetTime": 40.72693621607236
+      "targetTime": 38.576454276630415
     },
     {
       "name": "lt/virt",
-      "targetTime": 41.72693621607236
+      "targetTime": 41.397469530229216
     },
     {
       "name": "lt/miss",
-      "targetTime": 42.72693621607236
+      "targetTime": 45.275848479466035
     },
     {
       "name": "lt/done",
-      "targetTime": 46.25801223927772
+      "targetTime": 49.08105583117014
     },
     {
       "name": "lts/bdpt",
-      "targetTime": 48.32136051494101
+      "targetTime": 50.987757633405586
     },
     {
       "name": "bdpt/camera",
-      "targetTime": 52.95724763545398
+      "targetTime": 56.19148822009453
     },
     {
       "name": "bdpt/light",
-      "targetTime": 54.85752676416794
+      "targetTime": 57.48476226427555
     },
     {
       "name": "bdpt/connections",
-      "targetTime": 57.093009088619134
+      "targetTime": 59.72024458872674
     },
     {
       "name": "bdpt/done",
-      "targetTime": 62.876582882116985
+      "targetTime": 65.50381838222458
     },
     {
       "name": "lts/vm",
-      "targetTime": 64.37658288211699
+      "targetTime": 67.00381838222458
     },
     {
       "name": "vm/camera",
-      "targetTime": 64.87469391770712
+      "targetTime": 67.85438398302738
     },
     {
       "name": "vm/light",
-      "targetTime": 66.47262460817385
+      "targetTime": 70.17680461309793
     },
     {
       "name": "vm/merge",
-      "targetTime": 72.43364898333944
+      "targetTime": 75.66788956797996
     },
     {
       "name": "vm/done",
-      "targetTime": 77.43364898333944
+      "targetTime": 82.31267753897242
     },
     {
       "name": "lts/pssmlt",
-      "targetTime": 88.25260711249285
+      "targetTime": 92.68127705702075
     },
     {
       "name": "lts/guiding",
-      "targetTime": 107.53779111249274
+      "targetTime": 112.57346614155355
+    },
+    {
+      "name": "guiding/title",
+      "targetTime": 116.64903191447262
     },
     {
       "name": "guiding/dist",
-      "targetTime": 111.53779111249274
+      "targetTime": 119.0588501753233
     },
     {
       "name": "guiding/sampling",
-      "targetTime": 118.80274176469702
+      "targetTime": 122.0588501753233
     },
     {
       "name": "guiding/parallax",
-      "targetTime": 126.48610823705523
+      "targetTime": 126.0588501753233
+    },
+    {
+      "name": "guiding/neighbors",
+      "targetTime": 130.5272897042764
+    },
+    {
+      "name": "guiding/dir1",
+      "targetTime": 133.9986078564574
+    },
+    {
+      "name": "guiding/dir2",
+      "targetTime": 139.9986078564574
+    },
+    {
+      "name": "guiding/done",
+      "targetTime": 149.3958503926625
     },
     {
       "name": "lts/psGuiding",
-      "targetTime": 151.73610823705542
+      "targetTime": 152.57207767526884
+    },
+    {
+      "name": "psg/dist",
+      "targetTime": 156.22207767526933
+    },
+    {
+      "name": "psg/correl",
+      "targetTime": 159.22207767526933
+    },
+    {
+      "name": "psg/done",
+      "targetTime": 168.7438658636012
     },
     {
       "name": "lts/done",
-      "targetTime": 172.1858868809411
+      "targetTime": 173.0505381669734
     }
   ],
   "seed": 3292355136

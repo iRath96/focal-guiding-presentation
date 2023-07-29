@@ -67,8 +67,8 @@ function* hierarchical($: {
             unimportant.push(node)
         }
         //return waitFor(5)
-        return sequence(1, ...trajectory.map((p, i) =>
-            all(circle().position(p, 0.7), circle().size(size * Math.pow(0.83, i), 1))
+        return sequence(0.8, ...trajectory.map((p, i) =>
+            all(circle().position(p, 0.7), circle().size(size * Math.pow(0.83, i), 0.7))
         ))
     }))
 
@@ -159,7 +159,7 @@ export default makeScene2D(function* (originalView) {
     visualizer.gridOpacity = 0.4
     visualizer.maxDensity = 1
 
-    yield* captions().showTransition("Our approach", 8)
+    yield* captions().showTransition("Our approach", 4)
 
     yield* waitUntil('show grid')
     yield* visualizer.show()

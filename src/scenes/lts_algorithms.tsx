@@ -35,7 +35,7 @@ function* lighttraceSingle($: {
 
     for (let i = 1; i < path.length; i++) {
         const id = $.cbox.pathvis.showPath([ path[i-1], path[i] ])
-        yield* $.cbox.pathvis.fadeInPath(id, 1)
+        yield* $.cbox.pathvis.fadeInPath(id, 0.7)
     }
 
     yield* waitFor(1)
@@ -309,7 +309,6 @@ function* pathtrace($: {
     )
 
     yield* waitUntil('pt/mnee')
-    yield* captions().updateReference("Manifold NEE [Hanika et al. 2015; Zeltner et al. 2020]")
 
     const mneeIds: number[] = []
     for (const segment of segments) {
@@ -333,7 +332,9 @@ function* pathtrace($: {
         }))
     }
 
-    yield* all(...segments.map(s =>
+    yield* all(
+        captions().updateReference("Manifold NEE [Hanika et al. 2015; Zeltner et al. 2020]"),
+        ...segments.map(s =>
         s.node.opacity(
             s.isHelper ? 0 :
             s.isNEE ? 0.2 :
@@ -436,7 +437,10 @@ function* lighttrace($: {
     )
 
     yield* waitUntil('lt/done')
-    yield* $.cbox.pathvis.fadeAndRemove(1)
+    yield* all(
+        $.cbox.pathvis.fadeAndRemove(1),
+        captions().reset()
+    )
 }
 
 function* pssmlt($: {
@@ -511,7 +515,12 @@ function* guiding($: {
     }
 
     yield* pathvis.fadeInPaths(centralPaths, 1)
-    yield* waitFor(1)
+
+    yield* waitUntil('guiding/title')
+    yield* all(
+        captions().updateTitle("Path guiding"),
+        captions().updateReference("[Vorba et al. 2014; Müller et al. 2017]")
+    )
 
     yield* waitUntil('guiding/dist')
     const guidingDistRes = 512
@@ -604,7 +613,7 @@ function* guiding($: {
         guidingPlot.opacity(0, 1),
     )
     const pathsToBeHidden = shuffle([...centralPaths]).slice(2)
-    yield* sequence(0.05,
+    yield* sequence(0.02,
         ...pathsToBeHidden.map(id =>
             pathvis.getPath(id).opacity(0, 0.2))
     )
@@ -657,17 +666,22 @@ function* guiding($: {
             lineDash={[3,3]}
         />)
     }
-    yield* spatialExtent(20, 2)
-    yield* spatialExtent(120, 2)
+    yield* waitUntil('guiding/neighbors')
+    yield* spatialExtent(120, 3)
     view.add(directionsView)
+    
+    yield* waitUntil('guiding/dir1')
     yield* directionsView.opacity(1, 1)
     yield* directionsMerge(1, 2)
 
     guidingBrokenTarget(true)
     guidingUniform(1)
-    yield* guidingPlot.opacity(1, 1)
-    yield* guidingUniform(0, 1)
+    yield* all(
+        guidingPlot.opacity(1, 1),
+        guidingUniform(0, 1),
+    )
     yield* waitFor(2)
+    yield* waitUntil('guiding/dir2')
     yield* all(
         guidingPlot.opacity(0, 1),
         directionsMerge(0, 1),
@@ -696,13 +710,14 @@ function* guiding($: {
         />
     </Layout>;
     view.add(distanceLabel)
-    yield* directionsMerge(1, 3)
+    yield* directionsMerge(1, 2)
 
     guidingBrokenTarget(false)
     yield* guidingPlot.opacity(1, 1)
     yield* waitFor(1)
     yield* distanceLabel.opacity(1, 1)
 
+    yield* waitUntil('guiding/done')
     yield* all(
         view.opacity(0, 2),
         //pathvis.fadeAndRemove(2),
@@ -738,7 +753,12 @@ function* psGuiding($: {
             $.view.add(dot)
         }
     }
-    yield* sequence(0.05, ...dots.map(dot => dot.opacity(1, 0.5)))
+    yield* sequence(0.05, ...dots.map(dot =>
+        all(
+            dot.opacity(1, 0.5),
+            dot.scale(2, 0.25).to(1, 0.25),
+        )
+    ));
 
     const hitpointCeiling = vec2f(100, -300)
     const distributionT = createSignal(0)
@@ -806,6 +826,8 @@ function* psGuiding($: {
         lineWidth={4}
         fill={"rgba(0,255,0,0.2)"}
     />)
+
+    yield* waitUntil('psg/dist')
     yield* distributionT(1, 2)
     yield* conditionalT(1, 1)
 
@@ -819,7 +841,11 @@ function* psGuiding($: {
         arrowSize={12}
         endArrow
     />)
+
+    yield* waitUntil('psg/correl')
     yield* hitpointT(1, 1).to(0, 2).to(0.5, 1)
+
+    yield* waitUntil('psg/done')
 }
 
 export default makeScene2D(function* (originalView) {
@@ -854,7 +880,6 @@ export default makeScene2D(function* (originalView) {
     yield* captions().updateTitle("Light tracing")
     yield* lighttraceSingle({ cbox })
     yield* lighttrace({ cbox, numPaths: 18 })
-    yield* captions().reset()
 
     yield* waitUntil('lts/bdpt')
     yield* all(
@@ -876,10 +901,6 @@ export default makeScene2D(function* (originalView) {
     yield* captions().reset()
 
     yield* waitUntil('lts/guiding')
-    yield* all(
-        captions().updateTitle("Path guiding"),
-        captions().updateReference("[Vorba et al. 2014; Müller et al. 2017]")
-    )
     yield* guiding({ cbox, view })
     yield* captions().reset()
 

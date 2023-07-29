@@ -3,31 +3,31 @@
   "timeEvents": [
     {
       "name": "show grid",
-      "targetTime": 16.31612267570587
+      "targetTime": 14.690915513891875
     },
     {
       "name": "splatting",
-      "targetTime": 23.996440853421372
+      "targetTime": 17.926390008092014
     },
     {
       "name": "hierarchical",
-      "targetTime": 53.090419861699644
+      "targetTime": 49.18841806681118
     },
     {
       "name": "warping",
-      "targetTime": 55.090419861699644
+      "targetTime": 51.18841806681118
     },
     {
       "name": "shoot ray",
-      "targetTime": 65.49041986169966
+      "targetTime": 58.78841806681116
     },
     {
       "name": "pdf",
-      "targetTime": 68.79041986169966
+      "targetTime": 67.27624972322327
     },
     {
       "name": "ours/done",
-      "targetTime": 68.79041986169966
+      "targetTime": 77.2894381272041
     }
   ],
   "seed": 2128447463
