@@ -1,10 +1,10 @@
-import { Circle, Layout, Line, makeScene2D, Node, Ray } from '@motion-canvas/2d';
+import { Circle, Gradient, Layout, Line, makeScene2D, Node, Ray } from '@motion-canvas/2d';
 import { all, chain, createRef, createSignal, debug, delay, Random, Reference, sequence, waitFor, waitUntil } from '@motion-canvas/core';
 import { CBox } from '../common/cbox';
 import { Captions } from '../common/captions';
 import { findGuidePaths } from '../common/guiding';
 import { QuadTree } from '../rt/quadtree';
-import { Ray2f, Vector2f, bounds2f_center, bounds2f_evaluate, circle2f_towards, ray2f_evaluate, ray2f_targeting, vec2f, vec2f_add, vec2f_copy, vec2f_direction, vec2f_distance, vec2f_multiply, vec2f_reflect } from '../rt/math';
+import { Ray2f, Vector2f, bounds2f_center, bounds2f_evaluate, circle2f_towards, ray2f_evaluate, ray2f_targeting, vec2f, vec2f_add, vec2f_angle, vec2f_copy, vec2f_direction, vec2f_distance, vec2f_multiply, vec2f_reflect } from '../rt/math';
 import { QuadtreeVisualizer } from '../ui/quadtree';
 import { Path, PathVertex, PathVertexType, path_segments } from '../ui/path';
 import { colors } from '../common';
@@ -148,6 +148,42 @@ function* hierarchical($: {
         //$.qvis.view.opacity(1, 1),
     )
     const hits = [...$.quadtree.traverse(ray)]
+    const pdf: Vector2f[] = []
+    let hitI = 0
+    const tStart = 0
+    const tEnd = hits[hits.length - 1].t1
+    pdf.push(vec2f(tStart, 0))
+    for (let i = 0; i <= 128; i++) {
+        const x = tStart + (tEnd - tStart) * i / 128
+        while (hitI < hits.length-1 && hits[hitI+1].t0 <= x) hitI++;
+        const y = Math.pow(hits[hitI].patch.density, 0.33) * x / 20;
+        pdf.push(vec2f(x, y))
+    }
+    pdf.push(vec2f(tEnd, 0))
+
+    const gradT0 = createSignal(0)
+    const gradT1 = createSignal(0)
+    const pdfColor = "255, 127, 0"
+    $.view.add(<Line
+        position={ray.o}
+        rotation={vec2f_angle(ray.d) * 180 / Math.PI}
+        points={pdf}
+        lineWidth={2}
+        fill={new Gradient({
+            from: [ 0, 0 ],
+            to: [ tEnd, 0 ],
+            stops: [
+                { color: `rgba(${pdfColor}, 0.1)`, offset: 0 },
+                { color: `rgba(${pdfColor}, 0.1)`, offset: gradT0 },
+                { color: `rgba(${pdfColor}, 0.4)`, offset: gradT0 },
+                { color: `rgba(${pdfColor}, 0.4)`, offset: gradT1 },
+                { color: `rgba(${pdfColor}, 0.0)`, offset: gradT1 },
+                { color: `rgba(${pdfColor}, 0.0)`, offset: 1 },
+            ]
+        })}
+        stroke={`rgba(${pdfColor}, 0.3)`}
+    />)
+
     yield* chain(...hits.map(function* (hit) {
         const node = <Ray
             from={ray2f_evaluate(ray, Math.max(hit.t0, 0))}
@@ -158,10 +194,14 @@ function* hierarchical($: {
         />
         $.view.add(node)
         yield* all(
+            gradT0(hit.t0 / tEnd, 0),
+            gradT1(hit.t1 / tEnd, 0),
             node.opacity(1, 0.25).to(0.3, 0.25),
-            $.qvis.highlight(hit.patch.node.id)
+            //$.qvis.highlight(hit.patch.node.id)
         )
     }))
+    gradT0(1)
+    gradT1(1)
 }
 
 export default makeScene2D(function* (originalView) {
