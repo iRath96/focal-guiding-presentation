@@ -1,7 +1,7 @@
 import { debug } from '@motion-canvas/core'
 import {
     Bounds2f, Ray2f, Vector2f,
-    bounds2f_center, bounds2f_copy, bounds2f_diagonal, vec2f, vec2f_add, vec2f_copy, vec2f_multiply, vec2f_pmultiply
+    bounds2f_center, bounds2f_copy, bounds2f_diagonal, bounds2f_relative, vec2f, vec2f_add, vec2f_copy, vec2f_multiply, vec2f_pmultiply
 } from './math'
 
 export interface QuadTreeNode {
@@ -170,6 +170,22 @@ export class QuadTree {
 
     public visualize() {
         return this.collectPatches(this.root, this.bounds)
+    }
+
+    private lookupNode(point: Vector2f, node: QuadTreeNode, bounds: Bounds2f): QuadTreePatch {
+        const relative = bounds2f_relative(bounds, point)
+        if (!node.children) return {
+            node,
+            density: node.density,
+            bounds
+        }
+
+        const childIndex = (relative.x > 0.5 ? 1 : 0) | (relative.y > 0.5 ? 2 : 0);
+        return this.lookupNode(point, node.children[childIndex], this.childBounds(bounds, childIndex))
+    }
+
+    public lookup(point: Vector2f) {
+        return this.lookupNode(point, this.root, this.bounds)
     }
 
     private firstNode(tNear: Vector2f, tMid: Vector2f) {

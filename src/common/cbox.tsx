@@ -41,6 +41,15 @@ export class CBox {
     public cameraDir = 0
     public cameraSpread = 90
 
+    get focalPoints() {
+        return [
+            this.camera.center,
+            this.light.center,
+            this.mirroredCamera.center,
+            this.mirroredLight.center
+        ]
+    }
+
     get ceilingY() {
         return this.walls[1].to.y
     }

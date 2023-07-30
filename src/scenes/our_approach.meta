@@ -18,24 +18,32 @@
       "targetTime": 17.951204136948228
     },
     {
+      "name": "highlight",
+      "targetTime": 29.149954058690806
+    },
+    {
+      "name": "training",
+      "targetTime": 33.14995405869081
+    },
+    {
       "name": "hierarchical",
-      "targetTime": 49.213232195667395
+      "targetTime": 48.022154010569174
     },
     {
       "name": "warping",
-      "targetTime": 51.213232195667395
+      "targetTime": 51.411745226517105
     },
     {
       "name": "shoot ray",
-      "targetTime": 58.813232195667375
+      "targetTime": 59.011745226517085
     },
     {
       "name": "pdf",
-      "targetTime": 67.3010638520795
+      "targetTime": 67.4995768829292
     },
     {
       "name": "ours/done",
-      "targetTime": 77.31425225606031
+      "targetTime": 77.51276528691002
     }
   ],
   "seed": 2128447463

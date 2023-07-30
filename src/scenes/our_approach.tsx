@@ -18,21 +18,14 @@ function* spatialDensity($: {
     const view = <Layout zIndex={50} />;
     $.view.add(view);
 
-    const gaussians = [
-        { c: $.cbox.light.center },
-        { c: $.cbox.mirroredLight.center },
-        { c: $.cbox.camera.center },
-        { c: $.cbox.mirroredCamera.center },
-    ]
-
     const scale = createSignal(0)
-    for (const gaussian of gaussians) {
+    for (const focal of $.cbox.focalPoints) {
         for (let iter = 1; iter < 5; iter++) {
             const radius = () => 12 * Math.pow(iter, 2) - (1 - scale()) * 200;
             const opacity = () => radius() > 0 ? 1 : 0;
 
             view.add(<Circle
-                position={gaussian.c}
+                position={focal}
                 size={radius}
                 opacity={opacity}
                 fill={`rgba(255, 127, 0, ${iter == 1 ? 0.7 : 0.3})`}
@@ -244,6 +237,12 @@ export default makeScene2D(function* (originalView) {
     yield* visualizer.show()
 
     yield* waitUntil('splatting')
+    const focalNodes = new Set([
+        cbox.light.center,
+        cbox.mirroredLight.center
+    ].map(focal =>
+        quadtree.lookup(focal).node.id
+    ));
     const pathvis = cbox.pathvis
     const splatExamples = [
         paths[4],
@@ -260,6 +259,7 @@ export default makeScene2D(function* (originalView) {
             return v
         }
     })()
+    let exampleWeight = 1.25
     for (const example of splatExamples) {
         const speed = 2000
         for (const [a,b] of path_segments(example)) {
@@ -275,15 +275,27 @@ export default makeScene2D(function* (originalView) {
                         visualizer.highlight(hit.patch.node.id),
                         visualizer.colorRect(hit.patch.node.id,
                             splatMass(hit.patch.node.id,
+                                (focalNodes.has(hit.patch.node.id) ?
+                                    exampleWeight :
+                                    1
+                                ) *
                                 Math.max(0.003 * (hit.t1 - hit.t0), 0)
                             ), 0.5)
                     )
                 ))
             )
         }
+        exampleWeight += 0.5
     }
     yield* pathvis.fadeAndRemove(1)
+    yield* waitUntil('highlight')
+    yield* all(
+        ...[...focalNodes].map(node =>
+            visualizer.highlight(node, 4, 2)
+        )
+    )
 
+    yield* waitUntil('training')
     for (let iter = 1; iter <= 3; iter++) {
         visualizer.maxDensity = 20 * Math.pow(iter - 0.2, 3)
         for (const path of paths) {
@@ -314,8 +326,10 @@ export default makeScene2D(function* (originalView) {
         }
 
         quadtree.rebuild()
-        yield* visualizer.show()
-        yield* waitFor(1)
+        if (iter > 1) {
+            yield* visualizer.show()
+            yield* waitFor(1)
+        }
         quadtree.minDepth = 0
         quadtree.refine()
         yield* visualizer.show()

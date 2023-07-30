@@ -63,6 +63,13 @@ export function vec2f_pmultiply(a: Vector2f, b: Vector2f): Vector2f {
     }
 }
 
+export function vec2f_pdivide(a: Vector2f, b: Vector2f): Vector2f {
+    return {
+        x: a.x / b.x,
+        y: a.y / b.y,
+    }
+}
+
 export function vec2f_copy(a: Vector2f): Vector2f {
     return {
         x: a.x,

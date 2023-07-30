@@ -32,11 +32,11 @@ export class QuadtreeVisualizer {
         return ref()
     }
 
-    *highlight(id: number, time = 0.5) {
+    *highlight(id: number, time = 0.5, scale = 1.2) {
         const rect = this.shownPatches.get(id)
         yield* all(
             rect.lineWidth(this.gridLineWidth * 2, time / 2),
-            rect.scale(1.2, time / 2),
+            rect.scale(scale, time / 2),
             //rect.stroke("white", time / 2),
             rect.zIndex(1, time / 2),
         )
