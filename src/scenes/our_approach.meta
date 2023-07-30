@@ -2,32 +2,40 @@
   "version": 0,
   "timeEvents": [
     {
+      "name": "spatial",
+      "targetTime": 8
+    },
+    {
+      "name": "spatial/done",
+      "targetTime": 11.687360762222491
+    },
+    {
       "name": "show grid",
-      "targetTime": 14.690915513891875
+      "targetTime": 14.71572964274809
     },
     {
       "name": "splatting",
-      "targetTime": 17.926390008092014
+      "targetTime": 17.951204136948228
     },
     {
       "name": "hierarchical",
-      "targetTime": 49.18841806681118
+      "targetTime": 49.213232195667395
     },
     {
       "name": "warping",
-      "targetTime": 51.18841806681118
+      "targetTime": 51.213232195667395
     },
     {
       "name": "shoot ray",
-      "targetTime": 58.78841806681116
+      "targetTime": 58.813232195667375
     },
     {
       "name": "pdf",
-      "targetTime": 67.27624972322327
+      "targetTime": 67.3010638520795
     },
     {
       "name": "ours/done",
-      "targetTime": 77.2894381272041
+      "targetTime": 77.31425225606031
     }
   ],
   "seed": 2128447463

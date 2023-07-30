@@ -1,5 +1,5 @@
 import { Circle, Layout, Line, makeScene2D, Node, Ray } from '@motion-canvas/2d';
-import { all, chain, createRef, debug, delay, Random, Reference, sequence, waitFor, waitUntil } from '@motion-canvas/core';
+import { all, chain, createRef, createSignal, debug, delay, Random, Reference, sequence, waitFor, waitUntil } from '@motion-canvas/core';
 import { CBox } from '../common/cbox';
 import { Captions } from '../common/captions';
 import { findGuidePaths } from '../common/guiding';
@@ -10,6 +10,42 @@ import { Path, PathVertex, PathVertexType, path_segments } from '../ui/path';
 import { colors } from '../common';
 
 const captions = createRef<Captions>()
+
+function* spatialDensity($: {
+    cbox: CBox
+    view: Node
+}) {
+    const view = <Layout zIndex={50} />;
+    $.view.add(view);
+
+    const gaussians = [
+        { c: $.cbox.light.center },
+        { c: $.cbox.mirroredLight.center },
+        { c: $.cbox.camera.center },
+        { c: $.cbox.mirroredCamera.center },
+    ]
+
+    const scale = createSignal(0)
+    for (const gaussian of gaussians) {
+        for (let iter = 1; iter < 5; iter++) {
+            const radius = () => 12 * Math.pow(iter, 2) - (1 - scale()) * 200;
+            const opacity = () => radius() > 0 ? 1 : 0;
+
+            view.add(<Circle
+                position={gaussian.c}
+                size={radius}
+                opacity={opacity}
+                fill={`rgba(255, 127, 0, ${iter == 1 ? 0.7 : 0.3})`}
+                lineWidth={2}
+                stroke={"rgba(255, 255, 255, 0.5)"}
+            />)
+        }
+    }
+    yield* scale(1, 2)
+    yield* waitUntil('spatial/done')
+    yield* scale(0, 2)
+    view.remove()
+}
 
 function sgmt(tFar: number, tNear: number) {
     return tFar * tFar - tNear * tNear
@@ -160,6 +196,9 @@ export default makeScene2D(function* (originalView) {
     visualizer.maxDensity = 1
 
     yield* captions().showTransition("Our approach", 4)
+
+    yield* waitUntil('spatial')
+    yield* spatialDensity({ cbox, view })
 
     yield* waitUntil('show grid')
     yield* visualizer.show()
