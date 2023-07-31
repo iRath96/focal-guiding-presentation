@@ -1,10 +1,10 @@
-import { Node, Img, Layout, Rect, Txt, makeScene2D, LineProps } from "@motion-canvas/2d";
+import { Node, Img, Layout, Rect, Txt, makeScene2D, LineProps, Ray } from "@motion-canvas/2d";
 import { Random, all, chain, createRef, createSignal, debug, sequence, waitUntil } from "@motion-canvas/core";
 import { Captions } from "../common/captions";
 import { CBox } from "../common/cbox";
 import { findGuidePaths } from "../common/guiding";
 import { PathVertex, PathVertexType, PathVisualizer, path_segments, shuffle } from "../ui/path";
-import { ray2f_evaluate, ray2f_targeting, vec2f_direction, vec2f_lerp } from "../rt/math";
+import { ray2f_evaluate, ray2f_targeting, vec2f, vec2f_direction, vec2f_lerp, vec2f_multiply, vec2f_pmultiply } from "../rt/math";
 import { colors } from "../common";
 
 const captions = createRef<Captions>()
@@ -157,12 +157,56 @@ function* lts(originalView: Node) {
     yield* cbox.fadeInWalls()
 
     yield* waitUntil('materials')
+    const matview = <Layout />;
+    cboxView.add(matview);
+    const materials = [
+        { name: "mirror", anchor: vec2f(0, -300) },
+        { name: "paint", anchor: vec2f(300, 0) },
+        { name: "tiles", anchor: vec2f(0, 300) },
+    ]
+    yield* chain(...materials.map(material => {
+        const offset = vec2f_multiply(material.anchor, 0.3);
+        const mat = <Layout opacity={0} position={material.anchor}>
+            <Img
+                position={offset}
+                src={`imgs/materials/${material.name}.png`}
+                size={[181, 194]}
+                scale={[-0.7,0.7]}
+                stroke={"#000"}
+                lineWidth={10}
+            />
+            {/*<Txt
+                text={material.name}
+                fill={"#fff"}
+                fontSize={30}
+                y={50}
+            />*/}
+        </Layout>;
+        matview.add(mat);
+        mat.scale(0.1)
+        return all(
+            mat.opacity(1, 0.5),
+            mat.scale(1, 0.5),
+        );
+    }))
 
     yield* waitUntil('lights')
     yield* cbox.fadeInLight()
 
     yield* waitUntil('camera')
     yield* cbox.fadeInCamera()
+
+    const referenceImage = <Img
+        size={[1024,1024]}
+        src={"imgs/cbox.png"}
+        opacity={0}
+    />;
+    view.add(referenceImage);
+    yield* all(
+        referenceImage.opacity(1, 1).wait(4).to(0, 1),
+        matview.opacity(0, 1),
+    );
+    matview.remove();
 
     yield* waitUntil('paths')
     const paths = findGuidePaths(cbox, {
