@@ -42,8 +42,36 @@
       "targetTime": 56.53056791170959
     },
     {
+      "name": "geometry",
+      "targetTime": 63.53560465918214
+    },
+    {
+      "name": "materials",
+      "targetTime": 64.73560465918216
+    },
+    {
+      "name": "lights",
+      "targetTime": 65.7026451501019
+    },
+    {
+      "name": "camera",
+      "targetTime": 68.78015781520352
+    },
+    {
+      "name": "paths",
+      "targetTime": 76.38437064734303
+    },
+    {
+      "name": "extensions",
+      "targetTime": 81.93437064734283
+    },
+    {
+      "name": "focal",
+      "targetTime": 87.73437064734262
+    },
+    {
       "name": "intro/done",
-      "targetTime": 110.90585915491467
+      "targetTime": 93.59576160106572
     }
   ],
   "seed": 2604439895

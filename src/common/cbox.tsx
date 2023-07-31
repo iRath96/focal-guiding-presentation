@@ -1,7 +1,8 @@
 import { PathVertex, PathVertexType, PathVisualizer } from '../ui/path'
-import { Circle2f, Line2f, Ray2f, Vector2f, circle2f_intersect, circle2f_normal, line2f_intersect, line2f_normal, ray2f_evaluate, sample_hemicircle, vec2f, vec2f_add, vec2f_direction, vec2f_distance, vec2f_dot, vec2f_minus, vec2f_multiply, vec2f_polar, vec2f_reflect } from '../rt/math'
+import { Circle2f, Line2f, Ray2f, Vector2f, circle2f_intersect, circle2f_normal, line2f_intersect, line2f_normal, ray2f_evaluate, sample_hemicircle, vec2f, vec2f_add, vec2f_direction, vec2f_distance, vec2f_dot, vec2f_lerp, vec2f_minus, vec2f_multiply, vec2f_polar, vec2f_reflect } from '../rt/math'
 import { Line, Node } from '@motion-canvas/2d'
-import { Vector2 } from '@motion-canvas/core'
+import { Vector2, createSignal } from '@motion-canvas/core'
+import { wiggle } from './animations'
 
 interface CBoxProps {
     onlyFloor: boolean
@@ -93,6 +94,28 @@ export class CBox {
 
         this.cameraNode = this.pathvis.showCamera(this.camera, this.cameraDir)
         this.lightNode = this.pathvis.showLight(this.light)
+    }
+
+    *fadeInWalls() {
+        for (const wall of this.walls) {
+            const t = createSignal(0)
+            this.view.add(<Line
+                points={() => [ wall.from, vec2f_lerp(wall.from, wall.to, t()) ]}
+                stroke={"#ffffff"}
+                lineWidth={4}
+            />)
+            yield* t(1, 0.2);
+        }
+    }
+
+    *fadeInLight() {
+        this.lightNode = this.pathvis.showLight(this.light)
+        yield* wiggle(this.lightNode, 0.5, 0.5, 0)
+    }
+
+    *fadeInCamera() {
+        this.cameraNode = this.pathvis.showCamera(this.camera, this.cameraDir)
+        yield* wiggle(this.cameraNode, 0.5, 0.5, 0)
     }
 
     intersect(ray: Ray2f, ignoreCamera = true): PathVertex {

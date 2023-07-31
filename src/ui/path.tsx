@@ -71,31 +71,22 @@ export class PathVisualizer {
     private nextId = 0
 
     showCamera(camera: Circle2f, rotation = 42) {
-        const rvec = vec2f_polar(rotation / 180 * Math.PI)
         const size = 4 * camera.radius
-        const pos = vec2f_add(
-            vec2f_add(
-                camera.center,
-                vec2f_multiply(
-                    vec2f(-rvec.y, rvec.x),
-                    -0.05 * size
-                )
-            ),
-            vec2f_multiply(rvec, -0.25 * size)
-        )
+        const lpos = vec2f(-0.25 * size, -0.05 * size)
 
         const layout = <Layout
-            position={pos}
+            position={camera.center}
+            rotation={rotation}
             zIndex={10}
         />
         layout.add(<Rect
+            position={lpos}
             size={[ size, 0.7 * size ]}
-            rotation={rotation}
             fill="000"
         />)
         layout.add(<Img
+            position={lpos}
             size={size}
-            rotation={rotation}
             src={"svg/camera-side-view-svgrepo-com.svg"}
         />)
         this.view.add(layout)
@@ -141,7 +132,7 @@ export class PathVisualizer {
             arrowSize={12}
             endArrow={
                 v1.type === PathVertexType.Diffuse ||
-                v1.type === PathVertexType.Light ||
+                //v1.type === PathVertexType.Light ||
                 v1.type === PathVertexType.Miss
             }
             zIndex={2}

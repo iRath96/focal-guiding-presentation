@@ -604,7 +604,7 @@ export default makeScene2D(function* (originalView) {
     const captions = createRef<Captions>()
     originalView.add(<Captions
         ref={captions}
-        chapter="Focal points"
+        chapter=""
     />);
 
     const view = <Layout
@@ -624,7 +624,10 @@ export default makeScene2D(function* (originalView) {
 
     const pathvis = new PathVisualizer(view)
     
-    yield* captions().updateTitle("Direct focal points");
+    yield* all(
+        captions().chapter("Focal points", 1),
+        captions().updateTitle("Direct focal points")
+    );
 
     yield* waitUntil('light')
     yield* wiggle(cbox.lightNode, 1.5)

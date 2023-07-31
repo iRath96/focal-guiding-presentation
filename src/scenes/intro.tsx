@@ -1,6 +1,11 @@
-import { Node, Img, Layout, Rect, Txt, makeScene2D } from "@motion-canvas/2d";
-import { all, chain, createRef, createSignal, waitUntil } from "@motion-canvas/core";
+import { Node, Img, Layout, Rect, Txt, makeScene2D, LineProps } from "@motion-canvas/2d";
+import { Random, all, chain, createRef, createSignal, debug, sequence, waitUntil } from "@motion-canvas/core";
 import { Captions } from "../common/captions";
+import { CBox } from "../common/cbox";
+import { findGuidePaths } from "../common/guiding";
+import { PathVertex, PathVertexType, PathVisualizer, path_segments, shuffle } from "../ui/path";
+import { ray2f_evaluate, ray2f_targeting, vec2f_direction, vec2f_lerp } from "../rt/math";
+import { colors } from "../common";
 
 const captions = createRef<Captions>()
 
@@ -136,7 +141,118 @@ function* lts(originalView: Node) {
 
     yield* captions().chapter("Background", 1);
 
-    // TODO
+    const cboxView = <Layout
+        position={[-350, 55]}
+        scale={[ -1, 1 ]}
+    />;
+    const cboxGeomView = <Layout />;
+    const pathvisView = <Layout />;
+    cboxView.add(cboxGeomView);
+    cboxView.add(pathvisView);
+    view.add(cboxView);
+    const cbox = new CBox(cboxGeomView);
+    const pathvis = new PathVisualizer(pathvisView);
+    
+    yield* waitUntil('geometry')
+    yield* cbox.fadeInWalls()
+
+    yield* waitUntil('materials')
+
+    yield* waitUntil('lights')
+    yield* cbox.fadeInLight()
+
+    yield* waitUntil('camera')
+    yield* cbox.fadeInCamera()
+
+    yield* waitUntil('paths')
+    const paths = findGuidePaths(cbox, {
+        spread: 110,
+        dir: 0,
+        maxDepth: 6,
+        seed: 9,
+        candidates: 700,
+        yBlock: false,
+    }).filter((path, i) => {
+        if (path.length === 2 || (path.length === 3 && path[1].type === PathVertexType.Specular)) {
+            return i % 3 === 0;
+        }
+        return true;
+    });
+    shuffle(paths)
+    yield* sequence(0.05, ...paths.map(path => {
+        const id = pathvis.showPath(path, { opacity: 0.5 });
+        return pathvis.fadeInPath(id, 1);
+    }))
+    
+    // draw extensions
+    yield* waitUntil('extensions')
+    yield* all(
+        cboxGeomView.opacity(0.2, 1),
+        pathvis.opacity(0.5, 1),
+    );
+    const extIds: number[] = []
+    const extProps: LineProps = {
+        lineDash: [2,6],
+        opacity: 0.3,
+    }
+    for (const path of paths) {
+        let prevP: PathVertex
+        for (const [a,b] of path_segments(path)) {
+            if (a.type === PathVertexType.Camera) {
+                extIds.push(pathvis.showPath([
+                    a,
+                    { p: ray2f_evaluate(ray2f_targeting(a.p, b.p), -150) }
+                ], extProps))
+            }
+            if (a.type === PathVertexType.Specular && b.type === PathVertexType.Light) {
+                extIds.push(pathvis.showPath([
+                    b,
+                    { p: ray2f_evaluate(ray2f_targeting(b.p, a.p), -150) }
+                ], extProps))
+                extIds.push(pathvis.showPath([
+                    a,
+                    { p: ray2f_evaluate(ray2f_targeting(a.p, prevP.p), -400) }
+                ], extProps))
+            }
+            if (a.type === PathVertexType.Specular && prevP.type === PathVertexType.Camera) {
+                extIds.push(pathvis.showPath([
+                    a,
+                    { p: ray2f_evaluate(ray2f_targeting(a.p, b.p), -800) }
+                ], extProps))
+            }
+            prevP = a
+        }
+    }
+    yield* sequence(0.05, ...extIds.map(ext => {
+        return pathvis.fadeInPath(ext, 1);
+    }))
+
+    // highlight focal points
+    yield* waitUntil('focal');
+    yield* sequence(0.2, ...cbox.focalPoints.map(focal => {
+        const rect = <Rect
+            position={focal}
+            size={90}
+            stroke={colors.green}
+            lineWidth={8}
+            opacity={0}
+            radius={5}
+        />;
+        pathvisView.add(rect);
+        rect.scale(0.1);
+        return all(
+            rect.opacity(1, 1),
+            rect.scale(1, 1),
+        );
+    }));
+
+    yield* waitUntil('intro/done')
+    yield* all(
+        cboxGeomView.opacity(1, 1),
+        pathvisView.opacity(0, 1),
+        cbox.cameraNode.rotation(34.4, 1),
+        captions().chapter("", 1),
+    );
 }
 
 export default makeScene2D(function* (view) {
@@ -150,6 +266,4 @@ export default makeScene2D(function* (view) {
     yield* title(view)
     yield* agenda(view)
     yield* lts(view)
-
-    yield* waitUntil('intro/done')
 });

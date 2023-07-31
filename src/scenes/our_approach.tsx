@@ -213,7 +213,11 @@ export default makeScene2D(function* (originalView) {
     cbox.cameraSpread = 90
     cbox.draw()
 
-    const paths = findGuidePaths(cbox, 90, 3000, 42)
+    const paths = findGuidePaths(cbox, {
+        spread: 90,
+        candidates: 3000,
+        seed: 42,
+    })
     //for (const path of paths) {
     //    cbox.pathvis.showPath(path, { opacity: 0.3, visible: true })
     //}
