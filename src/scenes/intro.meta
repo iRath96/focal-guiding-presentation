@@ -2,76 +2,96 @@
   "version": 0,
   "timeEvents": [
     {
+      "name": "h/left",
+      "targetTime": 6.483575027936297
+    },
+    {
+      "name": "h/right",
+      "targetTime": 8.21520106911036
+    },
+    {
+      "name": "h/pinhole",
+      "targetTime": 9.21520106911036
+    },
+    {
+      "name": "h/canvas",
+      "targetTime": 12.084912063221857
+    },
+    {
+      "name": "h/end",
+      "targetTime": 15.177363617248437
+    },
+    {
       "name": "show crops",
-      "targetTime": 17.99838125296373
+      "targetTime": 20.19598407137731
     },
     {
       "name": "ours",
-      "targetTime": 27.10987637474506
+      "targetTime": 27.707369181255967
     },
     {
       "name": "title",
-      "targetTime": 31.582279356907907
+      "targetTime": 32.17977216341882
     },
     {
       "name": "agenda/0",
-      "targetTime": 38.582279356907904
+      "targetTime": 39.17977216341882
     },
     {
       "name": "agenda/1",
-      "targetTime": 42.13099206971995
+      "targetTime": 42.728484876230866
     },
     {
       "name": "agenda/2",
-      "targetTime": 45.114120242166855
+      "targetTime": 45.71161304867777
     },
     {
       "name": "agenda/3",
-      "targetTime": 49.78586974413719
+      "targetTime": 50.3833625506481
     },
     {
       "name": "agenda/4",
-      "targetTime": 52.536637718586626
+      "targetTime": 53.13413052509754
     },
     {
       "name": "agenda/5",
-      "targetTime": 55.53056791170959
+      "targetTime": 56.1280607182205
     },
     {
       "name": "lts",
-      "targetTime": 56.53056791170959
+      "targetTime": 57.1280607182205
     },
     {
       "name": "geometry",
-      "targetTime": 63.53560465918214
+      "targetTime": 63.274420482671516
     },
     {
       "name": "materials",
-      "targetTime": 64.73560465918216
+      "targetTime": 64.47442048267153
     },
     {
       "name": "lights",
-      "targetTime": 65.7026451501019
+      "targetTime": 65.97442048267153
     },
     {
       "name": "camera",
-      "targetTime": 68.78015781520352
+      "targetTime": 68.5189736386929
     },
     {
       "name": "paths",
-      "targetTime": 75.83769200457985
+      "targetTime": 75.57650782806923
     },
     {
       "name": "extensions",
-      "targetTime": 81.38769200457965
+      "targetTime": 81.12650782806902
     },
     {
       "name": "focal",
-      "targetTime": 87.18769200457943
+      "targetTime": 86.92650782806881
     },
     {
       "name": "intro/done",
-      "targetTime": 93.45909194037492
+      "targetTime": 93.1979077638643
     }
   ],
   "seed": 2604439895

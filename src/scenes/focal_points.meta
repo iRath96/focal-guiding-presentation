@@ -3,51 +3,51 @@
   "timeEvents": [
     {
       "name": "light",
-      "targetTime": 5.476666730415721
+      "targetTime": 5.61977956091931
     },
     {
       "name": "camera",
-      "targetTime": 6.976666730415721
+      "targetTime": 7.11977956091931
     },
     {
       "name": "start",
-      "targetTime": 10.578774851052712
+      "targetTime": 10.721887681556302
     },
     {
       "name": "end",
-      "targetTime": 12.028774851052718
+      "targetTime": 12.171887681556308
     },
     {
       "name": "known",
-      "targetTime": 17.330481845973296
+      "targetTime": 17.473594676476885
     },
     {
       "name": "laser",
-      "targetTime": 26.289404412705334
+      "targetTime": 26.432517243208924
     },
     {
       "name": "diffusing",
-      "targetTime": 28.811462044056768
+      "targetTime": 28.954574874560358
     },
     {
       "name": "laser/end",
-      "targetTime": 31.161785178431785
+      "targetTime": 31.304898008935375
     },
     {
       "name": "obs/done",
-      "targetTime": 41.87603352094718
+      "targetTime": 42.01914635145077
     },
     {
       "name": "vi/lens",
-      "targetTime": 47.66638941651703
+      "targetTime": 47.80950224702062
     },
     {
       "name": "vi/mirror",
-      "targetTime": 52.17404981464119
+      "targetTime": 52.317162645144776
     },
     {
       "name": "vi/done",
-      "targetTime": 59.86935247975826
+      "targetTime": 60.01246531026185
     }
   ],
   "seed": 3153095361

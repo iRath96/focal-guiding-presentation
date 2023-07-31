@@ -4,7 +4,7 @@ import { Captions } from "../common/captions";
 import { CBox } from "../common/cbox";
 import { findGuidePaths } from "../common/guiding";
 import { PathVertex, PathVertexType, PathVisualizer, path_segments, shuffle } from "../ui/path";
-import { ray2f_evaluate, ray2f_targeting, vec2f, vec2f_direction, vec2f_lerp, vec2f_multiply, vec2f_pmultiply } from "../rt/math";
+import { Bounds2f, bounds2f_center, bounds2f_diagonal, ray2f_evaluate, ray2f_targeting, vec2f, vec2f_direction, vec2f_lerp, vec2f_multiply, vec2f_pmultiply, vec2f_sub } from "../rt/math";
 import { colors } from "../common";
 
 const captions = createRef<Captions>()
@@ -13,8 +13,17 @@ function* cameraObscura(originalView: Node) {
     const view = <Layout/>;
     originalView.add(view);
 
-    const showCropRect = createSignal(0)
+    const showCropRect = createSignal(0);
+    const highlight = createRef<Rect>();
     const reference = <Layout>
+        <Rect
+            ref={highlight}
+            stroke={"#fff"}
+            lineWidth={8}
+            radius={20}
+            opacity={0}
+            zIndex={10}
+        />
         <Img
             src={"imgs/camera-obscura/Reference.png"}
             size={[1280,720]}
@@ -30,7 +39,7 @@ function* cameraObscura(originalView: Node) {
             scale={showCropRect}
         />
     </Layout>;
-    view.add(reference)
+    view.add(reference);
 
     reference.scale(0.8)
     reference.opacity(0)
@@ -38,6 +47,28 @@ function* cameraObscura(originalView: Node) {
         reference.scale(1, 5),
         reference.opacity(1, 5),
     );
+    
+    function* showHighlight(name: string, bounds: Bounds2f, time = 1) {
+        const htime = name === 'left' ? 0 : time;
+        yield* waitUntil(`h/${name}`);
+        yield* all(
+            highlight().opacity(1, time),
+            highlight().position(
+                vec2f_sub(
+                    bounds2f_center(bounds),
+                    vec2f(640, 360)
+                )
+            , htime),
+            highlight().size(bounds2f_diagonal(bounds), htime)
+        )
+    }
+
+    yield* showHighlight('left', { min: vec2f(30, 30), max: vec2f(570, 690) })
+    yield* showHighlight('right', { min: vec2f(670, 30), max: vec2f(1250, 690) })
+    yield* showHighlight('pinhole', { min: vec2f(580, 320), max: vec2f(660, 400) })
+    yield* showHighlight('canvas', { min: vec2f(830, 200), max: vec2f(1100, 520) })
+    yield* waitUntil('h/end');
+    yield* highlight().opacity(0, 1);
     
     yield* waitUntil('show crops')
     yield* all(
