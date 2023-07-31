@@ -4,6 +4,7 @@ import { colors } from '../common';
 
 export interface CaptionsProps extends NodeProps {
     chapter?: SimpleSignal<string> | string
+    blocker?: boolean
 }
 
 export class Captions extends Node {
@@ -76,18 +77,20 @@ export class Captions extends Node {
             fontStyle={"italic"}
         />)
 
-        this.add(<Rect
-            size={[1920, 1080]}
-            fill={new Gradient({
-                from: [-970, 0],
-                to: [970, 0],
-                stops: [
-                    { color: "rgba(0,0,0,0)", offset: 0.6, },
-                    { color: "black", offset: 0.75, },
-                ],
-            })}
-            zIndex={1}
-        />)
+        if ({ blocker: true, ...props }.blocker) {
+            this.add(<Rect
+                size={[1920, 1080]}
+                fill={new Gradient({
+                    from: [-970, 0],
+                    to: [970, 0],
+                    stops: [
+                        { color: "rgba(0,0,0,0)", offset: 0.6, },
+                        { color: "black", offset: 0.75, },
+                    ],
+                })}
+                zIndex={1}
+            />)
+        }
     }
 
     *showTransition(text: string, time: number) {

@@ -2,8 +2,20 @@
   "version": 0,
   "timeEvents": [
     {
+      "name": "show crops",
+      "targetTime": 17.99838125296373
+    },
+    {
+      "name": "ours",
+      "targetTime": 27.10987637474506
+    },
+    {
+      "name": "title",
+      "targetTime": 31.582279356907907
+    },
+    {
       "name": "intro/done",
-      "targetTime": 94.72844781859932
+      "targetTime": 97.95757060011299
     }
   ],
   "seed": 2604439895
