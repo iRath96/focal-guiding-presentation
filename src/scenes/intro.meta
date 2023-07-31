@@ -14,8 +14,36 @@
       "targetTime": 31.582279356907907
     },
     {
+      "name": "agenda/0",
+      "targetTime": 38.582279356907904
+    },
+    {
+      "name": "agenda/1",
+      "targetTime": 42.13099206971995
+    },
+    {
+      "name": "agenda/2",
+      "targetTime": 45.114120242166855
+    },
+    {
+      "name": "agenda/3",
+      "targetTime": 49.78586974413719
+    },
+    {
+      "name": "agenda/4",
+      "targetTime": 52.536637718586626
+    },
+    {
+      "name": "agenda/5",
+      "targetTime": 55.53056791170959
+    },
+    {
+      "name": "lts",
+      "targetTime": 56.53056791170959
+    },
+    {
       "name": "intro/done",
-      "targetTime": 97.95757060011299
+      "targetTime": 110.90585915491467
     }
   ],
   "seed": 2604439895

@@ -2,6 +2,8 @@ import { Node, Img, Layout, Rect, Txt, makeScene2D } from "@motion-canvas/2d";
 import { all, chain, createRef, createSignal, waitUntil } from "@motion-canvas/core";
 import { Captions } from "../common/captions";
 
+const captions = createRef<Captions>()
+
 function* cameraObscura(originalView: Node) {
     const view = <Layout/>;
     originalView.add(view);
@@ -76,18 +78,78 @@ function* cameraObscura(originalView: Node) {
 }
 
 function* title(view: Node) {
-    const captions = createRef<Captions>()
-    view.add(<Captions
-        ref={captions}
-        blocker={false}
-        chapter=""
-    />);
     yield* captions().showTransition("Focal Path Guiding", 1)
 }
 
+function* agenda(originalView: Node) {
+    const view = <Layout/>;
+    originalView.add(view);
+
+    yield* captions().chapter("Agenda", 1)
+
+    const points = [
+        "Background",
+        "Focal Points",
+        "Previous Work",
+        "Our Approach",
+        "Results",
+        "",
+    ]
+    let prevT: Node = <Txt />
+    yield* chain(...points.map((point, index) => {
+        const t = <Txt
+            width={1700}
+            y={(index - 2) * 100}
+            text={point}
+            fontSize={50}
+            fill={"#fff"}
+            opacity={0}
+        />
+        view.add(t)
+        const task = chain(
+            waitUntil(`agenda/${index}`),
+            all(
+                prevT.opacity(0.5, 1),
+                prevT.x(0, 1),
+                //prevT.y(prevT.y() - 10, 1),
+                //prevT.scale(1, 1),
+                //t.scale(1.2, 1),
+                t.opacity(1, 1),
+                t.x(20, 1),
+            )
+        )
+        prevT = t
+        return task
+    }))
+
+    yield* waitUntil('lts')
+    yield* all(
+        view.opacity(0, 1),
+        captions().chapter("", 1),
+    )
+    view.remove()
+}
+
+function* lts(originalView: Node) {
+    const view = <Layout/>;
+    originalView.add(view);
+
+    yield* captions().chapter("Background", 1);
+
+    // TODO
+}
+
 export default makeScene2D(function* (view) {
+    view.add(<Captions
+        ref={captions}
+        chapter=""
+        blocker={false}
+    />);
+
     yield* cameraObscura(view)
     yield* title(view)
+    yield* agenda(view)
+    yield* lts(view)
 
     yield* waitUntil('intro/done')
 });
