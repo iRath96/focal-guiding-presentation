@@ -145,10 +145,10 @@ function* lts(originalView: Node) {
         position={[-350, 55]}
         scale={[ -1, 1 ]}
     />;
-    const cboxGeomView = <Layout />;
     const pathvisView = <Layout />;
-    cboxView.add(cboxGeomView);
+    const cboxGeomView = <Layout />;
     cboxView.add(pathvisView);
+    cboxView.add(cboxGeomView);
     view.add(cboxView);
     const cbox = new CBox(cboxGeomView);
     const pathvis = new PathVisualizer(pathvisView);
@@ -221,7 +221,17 @@ function* lts(originalView: Node) {
             return i % 3 === 0;
         }
         return true;
-    });
+    }).map(path =>
+        path.map(vertex => {
+            if (vertex.type === PathVertexType.Camera) {
+                return { ...vertex, p: cbox.camera.center }
+            }
+            if (vertex.type === PathVertexType.Light) {
+                return { ...vertex, p: cbox.light.center }
+            }
+            return vertex
+        })
+    );
     shuffle(paths)
     yield* sequence(0.05, ...paths.map(path => {
         const id = pathvis.showPath(path, { opacity: 0.5 });
@@ -242,26 +252,26 @@ function* lts(originalView: Node) {
     for (const path of paths) {
         let prevP: PathVertex
         for (const [a,b] of path_segments(path)) {
-            if (a.type === PathVertexType.Camera) {
-                extIds.push(pathvis.showPath([
-                    a,
-                    { p: ray2f_evaluate(ray2f_targeting(a.p, b.p), -150) }
-                ], extProps))
-            }
+            //if (a.type === PathVertexType.Camera) {
+            //    extIds.push(pathvis.showPath([
+            //        a,
+            //        { p: ray2f_evaluate(ray2f_targeting(a.p, b.p), -150) }
+            //    ], extProps))
+            //}
             if (a.type === PathVertexType.Specular && b.type === PathVertexType.Light) {
-                extIds.push(pathvis.showPath([
-                    b,
-                    { p: ray2f_evaluate(ray2f_targeting(b.p, a.p), -150) }
-                ], extProps))
+                //extIds.push(pathvis.showPath([
+                //    b,
+                //    { p: ray2f_evaluate(ray2f_targeting(b.p, a.p), -150) }
+                //], extProps))
                 extIds.push(pathvis.showPath([
                     a,
-                    { p: ray2f_evaluate(ray2f_targeting(a.p, prevP.p), -400) }
+                    { p: ray2f_evaluate(ray2f_targeting(a.p, cbox.mirroredLight.center), 400) }
                 ], extProps))
             }
             if (a.type === PathVertexType.Specular && prevP.type === PathVertexType.Camera) {
                 extIds.push(pathvis.showPath([
                     a,
-                    { p: ray2f_evaluate(ray2f_targeting(a.p, b.p), -800) }
+                    { p: ray2f_evaluate(ray2f_targeting(a.p, cbox.mirroredCamera.center), 800) }
                 ], extProps))
             }
             prevP = a
@@ -273,6 +283,8 @@ function* lts(originalView: Node) {
 
     // highlight focal points
     yield* waitUntil('focal');
+    const prevCboxY = cboxView.y();
+    yield* cboxView.y(200, 1);
     yield* sequence(0.2, ...cbox.focalPoints.map(focal => {
         const rect = <Rect
             position={focal}
@@ -296,6 +308,7 @@ function* lts(originalView: Node) {
         pathvisView.opacity(0, 1),
         cbox.cameraNode.rotation(34.4, 1),
         captions().chapter("", 1),
+        cboxView.y(prevCboxY, 1),
     );
 }
 
