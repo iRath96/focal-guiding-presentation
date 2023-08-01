@@ -72,6 +72,26 @@
     {
       "name": "summary",
       "targetTime": 79.01747821838978
+    },
+    {
+      "name": "summary/0",
+      "targetTime": 83.30805002598541
+    },
+    {
+      "name": "summary/1",
+      "targetTime": 89.23829204336874
+    },
+    {
+      "name": "summary/2",
+      "targetTime": 95.7241313918369
+    },
+    {
+      "name": "summary/done",
+      "targetTime": 101.51335621986466
+    },
+    {
+      "name": "done",
+      "targetTime": 111.95980728020453
     }
   ],
   "seed": 2636205122

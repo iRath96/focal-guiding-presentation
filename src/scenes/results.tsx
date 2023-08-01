@@ -225,8 +225,78 @@ function* livingRoom(originalView: Node) {
     })
 }
 
-function* summary() {
-    yield* waitFor(60);
+function* summary(originalView: Node) {
+    const view = <Layout/>;
+    originalView.add(view);
+
+    const points = [
+        [
+            "Defined and categorized focal points and",
+            "investigated their common causes",
+        ],
+        [
+            "Different families of rendering algorithms",
+            "explore different kinds of focal points",
+        ],
+        [
+            "Introduced you to our Focal Path Guiding",
+            "and looked at some of its results",
+        ],
+    ]
+
+    const lineHeight = 80
+    const pointGap = 50
+    let currentY = -300
+    let prevNode = <Layout/>;
+    yield* chain(...points.map((lines, index) => {
+        const text = <Layout
+            x={40}
+            opacity={0}
+        >
+            <Circle
+                x={-900}
+                y={currentY + lineHeight - 7}
+                size={10}
+                fill={colors.white}
+            />
+            {lines.map((line, lineIndex) =>
+                <Txt
+                    y={currentY += lineHeight}
+                    width={1700}
+                    text={line}
+                    fill={colors.white}
+                />
+            )}
+        </Layout>;
+        currentY += pointGap
+        view.add(text);
+        const task = chain(
+            waitUntil(`summary/${index}`),
+            all(
+                prevNode.opacity(0.5, 1),
+                text.opacity(1, 1),
+            ),
+        );
+        prevNode = text;
+        return task;
+    }));
+
+    yield* waitUntil('summary/done');
+    yield* all(
+        captions().chapter("", 1),
+        view.opacity(0, 1),
+    );
+    view.remove()
+}
+
+function* acknowledgements(originalView: Node) {
+    const view = <Layout/>;
+    originalView.add(view);
+
+    view.add(<Txt
+        text={"Thank you"}
+        fill={colors.white}
+    />)
 }
 
 export default makeScene2D(function* (view) {
@@ -244,5 +314,10 @@ export default makeScene2D(function* (view) {
     yield* waitUntil('summary')
     yield* captions().chapter("", 1)
     yield* captions().chapter("Summary", 1)
-    yield* summary();
+    yield* summary(view);
+
+    yield* captions().chapter("Acknowledgements", 1);
+    yield* acknowledgements(view);
+
+    yield* waitUntil('done');
 });
