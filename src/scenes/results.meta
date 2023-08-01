@@ -2,24 +2,60 @@
   "version": 0,
   "timeEvents": [
     {
-      "name": "obscura",
+      "name": "obs",
       "targetTime": 5
     },
     {
-      "name": "obs/MCVCM",
-      "targetTime": 14.53028549502628
+      "name": "obs/0",
+      "targetTime": 14.41364247538684
     },
     {
-      "name": "obs/Ours",
-      "targetTime": 20.277488427535275
+      "name": "obs/1",
+      "targetTime": 20.78404318213793
+    },
+    {
+      "name": "obs/focal",
+      "targetTime": 23.78404318213793
     },
     {
       "name": "obs/done",
-      "targetTime": 29.07752218566944
+      "targetTime": 28.38615793813076
+    },
+    {
+      "name": "dr",
+      "targetTime": 29.38615793813076
+    },
+    {
+      "name": "dr/focal",
+      "targetTime": 36.38002554713221
+    },
+    {
+      "name": "dr/b-0",
+      "targetTime": 39.38002554713221
+    },
+    {
+      "name": "dr/b-1",
+      "targetTime": 44.03220021359939
+    },
+    {
+      "name": "dr/b-2",
+      "targetTime": 48.70940782955849
+    },
+    {
+      "name": "dr/b-3",
+      "targetTime": 55.95826403870727
+    },
+    {
+      "name": "dr/b-4",
+      "targetTime": 60.895275381830096
+    },
+    {
+      "name": "dr/done",
+      "targetTime": 63.961778408952725
     },
     {
       "name": "done",
-      "targetTime": 32.2493489619544
+      "targetTime": 64.96177840895272
     }
   ],
   "seed": 2636205122

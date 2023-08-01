@@ -1,7 +1,7 @@
 import { Circle, Img, Layout, Node, Ray, Rect, Txt, makeScene2D } from "@motion-canvas/2d";
-import { Reference, all, chain, createRef, createSignal, sequence, waitFor, waitUntil } from "@motion-canvas/core";
+import { Reference, Vector2, all, chain, createRef, createSignal, sequence, waitFor, waitUntil } from "@motion-canvas/core";
 import { Captions } from "../common/captions";
-import { Line2f, line2f_evaluate, line2f_intersect, ray2f_evaluate, ray2f_targeting, vec2f } from "../rt/math";
+import { Bounds2f, Line2f, Vector2f, line2f_evaluate, line2f_intersect, ray2f_evaluate, ray2f_targeting, vec2f } from "../rt/math";
 import { colors } from "../common";
 import { linspace } from "../common/guiding";
 
@@ -11,8 +11,21 @@ function* title(view: Node) {
     yield* captions().showTransition("Results", 1)
 }
 
-function* cameraObscura(originalView: Node) {
-    yield* waitUntil('obscura')
+interface ShowSceneProps {
+    name: string
+    path: string
+    crop: Vector2f
+    highlights: string[][]
+    highlightsB: string[][]
+    focalPoints: {
+        point: Vector2f
+        startLine: Line2f
+        endLine: Line2f
+    }[]
+}
+
+function* showScene(originalView: Node, $: ShowSceneProps) {
+    yield* waitUntil($.name)
 
     const view = <Layout/>;
     originalView.add(view);
@@ -21,16 +34,17 @@ function* cameraObscura(originalView: Node) {
     const reference = <Layout
         y={-170}
         scale={0.87}
+        opacity={0}
     >
         <Img
-            src={"imgs/camera-obscura/Reference.png"}
+            src={`imgs/${$.path}/Reference.png`}
             size={[1280,720]}
             stroke={"#aaa"}
             lineWidth={8}
         />
         <Rect
             size={96}
-            position={[880+48-640,370+48-360]}
+            position={[$.crop.x+48-640,$.crop.y+48-360]}
             stroke={"red"}
             lineWidth={4}
             opacity={showCropRect}
@@ -39,6 +53,7 @@ function* cameraObscura(originalView: Node) {
         />
     </Layout>;
     view.add(reference);
+    yield* reference.opacity(1, 1);
 
     const renders = <Layout/>;
     view.add(renders);
@@ -54,7 +69,7 @@ function* cameraObscura(originalView: Node) {
             opacity={0}
         >
             <Img
-                src={`imgs/camera-obscura/${method}_crop.png`}
+                src={`imgs/${$.path}/${method}_crop.png`}
                 size={[240,240]}
                 stroke={"#aaa"}
                 lineWidth={8}
@@ -70,75 +85,133 @@ function* cameraObscura(originalView: Node) {
         return img.opacity(1, 1)
     }))
 
-    function* highlight(method: string) {
-        yield* waitUntil(`obs/${method}`);
-
-        const ref = references[method]();
-        const y = ref.y();
-        ref.zIndex(10);
-        yield* all(
-            ref.scale(1.5, 1),
-            ref.y(y - 50, 1),
-        );
-        yield* waitFor(1);
-        yield* all(
-            ref.scale(1, 1),
-            ref.y(y, 1),
-        );
-        ref.zIndex(0);
+    function* highlights(phase: string, highlights: string[][]) {
+        yield* chain(...highlights.map((highlight, hIndex) => {
+            return chain(
+                waitUntil(`${$.name}/${phase}${hIndex}`),
+                all(...highlight.map(function* (method) {
+                    const ref = references[method]();
+                    const y = ref.y();
+                    ref.zIndex(10);
+                    yield* all(
+                        ref.scale(1.2, 1),
+                        ref.y(y - 24, 1),
+                    );
+                    yield* waitFor(1);
+                    yield* all(
+                        ref.scale(1, 1),
+                        ref.y(y, 1),
+                    );
+                    ref.zIndex(0);
+                }))
+            );
+        }))
     }
 
-    yield* highlight('MCVCM')
-    yield* highlight('Ours')
+    yield* highlights('', $.highlights)
 
     // show sample rays
-    const focalPoint = vec2f(0, 0);
-    const focal = <Circle
-        position={focalPoint}
-        size={20}
-        fill={colors.red}
-        lineWidth={2}
-        stroke={"#fff"}
-        zIndex={20}
-        opacity={0}
-        scale={10}
-    />;
-    reference.add(focal);
+    yield* waitUntil(`${$.name}/focal`);
     yield* all(
-        focal.opacity(1, 1),
-        focal.scale(1, 1),
+        ...$.focalPoints.map(focal => {
+            const circle = <Circle
+                position={focal.point}
+                size={20}
+                fill={colors.red}
+                lineWidth={2}
+                stroke={"#fff"}
+                zIndex={20}
+                opacity={0}
+                scale={10}
+            />;
+            reference.add(circle);
+            return all(
+                circle.opacity(1, 1),
+                circle.scale(1, 1),
+            );
+        })
     );
 
-    const startLine: Line2f = {
-        from: vec2f(-390, -140),
-        to: vec2f(-330, 120),
-    }
-    const endLine: Line2f = {
-        from: vec2f(370, -200),
-        to: vec2f(230, 200),
-    }
-    const fadeIn = createSignal(0)
-    for (const t of linspace(10)) {
-        const ray = ray2f_targeting(
-            line2f_evaluate(startLine, t),
-            focalPoint
-        );
-        const hit = line2f_intersect(endLine, ray);
-        if (!isFinite(hit)) continue;
-        reference.add(<Ray
-            from={ray.o}
-            to={() => ray2f_evaluate(ray, fadeIn() * hit)}
-            lineWidth={4}
-            stroke={colors.yellow}
-            arrowSize={12}
-            endArrow
-        />)
-    }
-    yield* fadeIn(1, 2)
+    yield* all(
+        ...$.focalPoints.map(focal => {
+            const fadeIn = createSignal(0)
+            for (const t of linspace(10)) {
+                const ray = ray2f_targeting(
+                    line2f_evaluate(focal.startLine, t),
+                    focal.point
+                );
+                const hit = line2f_intersect(focal.endLine, ray);
+                if (!isFinite(hit)) continue;
+                reference.add(<Ray
+                    from={ray.o}
+                    to={() => ray2f_evaluate(ray, fadeIn() * hit)}
+                    lineWidth={4}
+                    stroke={colors.yellow}
+                    arrowSize={12}
+                    endArrow
+                />)
+            }
+            return fadeIn(1, 2)
+        })
+    );
 
-    yield* waitUntil('obs/done')
+    yield* highlights('b-', $.highlightsB)
+
+    yield* waitUntil(`${$.name}/done`)
     yield* view.opacity(0, 1)
     view.remove()
+}
+
+function* cameraObscura(originalView: Node) {
+    yield* showScene(originalView, {
+        name: 'obs',
+        path: 'camera-obscura',
+        highlights: [['MCVCM', 'MEMLT'], ['Ours']],
+        highlightsB: [],
+        crop: vec2f(880, 370),
+        focalPoints: [{
+            point: vec2f(0, 0),
+            startLine: {
+                from: vec2f(-390, -140),
+                to: vec2f(-330, 120),
+            },
+            endLine: {
+                from: vec2f(370, -200),
+                to: vec2f(230, 200),
+            }
+        }]
+    })
+}
+
+function* diningRoom(originalView: Node) {
+    yield* showScene(originalView, {
+        name: 'dr',
+        path: 'dining-room',
+        highlights: [],
+        highlightsB: [['MCVCM', 'MEMLT'], ['MEMLT'], ['MCVCM'], ['Ours'], ['PAVMM']],
+        crop: vec2f(610, 375),
+        focalPoints: [{
+            point: vec2f(-169, -80),
+            startLine: {
+                from: vec2f(-219, -155),
+                to: vec2f(-119, -155),
+            },
+            endLine: {
+                from: vec2f(-400, 110),
+                to: vec2f(400, 110),
+            }
+        }, {
+            point: vec2f(134, -80),
+            startLine: {
+                from: vec2f(84, -155),
+                to: vec2f(184, -155),
+            },
+            endLine: {
+                from: vec2f(-400, 110),
+                to: vec2f(400, 110),
+            }
+        }]
+    })
 }
 
 export default makeScene2D(function* (view) {
@@ -150,6 +223,7 @@ export default makeScene2D(function* (view) {
 
     yield* title(view)
     yield* cameraObscura(view)
+    yield* diningRoom(view)
 
     yield* waitUntil('done')
 });
