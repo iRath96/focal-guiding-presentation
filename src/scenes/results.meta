@@ -1,0 +1,26 @@
+{
+  "version": 0,
+  "timeEvents": [
+    {
+      "name": "obscura",
+      "targetTime": 5
+    },
+    {
+      "name": "obs/MCVCM",
+      "targetTime": 14.53028549502628
+    },
+    {
+      "name": "obs/Ours",
+      "targetTime": 20.277488427535275
+    },
+    {
+      "name": "obs/done",
+      "targetTime": 29.07752218566944
+    },
+    {
+      "name": "done",
+      "targetTime": 32.2493489619544
+    }
+  ],
+  "seed": 2636205122
+}

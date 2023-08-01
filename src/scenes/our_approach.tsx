@@ -344,5 +344,10 @@ export default makeScene2D(function* (originalView) {
     yield* quadtreeView.opacity(0.5, 1)
     yield* hierarchical({ cbox, quadtree, qvis: visualizer, view })
     yield* waitUntil('ours/done')
-    yield* waitFor(100)
+    
+    yield* all(
+        view.opacity(0, 1),
+        captions().chapter("", 1),
+    );
+    view.remove()
 });
