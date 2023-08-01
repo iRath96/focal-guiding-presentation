@@ -51,11 +51,27 @@
     },
     {
       "name": "dr/done",
-      "targetTime": 63.961778408952725
+      "targetTime": 65.96372147625976
     },
     {
-      "name": "done",
-      "targetTime": 64.96177840895272
+      "name": "lr",
+      "targetTime": 66.96372147625976
+    },
+    {
+      "name": "lr/0",
+      "targetTime": 71.69315807394257
+    },
+    {
+      "name": "lr/focal",
+      "targetTime": 74.69315807394257
+    },
+    {
+      "name": "lr/done",
+      "targetTime": 78.01747821838978
+    },
+    {
+      "name": "summary",
+      "targetTime": 79.01747821838978
     }
   ],
   "seed": 2636205122

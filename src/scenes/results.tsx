@@ -214,6 +214,21 @@ function* diningRoom(originalView: Node) {
     })
 }
 
+function* livingRoom(originalView: Node) {
+    yield* showScene(originalView, {
+        name: 'lr',
+        path: 'modern-living-room',
+        highlights: [['Ours']],
+        highlightsB: [],
+        crop: vec2f(617, 53),
+        focalPoints: []
+    })
+}
+
+function* summary() {
+    yield* waitFor(60);
+}
+
 export default makeScene2D(function* (view) {
     view.add(<Captions
         ref={captions}
@@ -224,6 +239,10 @@ export default makeScene2D(function* (view) {
     yield* title(view)
     yield* cameraObscura(view)
     yield* diningRoom(view)
+    yield* livingRoom(view)
 
-    yield* waitUntil('done')
+    yield* waitUntil('summary')
+    yield* captions().chapter("", 1)
+    yield* captions().chapter("Summary", 1)
+    yield* summary();
 });

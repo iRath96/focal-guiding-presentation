@@ -8,3 +8,4 @@ end
 
 crop "camera-obscura", 880, 370
 crop "dining-room", 610, 375
+crop "modern-living-room", 617, 53
