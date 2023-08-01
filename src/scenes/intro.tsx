@@ -134,8 +134,8 @@ function* title(originalView: Node) {
             image: "uds", aspect: 2.5, scale: 1.0 },
         {
             symbol: "3",
-            name: "DFKI GmbH.", image: "dfki",
-            aspect: 2.5, scale: 0.75 },
+            name: "DFKI GmbH.",
+            image: "dfki", aspect: 2.5, scale: 0.75 },
     ]
     const logoHeight = 100
     view.add(<Layout layout direction={"column"} width={1800}>

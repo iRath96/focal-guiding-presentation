@@ -290,13 +290,61 @@ function* summary(originalView: Node) {
 }
 
 function* acknowledgements(originalView: Node) {
-    const view = <Layout/>;
+    const view = <Layout opacity={0} />;
     originalView.add(view);
 
-    view.add(<Txt
-        text={"Thank you"}
-        fill={colors.white}
-    />)
+    const thanks = [
+        "My great co-authors",
+        "Our anonymous reviewers",
+        "Our test scene artists",
+    ]
+    const affiliations = [
+        { image: "intel", aspect: 2.4, scale: 0.75 },
+        { image: "uds", aspect: 2.5, scale: 1.0 },
+        { image: "dfki", aspect: 2.5, scale: 0.75 },
+    ]
+    const logoHeight = 100
+    view.add(<Layout layout direction={"column"} width={1800}>
+        <Txt
+            text={"Thank you:"}
+            height={130}
+            fill={colors.white}
+            fontSize={100}
+        />
+        {thanks.map(thank => <Txt
+            marginTop={20}
+            marginLeft={20}
+            text={`•   ${thank}`}
+            fontSize={50}
+            fill={colors.white}
+        />)}
+        <Layout direction={"row"} marginTop={40} marginLeft={20}>
+            <Txt
+                text="Animated using"
+                fontSize={50}
+                fill={colors.white}
+            />
+            <Img
+                src={"logos/motioncanvas.svg"}
+                marginLeft={15}
+                marginRight={5}
+                marginTop={-6}
+                size={70} />
+            <Txt text="Motion Canvas" fill={colors.white} />
+        </Layout>
+        <Layout direction={"row"} marginTop={30} fontSize={40}>
+            {affiliations.map(affiliation => <Layout marginRight={40}>
+                <Img
+                    marginTop={15}
+                    scale={affiliation.scale}
+                    src={`logos/${affiliation.image}.svg`}
+                    size={[logoHeight * affiliation.aspect, logoHeight]}
+                />
+            </Layout>)}
+        </Layout>
+    </Layout>)
+
+    yield* view.opacity(1, 1);
 }
 
 export default makeScene2D(function* (view) {
