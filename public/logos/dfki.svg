@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="328.712" height="135.453" viewBox="0 0 328.712 135.453" id="Ebene_1" overflow="hidden">
+  <g>
+    <defs>
+      <rect x="195.491" y="-0.027" width="133.221" height="135.514" id="SVGID_1_"></rect>
+    </defs>
+    <clipPath id="SVGID_2_">
+      <use width="100%" height="100%" xlink:href="#SVGID_1_" overflow="visible"></use>
+    </clipPath>
+    <linearGradient x1="-39.188" y1="282.588" x2="-38.1875" y2="282.588" gradientUnits="userSpaceOnUse" id="SVGID_3_" gradientTransform="matrix(144.414,0,0,144.414,5854.76,-40741.9)">
+      <stop offset="0" stop-color="#FFFFFF"></stop>
+      <stop offset="0.0832" stop-color="#F5F6FC"></stop>
+      <stop offset="0.2346" stop-color="#D8DFF2"></stop>
+      <stop offset="0.4368" stop-color="#A9BAE1"></stop>
+      <stop offset="0.6792" stop-color="#618BC8"></stop>
+      <stop offset="0.9212" stop-color="#0060AC"></stop>
+      <stop offset="1" stop-color="#0060AC"></stop>
+    </linearGradient>
+    <rect x="195.491" y="-0.027" width="133.221" height="135.514" fill="url(#SVGID_3_)" clip-path="url(#SVGID_2_)"></rect>
+  </g>
+  <g>
+    <defs>
+      <path d=" M 125.742 -0.027 L 125.742 135.439 L 296.266 135.439 L 217.26 57.479 L 276.523 -0.027 Z" id="SVGID_4_"></path>
+    </defs>
+    <clipPath id="SVGID_5_">
+      <use width="100%" height="100%" xlink:href="#SVGID_4_" overflow="visible"></use>
+    </clipPath>
+    <linearGradient x1="-39.1841" y1="282.688" x2="-38.1841" y2="282.688" gradientUnits="userSpaceOnUse" id="SVGID_6_" gradientTransform="matrix(170.523,0,0,170.523,6807.56,-48137.1)">
+      <stop offset="0" stop-color="#FFFFFF"></stop>
+      <stop offset="0.0471" stop-color="#F0F2FA"></stop>
+      <stop offset="0.2384" stop-color="#B3C1E4"></stop>
+      <stop offset="0.4196" stop-color="#7C9BD1"></stop>
+      <stop offset="0.5854" stop-color="#4A7FC1"></stop>
+      <stop offset="0.7328" stop-color="#186DB6"></stop>
+      <stop offset="0.8563" stop-color="#0064AF"></stop>
+      <stop offset="0.9409" stop-color="#0060AC"></stop>
+      <stop offset="1" stop-color="#0060AC"></stop>
+    </linearGradient>
+    <rect x="125.742" y="-0.027" width="170.523" height="135.467" fill="url(#SVGID_6_)" clip-path="url(#SVGID_5_)"></rect>
+  </g>
+  <g>
+    <defs>
+      <path d=" M 0 -0.031 L 0 135.439 L 150.305 135.439 L 150.305 88.801 L 185.167 88.801 L 185.166 57.176 L 150.305 57.176 L 150.305 34.434 L 204.152 34.434 L 204.152 -0.031 Z" id="SVGID_7_"></path>
+    </defs>
+    <clipPath id="SVGID_8_">
+      <use width="100%" height="100%" xlink:href="#SVGID_7_" overflow="visible"></use>
+    </clipPath>
+    <linearGradient x1="-39.1821" y1="282.779" x2="-38.1821" y2="282.779" gradientUnits="userSpaceOnUse" id="SVGID_9_" gradientTransform="matrix(204.152,0,0,204.152,7999.09,-57662.3)">
+      <stop offset="0" stop-color="#FFFFFF"></stop>
+      <stop offset="0.266" stop-color="#FFFFFF"></stop>
+      <stop offset="0.5025" stop-color="#AFBFE3"></stop>
+      <stop offset="0.7389" stop-color="#5A88C6"></stop>
+      <stop offset="0.9045" stop-color="#016AB3"></stop>
+      <stop offset="0.9852" stop-color="#0060AC"></stop>
+      <stop offset="1" stop-color="#0060AC"></stop>
+    </linearGradient>
+    <rect x="0" y="-0.031" width="204.152" height="135.471" fill="url(#SVGID_9_)" clip-path="url(#SVGID_8_)"></rect>
+  </g>
+  <g>
+    <defs>
+      <path d=" M 58.619 -0.025 L 58.619 -0.033 L 0 -0.033 L 0 135.426 L 59.226 135.426 C 90.52 135.244 115.833 104.959 115.833 67.674 C 115.833 30.281 90.36 -0.033 58.937 -0.033 C 58.83 -0.033 58.725 -0.025 58.619 -0.025" id="SVGID_10_"></path>
+    </defs>
+    <clipPath id="SVGID_11_">
+      <use width="100%" height="100%" xlink:href="#SVGID_10_" overflow="visible"></use>
+    </clipPath>
+    <linearGradient x1="-39.1934" y1="282.426" x2="-38.1934" y2="282.426" gradientUnits="userSpaceOnUse" id="SVGID_12_" gradientTransform="matrix(115.833,0,0,115.833,4539.87,-32646.6)">
+      <stop offset="0" stop-color="#9AAFDB"></stop>
+      <stop offset="0.1366" stop-color="#92A9D8"></stop>
+      <stop offset="0.3607" stop-color="#7999CF"></stop>
+      <stop offset="0.6445" stop-color="#4C80C1"></stop>
+      <stop offset="0.9741" stop-color="#0063AE"></stop>
+      <stop offset="1" stop-color="#0060AC"></stop>
+    </linearGradient>
+    <rect x="0" y="-0.033" width="115.833" height="135.459" fill="url(#SVGID_12_)" clip-path="url(#SVGID_11_)"></rect>
+  </g>
+</svg>

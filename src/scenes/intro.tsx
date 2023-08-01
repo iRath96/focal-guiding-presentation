@@ -113,8 +113,82 @@ function* cameraObscura(originalView: Node) {
     view.remove()
 }
 
-function* title(view: Node) {
-    yield* captions().showTransition("Focal Path Guiding", 1)
+function* title(originalView: Node) {
+    const view = <Layout/>;
+    originalView.add(view);
+
+    const title = createSignal("")
+    const authors = [
+        { name: "Alexander Rath", affiliations: [1,2,3], },
+        { name: "Ömercan Yazici", affiliations: [2,3], },
+        { name: "Philipp Slusallek", affiliations: [2,3], },
+    ]
+    const affiliations = [
+        {
+            symbol: "1",
+            name: "Intel Corporation",
+            image: "intel", aspect: 2.4, scale: 0.75 },
+        {
+            symbol: "2",
+            name: "Saarland University",
+            image: "uds", aspect: 2.5, scale: 1.0 },
+        {
+            symbol: "3",
+            name: "DFKI GmbH.", image: "dfki",
+            aspect: 2.5, scale: 0.75 },
+    ]
+    const logoHeight = 100
+    view.add(<Layout layout direction={"column"} width={1800}>
+        <Txt
+            text={title}
+            height={100}
+            fill={colors.white}
+            fontSize={80}
+        />
+        <Layout direction={"row"} marginTop={30}>
+            {authors.map(author => <Layout marginRight={40}>
+                <Txt
+                    text={author.name}
+                    fill={colors.white}
+                    marginRight={10}
+                />
+                <Txt
+                    text={author.affiliations.join(", ")}
+                    fill={colors.white}
+                    fontSize={30}
+                />
+            </Layout>)}
+        </Layout>
+        <Layout direction={"row"} marginTop={30} fontSize={40}>
+            {affiliations.map(affiliation => <Layout marginRight={40}>
+                <Txt
+                    text={affiliation.symbol}
+                    fill={colors.white}
+                    opacity={0.7}
+                    marginRight={10}
+                    fontSize={20}
+                />
+                <Layout direction={"column"} alignItems={"center"}>
+                    <Txt
+                        text={affiliation.name}
+                        fill={colors.white}
+                        opacity={0.7}
+                    />
+                    <Img
+                        marginTop={15}
+                        scale={affiliation.scale}
+                        src={`logos/${affiliation.image}.svg`}
+                        size={[logoHeight * affiliation.aspect, logoHeight]}
+                    />
+                </Layout>
+            </Layout>)}
+        </Layout>
+    </Layout>)
+    yield* title("Focal Path Guiding", 1);
+
+    yield* waitUntil('title/done')
+    yield* view.opacity(0, 1);
+    view.remove();
 }
 
 function* agenda(originalView: Node) {
