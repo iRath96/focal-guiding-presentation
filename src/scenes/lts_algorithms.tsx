@@ -956,7 +956,7 @@ function* psGuiding($: {
 export default makeScene2D(function* (originalView) {
     originalView.add(<Captions
         ref={captions}
-        chapter="Previous works"
+        chapter=""
     />);
 
     const view = <Layout
@@ -970,7 +970,10 @@ export default makeScene2D(function* (originalView) {
     cbox.draw()
     
     cbox.cameraNode.scale(0)
-    yield* cbox.cameraNode.scale(1, 1)
+    yield* all(
+        captions().chapter("Previous works", 1),
+        cbox.cameraNode.scale(1, 1),
+    );
 
     yield* waitUntil('lts/pt')
     yield* all(
@@ -1018,4 +1021,8 @@ export default makeScene2D(function* (originalView) {
     yield* captions().reset()
 
     yield* waitUntil('lts/done')
+    yield* all(
+        captions().chapter("", 1),
+        view.opacity(0, 1),
+    );
 });

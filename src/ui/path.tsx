@@ -1,6 +1,7 @@
 import { Line, View2D, Node, Layout, Img, Rect, Circle, LineProps } from '@motion-canvas/2d'
 import { Circle2f, Vector2f, vec2f, vec2f_add, vec2f_direction, vec2f_distance, vec2f_lerp, vec2f_multiply, vec2f_polar } from '../rt/math'
 import { Random, SignalValue, SimpleSignal, all, createRef, createSignal, sequence } from '@motion-canvas/core'
+import { colors } from '../common';
 
 /**
  * Shuffles array in place.
@@ -100,7 +101,7 @@ export class PathVisualizer {
         />
         layout.add(<Circle
             size={2 * light.radius}
-            fill="#000"
+            fill={colors.black}
         />)
         layout.add(<Img
             size={3 * light.radius}
@@ -127,7 +128,7 @@ export class PathVisualizer {
         )
         const node = <Line
             points={() => [ lerp(pvp.t0()), lerp(pvp.t1()) ]}
-            stroke="#ffbb22"
+            stroke={colors.yellow}
             lineWidth={4}
             arrowSize={12}
             endArrow={

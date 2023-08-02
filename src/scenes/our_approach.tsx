@@ -240,7 +240,7 @@ export default makeScene2D(function* (originalView) {
     visualizer.gridOpacity = 0.4
     visualizer.maxDensity = 1
 
-    yield* captions().showTransition("Our approach", 4)
+    yield* captions().showTransition("Our approach", 3)
 
     yield* waitUntil('spatial')
     yield* spatialDensity({ cbox, view })

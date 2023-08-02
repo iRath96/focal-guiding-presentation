@@ -350,11 +350,12 @@ function* acknowledgements(originalView: Node) {
 export default makeScene2D(function* (view) {
     view.add(<Captions
         ref={captions}
-        chapter="Results"
+        chapter=""
         blocker={false}
     />);
 
     yield* title(view)
+    yield* captions().chapter("Results", 1)
     yield* cameraObscura(view)
     yield* diningRoom(view)
     yield* livingRoom(view)

@@ -5,6 +5,7 @@ import { PathVertex, PathVertexType, PathVisualizer } from '../ui/path';
 import { CBox } from '../common/cbox';
 import { wiggle } from '../common/animations';
 import { Captions } from '../common/captions';
+import { colors } from '../common';
 
 function knownBeforehandLabel(cbox: CBox, view: Node) {
     const layout = <Layout
@@ -422,8 +423,8 @@ class VirtualImageLens {
             ]}
             scale={() => [ this.lensT(), 1 ]}
             closed
-            fill="rgba(59, 91, 255, 0.5)"
-            stroke="rgb(59, 91, 255)"
+            fill="rgba(6, 178, 223, 0.5)"
+            stroke={colors.blue}
             lineWidth={4}
             zIndex={2}
         />)
@@ -468,7 +469,7 @@ class VirtualImageLens {
 
             this.view.add(<Line
                 points={() => lerpPath(path(), this.lensRayT())}
-                stroke={"#fff"}
+                stroke={colors.yellow}
                 lineWidth={4}
                 arrowSize={12}
                 endArrow
@@ -746,6 +747,7 @@ export default makeScene2D(function* (originalView) {
     yield* all(
         viLensView.opacity(0, 2),
         viMirrorView.opacity(0, 2),
-        delay(1, captions().reset())
+        delay(1, captions().reset()),
+        delay(1, captions().chapter("", 1)),
     )
 });

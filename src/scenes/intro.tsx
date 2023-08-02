@@ -1,5 +1,5 @@
 import { Node, Img, Layout, Rect, Txt, makeScene2D, LineProps, Ray } from "@motion-canvas/2d";
-import { Random, all, chain, createRef, createSignal, debug, sequence, waitUntil } from "@motion-canvas/core";
+import { Random, all, chain, createRef, createSignal, debug, delay, sequence, waitUntil } from "@motion-canvas/core";
 import { Captions } from "../common/captions";
 import { CBox } from "../common/cbox";
 import { findGuidePaths } from "../common/guiding";
@@ -18,7 +18,7 @@ function* cameraObscura(originalView: Node) {
     const reference = <Layout>
         <Rect
             ref={highlight}
-            stroke={"#fff"}
+            stroke={colors.yellow}
             lineWidth={8}
             radius={20}
             opacity={0}
@@ -33,10 +33,11 @@ function* cameraObscura(originalView: Node) {
         <Rect
             size={96}
             position={[880+48-640,370+48-360]}
-            stroke={"red"}
-            lineWidth={4}
+            stroke={colors.red}
+            lineWidth={5}
             opacity={showCropRect}
             scale={showCropRect}
+            radius={6}
         />
     </Layout>;
     view.add(reference);
@@ -134,32 +135,44 @@ function* title(originalView: Node) {
             image: "uds", aspect: 2.5, scale: 1.0 },
         {
             symbol: "3",
-            name: "DFKI GmbH.",
+            name: "DFKI Saarbrücken",
             image: "dfki", aspect: 2.5, scale: 0.75 },
     ]
     const logoHeight = 100
-    view.add(<Layout layout direction={"column"} width={1800}>
+    const authorView = createRef<Layout>();
+    const affiliationView = createRef<Layout>();
+    view.add(<Layout layout direction={"column"} width={1800} fontSize={30}>
         <Txt
             text={title}
             height={100}
             fill={colors.white}
             fontSize={80}
         />
-        <Layout direction={"row"} marginTop={30}>
+        <Layout
+            ref={authorView}
+            opacity={0}
+            direction={"row"}
+            marginTop={30}
+        >
             {authors.map(author => <Layout marginRight={40}>
                 <Txt
                     text={author.name}
                     fill={colors.white}
                     marginRight={10}
+                    fontSize={40}
                 />
                 <Txt
                     text={author.affiliations.join(", ")}
                     fill={colors.white}
-                    fontSize={30}
                 />
             </Layout>)}
         </Layout>
-        <Layout direction={"row"} marginTop={30} fontSize={40}>
+        <Layout
+            ref={affiliationView}
+            opacity={0}
+            direction={"row"}
+            marginTop={30}
+        >
             {affiliations.map(affiliation => <Layout marginRight={40}>
                 <Txt
                     text={affiliation.symbol}
@@ -184,7 +197,11 @@ function* title(originalView: Node) {
             </Layout>)}
         </Layout>
     </Layout>)
-    yield* title("Focal Path Guiding", 1);
+    yield* all(
+        title("Focal Path Guiding", 1),
+        delay(0.3, authorView().opacity(1, 1)),
+        delay(0.6, affiliationView().opacity(1, 1)),
+    );
 
     yield* waitUntil('title/done')
     yield* view.opacity(0, 1);
