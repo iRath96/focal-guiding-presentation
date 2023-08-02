@@ -45,11 +45,12 @@ function* showScene(originalView: Node, $: ShowSceneProps) {
         <Rect
             size={96}
             position={[$.crop.x+48-640,$.crop.y+48-360]}
-            stroke={"red"}
-            lineWidth={4}
+            stroke={colors.red}
+            lineWidth={5}
             opacity={showCropRect}
             scale={showCropRect}
             zIndex={50}
+            radius={6}
         />
     </Layout>;
     view.add(reference);
@@ -57,7 +58,21 @@ function* showScene(originalView: Node, $: ShowSceneProps) {
 
     const renders = <Layout/>;
     view.add(renders);
-    const methods = ["PT", "MEMLT", "MCVCM", "PAVMM", "Ours", "Reference"]
+    const methods = ["PT", "PAVMM", "Ours", "MEMLT", "MCVCM", "Reference"]
+    const labels = [
+        {
+            name: "path tracing",
+            from: 0,
+            to: 2,
+        }, {
+            name: "bi-directional",
+            from: 3,
+            to: 4,
+        }
+    ]
+    const cropSize = 200
+    const cropMargin = 50
+    const cropStride = cropSize + cropMargin
     const references = methods.reduce((h, k) => ({
         ...h,
         [k]: createRef<Layout>(),
@@ -65,18 +80,18 @@ function* showScene(originalView: Node, $: ShowSceneProps) {
     yield* sequence(0.1, ...methods.map((method, i) => {
         const img = <Layout
             ref={references[method]}
-            position={[ (i - 2.5) * 290, 320 ]}
+            position={[ (i - 2.5) * cropStride, 360 ]}
             opacity={0}
         >
             <Img
                 src={`imgs/${$.path}/${method}_crop.png`}
-                size={[240,240]}
+                size={[cropSize,cropSize]}
                 stroke={"#aaa"}
                 lineWidth={8}
             />
             <Txt
                 text={method}
-                y={165}
+                y={cropSize/2 + 45}
                 fontSize={40}
                 fill={colors.white}
                 fontFamily={"Mukta"}
@@ -84,7 +99,41 @@ function* showScene(originalView: Node, $: ShowSceneProps) {
         </Layout>;
         renders.add(img)
         return img.opacity(1, 1)
-    }))
+    }, ...labels.map(label => {
+        const mid = (label.to - label.from) / 2 * cropStride
+        const textWidth = label.name.length * 21
+        const text = <Layout
+            position={[ (label.from - 2.5) * cropStride, 215 ]}
+            zIndex={-1}
+            opacity={0.7}
+        >
+            <Ray
+                fromX={-cropStride * 0.4}
+                toX={mid - textWidth / 2}
+                stroke={colors.white}
+                lineWidth={1}
+            />
+            <Txt
+                x={mid}
+                y={4}
+                text={label.name.toUpperCase()}
+                fill={colors.white}
+                fontFamily={"Mukta"}
+                fontWeight={200}
+                opacity={2}
+                fontSize={30}
+                letterSpacing={4}
+            />
+            <Ray
+                fromX={cropStride * (label.to - label.from + 0.4)}
+                toX={mid + textWidth / 2}
+                stroke={colors.white}
+                lineWidth={1}
+            />
+        </Layout>
+        renders.add(text)
+        return text.opacity(0.5, 1)
+    })))
 
     function* highlights(phase: string, highlights: string[][]) {
         yield* chain(...highlights.map((highlight, hIndex) => {
