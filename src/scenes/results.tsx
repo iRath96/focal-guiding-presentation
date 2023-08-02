@@ -101,13 +101,13 @@ function* showScene(originalView: Node, $: ShowSceneProps) {
         </Layout>;
         renders.add(img)
         return img.opacity(1, 1)
-    }, ...labels.map(label => {
+    }), ...labels.map(label => {
         const mid = (label.to - label.from) / 2 * cropStride
         const textWidth = label.name.length * 21
         const text = <Layout
             position={[ (label.from - 2.5) * cropStride, 215 ]}
             zIndex={-1}
-            opacity={0.7}
+            opacity={0}
         >
             <Ray
                 fromX={-cropStride * 0.4}
@@ -134,8 +134,8 @@ function* showScene(originalView: Node, $: ShowSceneProps) {
             />
         </Layout>
         renders.add(text)
-        return text.opacity(0.5, 1)
-    })))
+        return text.opacity(0.7, 1)
+    }))
 
     function* highlights(phase: string, highlights: string[][]) {
         yield* chain(...highlights.map((highlight, hIndex) => {
