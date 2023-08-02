@@ -163,7 +163,7 @@ function* hierarchical($: {
 
     const gradT0 = createSignal(0)
     const gradT1 = createSignal(0)
-    const pdfColor = "255, 127, 0"
+    /*const pdfColor = "255, 127, 0"
     $.view.add(<Line
         position={ray.o}
         rotation={vec2f_angle(ray.d) * 180 / Math.PI}
@@ -182,7 +182,7 @@ function* hierarchical($: {
             ]
         })}
         stroke={`rgba(${pdfColor}, 0.3)`}
-    />)
+    />)*/
 
     yield* chain(...hits.map(function* (hit) {
         const node = <Ray
