@@ -6,7 +6,21 @@ import { Ray2f, ray2f_evaluate, vec2f, vec2f_add, vec2f_direction, vec2f_distanc
 import { PSSMLT } from '../rt/pssmlt';
 import { Captions } from '../common/captions';
 import { FakeRandom, findGuidePaths, FocalHighlight, linear_lookup, linspace, polar_plot, sample, saturate, StratifiedRandom, theta_linspace } from '../common/guiding';
-import { colors } from '../common';
+import { alpha, colors } from '../common';
+
+function array_equals<T>(a: T[], b: T[]): boolean {
+    if (a.length !== b.length) return false
+    return a.every((v, i) => v === b[i])
+}
+
+export function isCDSL(path: PathVertex[]) {
+    return array_equals(path.map(p => p.type), [
+        PathVertexType.Camera,
+        PathVertexType.Diffuse,
+        PathVertexType.Specular,
+        PathVertexType.Light
+    ])
+}
 
 const captions = createRef<Captions>()
 
@@ -606,7 +620,7 @@ function* guiding($: {
     $.view.add(view)
 
     const centralPaths: number[] = []
-    for (const path of findGuidePaths($.cbox)) {
+    for (const path of findGuidePaths($.cbox).filter(isCDSL)) {
         if (centralPaths.length === 0) {
             // first path, show extra path for camera segment
             hitpoint(path[1].p)
@@ -632,13 +646,13 @@ function* guiding($: {
     const guidingDist = createSignal<number[]>(() => {
         const targets = guidingBrokenTarget() ?
         [
-            { d: vec2f_normalized(vec2f(-1, -0.80)), exp: 10, w: 1.7 },
-            { d: vec2f_normalized(vec2f(-1,  1.60)), exp: 6 , w: 0.5 },
+            { d: vec2f_normalized(vec2f(-1, -1.10)), exp: 10, w: 1.7 },
+            //{ d: vec2f_normalized(vec2f(-1,  1.60)), exp: 6 , w: 0.5 },
         ] :
         [
             { d: vec2f_normalized(vec2f(-1, -1.15)), exp: 180, w: 1 },
-            { d: vec2f_normalized(vec2f(-1, -0.48)), exp: 180, w: 1 },
-            { d: vec2f_normalized(vec2f(-1,  1.60)), exp: 6  , w: 0.5 },
+            //{ d: vec2f_normalized(vec2f(-1, -0.48)), exp: 180, w: 1 },
+            //{ d: vec2f_normalized(vec2f(-1,  1.60)), exp: 6  , w: 0.5 },
         ]
         const normal = vec2f(-1, 0)
         let pdfs: number[] = []
@@ -726,10 +740,10 @@ function* guiding($: {
     const directionsMerge = createSignal(0)
     const parallaxCompensation = createSignal(0)
     guidePaths = findGuidePaths($.cbox, {
-        spread: 15,
-        candidates: 350,
-        seed: 42,
-    })
+        spread: 20,
+        candidates: 700,
+        seed: 9,
+    }).filter(isCDSL)
     for (const path of guidePaths) {
         const id = pathvis.showPath(path, { opacity: 0.2, visible: true })
         const dist = vec2f_distance(path[1].p, hitpoint())
@@ -774,7 +788,7 @@ function* guiding($: {
         />)
     }
     yield* waitUntil('guiding/neighbors')
-    yield* spatialExtent(120, 3)
+    yield* spatialExtent(150, 3)
     view.add(directionsView)
     
     yield* waitUntil('guiding/dir1')
@@ -837,6 +851,9 @@ function* psGuiding($: {
     cbox: CBox
     view: Node
 }) {
+    const distColor = colors.blue
+    const condDistColor = colors.green
+
     function add(n: Node) {
         $.view.add(n)
         return n
@@ -844,16 +861,16 @@ function* psGuiding($: {
 
     const dots: Node[] = []
     for (const path of guidePaths) {
-        for (let i = 1; i < path.length; i++) {
+        for (let i = 1; i < path.length-1; i++) {
             const dot = <Layout position={path[i].p} opacity={0}>
                 <Circle
-                    size={20}
-                    fill={colors.white}
+                    size={30}
+                    fill={distColor}
                     opacity={0.3}
                 />
                 <Circle
-                    size={9}
-                    fill={colors.white}
+                    size={15}
+                    fill={distColor}
                 />
             </Layout>
             dots.push(dot)
@@ -889,14 +906,14 @@ function* psGuiding($: {
             from: [ 0, -150 ],
             to: [ 0, 150 ],
             stops: [
-                { color: "rgba(0,0,0,0)", offset: 0 },
-                { color: colors.red, offset: 0.3 },
-                { color: colors.red, offset: 0.7 },
-                { color: "rgba(0,0,0,0)", offset: 1 },
+                { color: alpha(distColor, 0), offset: 0 },
+                { color: distColor, offset: 0.3 },
+                { color: distColor, offset: 0.7 },
+                { color: alpha(distColor, 0), offset: 1 },
             ]
         })}
         lineWidth={4}
-        fill={"rgba(255,0,0,0.2)"}
+        fill={alpha(distColor, 0.2)}
     />)
     const distP1 = add(<Line
         position={hitpointCeiling}
@@ -907,14 +924,14 @@ function* psGuiding($: {
             from: [ -120, 0 ],
             to: [ 120, 0 ],
             stops: [
-                { color: "rgba(0,0,0,0)", offset: 0 },
-                { color: colors.red, offset: 0.3 },
-                { color: colors.red, offset: 0.7 },
-                { color: "rgba(0,0,0,0)", offset: 1 },
+                { color: alpha(distColor, 0), offset: 0 },
+                { color: distColor, offset: 0.3 },
+                { color: distColor, offset: 0.7 },
+                { color: alpha(distColor, 0), offset: 1 },
             ]
         })}
         lineWidth={4}
-        fill={"rgba(255,0,0,0.2)"}
+        fill={alpha(distColor, 0.2)}
     />)
     const distPcond = add(<Line
         position={hitpointConditional}
@@ -924,14 +941,14 @@ function* psGuiding($: {
             from: [ -25 - (1 - conditionalT()) * 50, 0 ],
             to: [ 25 + (1 - conditionalT()) * 50, 0 ],
             stops: [
-                { color: "rgba(0,0,0,0)", offset: 0 },
-                { color: colors.green, offset: 0.3 },
-                { color: colors.green, offset: 0.7 },
-                { color: "rgba(0,0,0,0)", offset: 1 },
+                { color: alpha(condDistColor, 0), offset: 0 },
+                { color: condDistColor, offset: 0.3 },
+                { color: condDistColor, offset: 0.7 },
+                { color: alpha(condDistColor, 0), offset: 1 },
             ]
         })}
         lineWidth={4}
-        fill={"rgba(0,255,0,0.2)"}
+        fill={alpha(condDistColor, 0.2)}
     />)
 
     yield* waitUntil('psg/dist')
