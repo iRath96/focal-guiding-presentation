@@ -2,7 +2,7 @@ import {Circle, Line, Ray, View2D, makeScene2D, Node, Txt, Spline, Layout, Rect,
 import {Random, SimpleSignal, all, chain, createRef, createSignal, debug, delay, sequence, waitFor, waitUntil} from '@motion-canvas/core';
 import { Circle2f, Curve2f, Line2f, Ray2f, Vector2f, circle2f_evaluate, circle2f_intersect, circle2f_normal, curve2f_intersect, curve2f_normal, curve2f_rasterize, line2f_angle, line2f_evaluate, line2f_intersect, line2f_length, line2f_normal, ray2f_evaluate, sample_hemicircle, vec2f, vec2f_add, vec2f_direction, vec2f_distance, vec2f_dot, vec2f_length, vec2f_lerp, vec2f_minus, vec2f_multiply, vec2f_normalized, vec2f_polar, vec2f_reflect, vec2f_refract, vec2f_sub, vec3f } from '../rt/math';
 import { PathVertex, PathVertexType, PathVisualizer } from '../ui/path';
-import { CBox } from '../common/cbox';
+import { CBox, makeCBoxView } from '../common/cbox';
 import { wiggle } from '../common/animations';
 import { Captions } from '../common/captions';
 import { colors } from '../common';
@@ -610,10 +610,7 @@ export default makeScene2D(function* (originalView) {
         chapter=""
     />);
 
-    const view = <Layout
-        position={[-350, 55]}
-        scale={[ -1, 1 ]}
-    />
+    const view = makeCBoxView();
     originalView.add(view)
     
     const prng = new Random(11)

@@ -1,6 +1,6 @@
 import { Circle, Gradient, Node, NodeProps, Rect, Txt, initial, signal } from '@motion-canvas/2d'
 import { SimpleSignal, all, createRef, delay, waitFor } from '@motion-canvas/core'
-import { colors } from '../common';
+import { colors, isSIGGRAPH } from '../common';
 
 export interface CaptionsProps extends NodeProps {
     chapter?: SimpleSignal<string> | string
@@ -83,7 +83,7 @@ export class Captions extends Node {
             fontStyle={"italic"}
         />)
 
-        if ({ blocker: true, ...props }.blocker) {
+        if ({ blocker: !isSIGGRAPH, ...props }.blocker) {
             this.add(<Rect
                 size={[1920, 1080]}
                 fill={new Gradient({

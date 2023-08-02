@@ -2,7 +2,7 @@ import { Circle, Img, Layout, Node, Ray, Rect, Txt, makeScene2D } from "@motion-
 import { Reference, Vector2, all, chain, createRef, createSignal, sequence, waitFor, waitUntil } from "@motion-canvas/core";
 import { Captions } from "../common/captions";
 import { Bounds2f, Line2f, Vector2f, line2f_evaluate, line2f_intersect, ray2f_evaluate, ray2f_targeting, vec2f } from "../rt/math";
-import { colors } from "../common";
+import { colors, isSIGGRAPH } from "../common";
 import { linspace } from "../common/guiding";
 
 const captions = createRef<Captions>()
@@ -71,7 +71,7 @@ function* showScene(originalView: Node, $: ShowSceneProps) {
         }
     ]
     const cropSize = 200
-    const cropMargin = 50
+    const cropMargin = 40
     const cropStride = cropSize + cropMargin
     const references = methods.reduce((h, k) => ({
         ...h,
@@ -92,9 +92,11 @@ function* showScene(originalView: Node, $: ShowSceneProps) {
             <Txt
                 text={method}
                 y={cropSize/2 + 45}
-                fontSize={40}
+                fontSize={37}
+                letterSpacing={1}
                 fill={colors.white}
                 fontFamily={"Mukta"}
+                fontWeight={300}
             />
         </Layout>;
         renders.add(img)
@@ -420,10 +422,16 @@ export default makeScene2D(function* (view) {
     />);
 
     yield* title(view)
-    yield* captions().chapter("Results", 1)
-    yield* cameraObscura(view)
-    yield* diningRoom(view)
-    yield* livingRoom(view)
+    if (isSIGGRAPH) {
+        yield* captions().chapter("Results", 1)
+    }
+    const resultsView = <Layout x={
+        isSIGGRAPH ? 0 : -200
+    }/>
+    view.add(resultsView)
+    yield* cameraObscura(resultsView)
+    yield* diningRoom(resultsView)
+    yield* livingRoom(resultsView)
 
     yield* waitUntil('summary')
     yield* captions().chapter("", 1)

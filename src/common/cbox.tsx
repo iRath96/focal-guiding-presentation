@@ -1,9 +1,9 @@
 import { PathVertex, PathVertexType, PathVisualizer } from '../ui/path'
 import { Circle2f, Line2f, Ray2f, Vector2f, circle2f_intersect, circle2f_normal, line2f_intersect, line2f_normal, ray2f_evaluate, sample_hemicircle, vec2f, vec2f_add, vec2f_direction, vec2f_distance, vec2f_dot, vec2f_lerp, vec2f_minus, vec2f_multiply, vec2f_polar, vec2f_reflect } from '../rt/math'
-import { Line, Node } from '@motion-canvas/2d'
+import { Layout, Line, Node } from '@motion-canvas/2d'
 import { Vector2, createSignal } from '@motion-canvas/core'
 import { wiggle } from './animations'
-import { colors } from '../common'
+import { colors, isSIGGRAPH } from '../common'
 
 interface CBoxProps {
     onlyFloor: boolean
@@ -11,6 +11,16 @@ interface CBoxProps {
 
 interface CBoxWall extends Line2f {
     mirror?: boolean
+}
+
+export function makeCBoxView() {
+    return <Layout
+        position={[
+            isSIGGRAPH ? 0 : -350,
+            55
+        ]}
+        scale={[ -1, 1 ]}
+    />
 }
 
 export class CBox {

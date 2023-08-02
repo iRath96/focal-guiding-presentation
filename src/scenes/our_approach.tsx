@@ -1,6 +1,6 @@
 import { Circle, Gradient, Layout, Line, makeScene2D, Node, Ray } from '@motion-canvas/2d';
 import { all, chain, createRef, createSignal, debug, delay, Random, Reference, sequence, waitFor, waitUntil } from '@motion-canvas/core';
-import { CBox } from '../common/cbox';
+import { CBox, makeCBoxView } from '../common/cbox';
 import { Captions } from '../common/captions';
 import { findGuidePaths } from '../common/guiding';
 import { QuadTree } from '../rt/quadtree';
@@ -211,10 +211,7 @@ export default makeScene2D(function* (originalView) {
         chapter="Our approach"
     />);
 
-    const view = <Layout
-        position={[-350, 55]}
-        scale={[ -1, 1 ]}
-    />
+    const view = makeCBoxView();
     originalView.add(view)
 
     const cbox = new CBox(view)

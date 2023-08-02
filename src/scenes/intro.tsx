@@ -1,7 +1,7 @@
 import { Node, Img, Layout, Rect, Txt, makeScene2D, LineProps, Ray } from "@motion-canvas/2d";
 import { Random, all, chain, createRef, createSignal, debug, delay, sequence, waitUntil } from "@motion-canvas/core";
 import { Captions } from "../common/captions";
-import { CBox } from "../common/cbox";
+import { CBox, makeCBoxView } from "../common/cbox";
 import { findGuidePaths } from "../common/guiding";
 import { PathVertex, PathVertexType, PathVisualizer, path_segments, shuffle } from "../ui/path";
 import { Bounds2f, bounds2f_center, bounds2f_diagonal, ray2f_evaluate, ray2f_targeting, vec2f, vec2f_direction, vec2f_lerp, vec2f_multiply, vec2f_pmultiply, vec2f_sub } from "../rt/math";
@@ -278,10 +278,7 @@ function* lts(originalView: Node) {
 
     yield* captions().chapter("Background", 1);
 
-    const cboxView = <Layout
-        position={[-350, 55]}
-        scale={[ -1, 1 ]}
-    />;
+    const cboxView = makeCBoxView();
     const pathvisView = <Layout />;
     const cboxGeomView = <Layout />;
     cboxView.add(pathvisView);

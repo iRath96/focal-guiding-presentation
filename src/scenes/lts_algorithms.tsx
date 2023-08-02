@@ -1,6 +1,6 @@
 import { Circle, Gradient, Img, Layout, Line, makeScene2D, Node, Ray, Txt } from '@motion-canvas/2d';
 import { Random, all, chain, createRef, createSignal, delay, sequence, waitFor, waitUntil } from '@motion-canvas/core';
-import { CBox } from '../common/cbox';
+import { CBox, makeCBoxView } from '../common/cbox';
 import { Path, path_length, path_segments, PathVertex, PathVertexType, PathVisualizer, shuffle } from '../ui/path';
 import { Ray2f, ray2f_evaluate, vec2f, vec2f_add, vec2f_direction, vec2f_distance, vec2f_dot, vec2f_lerp, vec2f_multiply, vec2f_normalized, vec2f_polar, vec2f_sub, Vector2f } from '../rt/math';
 import { PSSMLT } from '../rt/pssmlt';
@@ -978,10 +978,7 @@ export default makeScene2D(function* (originalView) {
         chapter=""
     />);
 
-    const view = <Layout
-        position={[-350, 55]}
-        scale={[ -1, 1 ]}
-    />
+    const view = makeCBoxView();
     originalView.add(view)
 
     const cbox = new CBox(view)
