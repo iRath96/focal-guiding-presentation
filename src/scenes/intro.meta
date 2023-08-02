@@ -34,64 +34,68 @@
       "targetTime": 32.17977216341882
     },
     {
+      "name": "title/done",
+      "targetTime": 37.01984986406695
+    },
+    {
       "name": "agenda/0",
-      "targetTime": 39.17977216341882
+      "targetTime": 39.01984986406695
     },
     {
       "name": "agenda/1",
-      "targetTime": 42.728484876230866
+      "targetTime": 42.568562576878996
     },
     {
       "name": "agenda/2",
-      "targetTime": 45.71161304867777
+      "targetTime": 45.5516907493259
     },
     {
       "name": "agenda/3",
-      "targetTime": 50.3833625506481
+      "targetTime": 50.22344025129623
     },
     {
       "name": "agenda/4",
-      "targetTime": 53.13413052509754
+      "targetTime": 52.97420822574567
     },
     {
       "name": "agenda/5",
-      "targetTime": 56.1280607182205
+      "targetTime": 55.968138418868634
     },
     {
       "name": "lts",
-      "targetTime": 57.1280607182205
+      "targetTime": 56.968138418868634
     },
     {
       "name": "geometry",
-      "targetTime": 63.274420482671516
+      "targetTime": 63.11449818331965
     },
     {
       "name": "materials",
-      "targetTime": 64.47442048267153
+      "targetTime": 64.31449818331966
     },
     {
       "name": "lights",
-      "targetTime": 65.97442048267153
+      "targetTime": 65.81449818331966
     },
     {
       "name": "camera",
-      "targetTime": 68.5189736386929
+      "targetTime": 68.35905133934102
     },
     {
       "name": "paths",
-      "targetTime": 75.57650782806923
+      "targetTime": 75.41658552871735
     },
     {
       "name": "extensions",
-      "targetTime": 81.12650782806902
+      "targetTime": 80.96658552871715
     },
     {
       "name": "focal",
-      "targetTime": 86.92650782806881
+      "targetTime": 86.76658552871693
     },
     {
       "name": "intro/done",
-      "targetTime": 93.1979077638643
+      "targetTime": 93.03798546451242
     }
   ],
   "seed": 2604439895

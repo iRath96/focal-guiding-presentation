@@ -60,7 +60,10 @@ function* hierarchical($: {
     ]), 1)
 
     yield* waitUntil('warping')
-    yield* pathvis.opacity(0.3, 1)
+    yield* all(
+        pathvis.opacity(0.3, 1),
+        captions().updateReference("Hierarchical Sample Warping [McCool and Harwood 1997]")
+    )
 
     const prng = new Random(1234)
     const points: Vector2f[] = []
@@ -101,7 +104,10 @@ function* hierarchical($: {
         ))
     }))
 
-    yield* all(...unimportant.map(c => c.opacity(0, 1)))
+    yield* all(
+        captions().updateReference(),
+        ...unimportant.map(c => c.opacity(0, 1))
+    )
     for (const circle of unimportant) circle.remove();
 
     // connect to sampled point
@@ -137,6 +143,7 @@ function* hierarchical($: {
     // show pdf
     yield* waitUntil('pdf')
     yield* all(
+        captions().updateReference("Octree Traversal [Revelles et al. 2000]"),
         pathvis.opacity(0.3, 1),
         //$.qvis.view.opacity(1, 1),
     )
@@ -195,6 +202,7 @@ function* hierarchical($: {
     }))
     gradT0(1)
     gradT1(1)
+    yield* captions().updateReference();
 }
 
 export default makeScene2D(function* (originalView) {
@@ -344,5 +352,10 @@ export default makeScene2D(function* (originalView) {
     yield* quadtreeView.opacity(0.5, 1)
     yield* hierarchical({ cbox, quadtree, qvis: visualizer, view })
     yield* waitUntil('ours/done')
-    yield* waitFor(100)
+    
+    yield* all(
+        view.opacity(0, 1),
+        captions().chapter("", 1),
+    );
+    view.remove()
 });
