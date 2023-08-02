@@ -1,11 +1,11 @@
 import { Circle, Gradient, Img, Layout, Line, makeScene2D, Node, Ray, Txt } from '@motion-canvas/2d';
-import { Random, all, chain, createRef, createSignal, sequence, waitFor, waitUntil } from '@motion-canvas/core';
+import { Random, all, chain, createRef, createSignal, delay, sequence, waitFor, waitUntil } from '@motion-canvas/core';
 import { CBox } from '../common/cbox';
 import { Path, path_length, path_segments, PathVertex, PathVertexType, PathVisualizer, shuffle } from '../ui/path';
 import { Ray2f, ray2f_evaluate, vec2f, vec2f_add, vec2f_direction, vec2f_distance, vec2f_dot, vec2f_lerp, vec2f_multiply, vec2f_normalized, vec2f_polar, vec2f_sub, Vector2f } from '../rt/math';
 import { PSSMLT } from '../rt/pssmlt';
 import { Captions } from '../common/captions';
-import { FakeRandom, findGuidePaths, linear_lookup, linspace, polar_plot, sample, saturate, StratifiedRandom, theta_linspace } from '../common/guiding';
+import { FakeRandom, findGuidePaths, FocalHighlight, linear_lookup, linspace, polar_plot, sample, saturate, StratifiedRandom, theta_linspace } from '../common/guiding';
 import { colors } from '../common';
 
 const captions = createRef<Captions>()
@@ -210,6 +210,7 @@ function* pathtrace($: {
     cbox: CBox
     useNEE: boolean
     numPaths: number
+    view: Node
 }) {
     const segments: {
         node: Node
@@ -230,6 +231,7 @@ function* pathtrace($: {
             maxDepth: 2
         })
         for (let path of paths) {
+            path[0].p = $.cbox.camera.center;
             let hack = 0
             if (path[path.length - 1].nee) {
                 hack = path_length(path.slice(0, path.length - 1))
@@ -282,43 +284,93 @@ function* pathtrace($: {
     yield* $.cbox.pathvis.fadeInPaths(ids, 1, 0.03)
     
     yield* waitUntil('pt/cam')
-    yield* all(...segments.filter(s => !s.isNEE && !s.isHelper).map(s =>
-        s.node.opacity(s.isCamera ? 1 : 0.2, 1)))
+    const fhCam = createRef<FocalHighlight>();
+    $.view.add(<FocalHighlight
+        ref={fhCam}
+        position={$.cbox.camera.center}
+    />)
+    yield* all(
+        fhCam().opacity(1, 1),
+        $.cbox.cameraNode.opacity(0.3, 1),
+        ...segments
+            .filter(s => !s.isNEE && !s.isHelper)
+            .map(s =>
+                s.node.opacity(s.isCamera ? 1 : 0.2, 1)
+            )
+    )
 
     yield* waitUntil('pt/virt')
-    yield* all(...segments.filter(s => !s.isNEE).map(s =>
-        s.node.opacity(
-            s.isSpecular && s.isCamera || s.wasSpecular ?
-            1 : 0.2, 1))
+    const fhCamVirt = createRef<FocalHighlight>();
+    $.view.add(<FocalHighlight
+        ref={fhCamVirt}
+        position={$.cbox.mirroredCamera.center}
+    />)
+    const prevY = $.view.y();
+    yield* all(
+        $.view.y(prevY + 100, 1),
+        fhCam().opacity(0, 1),
+        fhCamVirt().opacity(1, 1),
+        $.cbox.cameraNode.opacity(1, 1),
+        ...segments
+            .filter(s => !s.isNEE)
+            .map(s =>
+                s.node.opacity(
+                    s.isSpecular && s.isCamera || s.wasSpecular ?
+                    1 : 0.2, 1
+                )
+        )
     )
 
     yield* waitFor(3)
 
-    yield* all(...segments.filter(s => !s.isNEE).map(s =>
-        s.node.opacity(s.isHelper ? 0 : 0.2, 1)))
+    yield* all(
+        $.view.y(prevY, 1),
+        fhCamVirt().opacity(0, 1),
+        ...segments
+            .filter(s => !s.isNEE)
+            .map(s =>
+                s.node.opacity(s.isHelper ? 0 : 0.2, 1)
+            )
+    )
     
     yield* waitUntil('pt/nee')
     yield* captions().updateReference("Next event estimation")
-
-    yield* all(...segments.map(s =>
-        s.node.opacity(
-            s.isHelper ? 0 :
-            s.isNEE ? 1 :
-            0.2
-        , 1))
+    const neeIds: number[] = []
+    for (const segment of segments) {
+        if (!segment.isNEE) continue
+        neeIds.push($.cbox.pathvis.showPath([
+            { p: segment.a.p },
+            { p: $.cbox.light.center }
+        ], {
+            lineDash: [8,8]
+        }))
+    }
+    const fhLight = createRef<FocalHighlight>();
+    $.view.add(<FocalHighlight
+        ref={fhLight}
+        position={$.cbox.light.center}
+    />)
+    yield* all(
+        $.cbox.lightNode.opacity(0.3, 1),
+        fhLight().opacity(1, 1),
+        ...segments.map(s =>
+            s.node.opacity(
+                s.isHelper ? 0 :
+                s.isNEE ? 0 :
+                0.2
+            , 1)
+        ),
+        $.cbox.pathvis.fadeInPaths(neeIds, 1),
     )
 
     yield* waitUntil('pt/mnee')
-
     const mneeIds: number[] = []
     for (const segment of segments) {
         if (!segment.isNEE) continue
         const start = segment.a.p
-        let end = $.cbox.mirroredLight.center
+        const end = $.cbox.mirroredLight.center
         const d = vec2f_direction(start, end)
-        end = vec2f_sub(end, vec2f_multiply(d, $.cbox.light.radius))
-
-        const mend = $.cbox.mirrorAtCeiling(end)
+        const mend = $.cbox.light.center
         const mid = vec2f_add(start, vec2f_multiply(d,
             ($.cbox.ceilingY - start.y) / d.y
         ))
@@ -330,26 +382,48 @@ function* pathtrace($: {
         ], {
             lineDash: [8,8]
         }))
+        mneeIds.push($.cbox.pathvis.showPath([
+            { p: start },
+            { p: mid },
+            { p: end }
+        ], {
+            lineDash: [8,8],
+            opacity: 0.3
+        }))
     }
-
+    const fhLightVirt = createRef<FocalHighlight>();
+    $.view.add(<FocalHighlight
+        ref={fhLightVirt}
+        position={$.cbox.mirroredLight.center}
+    />)
     yield* all(
         captions().updateReference("Manifold NEE [Hanika et al. 2015; Zeltner et al. 2020]"),
+        fhLight().opacity(0, 1),
+        ...neeIds.map(id => $.cbox.pathvis.getPath(id).opacity(0.2, 1)),
         ...segments.map(s =>
         s.node.opacity(
             s.isHelper ? 0 :
-            s.isNEE ? 0.2 :
+            s.isNEE ? 0 :
             0.2
         , 1))
     )
-    yield* $.cbox.pathvis.fadeInPaths(mneeIds, 1)
+    yield* all(
+        delay(0.4, fhLightVirt().opacity(1, 1)),
+        $.cbox.pathvis.fadeInPaths(mneeIds, 1),
+    );
 
     yield* waitUntil('pt/done')
-    yield* $.cbox.pathvis.fadeAndRemove(1)
+    yield* all(
+        fhLightVirt().opacity(0, 1),
+        $.cbox.lightNode.opacity(1, 1),
+        $.cbox.pathvis.fadeAndRemove(1),
+    );
 }
 
 function* lighttrace($: {
     cbox: CBox
     numPaths: number
+    view: Node
 }) {
     const segments: {
         node: Node
@@ -367,6 +441,7 @@ function* lighttrace($: {
             maxDepth: 2
         })
         for (let path of paths) {
+            path[0].p = $.cbox.light.center
             let hack = 0
             if (path[path.length - 1].nee) {
                 hack = path_length(path.slice(0, path.length - 1))
@@ -417,23 +492,49 @@ function* lighttrace($: {
     yield* $.cbox.pathvis.fadeInPaths(ids, 1, 0.01)
 
     yield* waitUntil('lt/light')
-    yield* all(...segments.filter(s => !s.isHelper).map(s =>
-        s.node.opacity(s.isLight ? 1 : 0.2, 1)))
+    const fhLight = createRef<FocalHighlight>();
+    $.view.add(<FocalHighlight
+        ref={fhLight}
+        position={$.cbox.light.center}
+    />)
+    yield* all(
+        $.cbox.lightNode.opacity(0.3, 1),
+        fhLight().opacity(1, 1),
+        ...segments
+            .filter(s => !s.isHelper)
+            .map(s =>
+                s.node.opacity(s.isLight ? 1 : 0.2, 1)
+            )
+    )
 
     yield* waitUntil('lt/virt')
-    yield* all(...segments.map(s =>
-        s.node.opacity(
-            s.isSpecular && s.isLight || s.wasSpecular ?
-            1 : 0.2, 1))
+    const fhLightVirt = createRef<FocalHighlight>();
+    $.view.add(<FocalHighlight
+        ref={fhLightVirt}
+        position={$.cbox.mirroredLight.center}
+    />)
+    yield* all(
+        fhLight().opacity(0, 1),
+        fhLightVirt().opacity(1, 1),
+        $.cbox.lightNode.opacity(1, 1),
+        ...segments.map(s =>
+            s.node.opacity(
+                s.isSpecular && s.isLight || s.wasSpecular ?
+                1 : 0.2, 1
+            )
+        )
     )
 
     yield* waitUntil('lt/miss')
-    yield* all(...segments.map(s =>
-        s.node.opacity(
-            s.isHelper ? 0 :
-            s.isMiss ? 1 :
-            0.2
-        , 1))
+    yield* all(
+        fhLightVirt().opacity(0, 1),
+        ...segments.map(s =>
+            s.node.opacity(
+                s.isHelper ? 0 :
+                s.isMiss ? 1 :
+                0.2
+            , 1)
+        )
     )
 
     yield* waitUntil('lt/done')
@@ -877,13 +978,13 @@ export default makeScene2D(function* (originalView) {
         captions().updateReference("[Kajiya 1986]")
     )
     yield* pathtraceSingle({ cbox })
-    yield* pathtrace({ cbox, useNEE: true, numPaths: 16 })
+    yield* pathtrace({ view, cbox, useNEE: true, numPaths: 16 })
     yield* captions().reset()
 
     yield* waitUntil('lts/lt')
     yield* captions().updateTitle("Light tracing")
     yield* lighttraceSingle({ cbox })
-    yield* lighttrace({ cbox, numPaths: 18 })
+    yield* lighttrace({ view, cbox, numPaths: 18 })
 
     yield* waitUntil('lts/bdpt')
     yield* all(

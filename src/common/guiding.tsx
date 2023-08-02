@@ -1,7 +1,31 @@
 import { Path, PathVertexType } from '../ui/path'
 import { Vector2f, vec2f_direction, vec2f_dot, vec2f_polar } from '../rt/math'
 import { CBox } from './cbox'
-import { Random } from '@motion-canvas/core'
+import { Random, SignalValue, SimpleSignal, debug } from '@motion-canvas/core'
+import { Node, NodeProps, Rect, initial, signal } from '@motion-canvas/2d'
+import { colors } from '../common'
+
+export interface FocalHighlightProps extends NodeProps {
+    position: SignalValue<Vector2f>
+}
+
+export class FocalHighlight extends Node {
+    @initial(0) @signal()
+    public declare readonly opacity: SimpleSignal<number, this>;
+
+    constructor(props: FocalHighlightProps) {
+        super(props);
+        debug(props.position)
+        this.add(<Rect
+            size={90}
+            stroke={colors.green}
+            lineWidth={8}
+            opacity={this.opacity}
+            scale={() => this.opacity() * 0.9 + 0.1}
+            radius={5}
+        />);
+    }
+}
 
 export class StratifiedRandom {
     private dim = 0
