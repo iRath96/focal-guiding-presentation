@@ -78,7 +78,8 @@ function* showScene(originalView: Node, $: ShowSceneProps) {
                 text={method}
                 y={165}
                 fontSize={40}
-                fill={"#fff"}
+                fill={colors.white}
+                fontFamily={"Mukta"}
             />
         </Layout>;
         renders.add(img)
@@ -119,7 +120,7 @@ function* showScene(originalView: Node, $: ShowSceneProps) {
                 size={20}
                 fill={colors.red}
                 lineWidth={2}
-                stroke={"#fff"}
+                stroke={colors.white}
                 zIndex={20}
                 opacity={0}
                 scale={10}
@@ -244,9 +245,9 @@ function* summary(originalView: Node) {
         ],
     ]
 
-    const lineHeight = 80
+    const lineHeight = 70
     const pointGap = 50
-    let currentY = -300
+    let currentY = -265
     let prevNode = <Layout/>;
     yield* chain(...points.map((lines, index) => {
         const text = <Layout
@@ -265,6 +266,8 @@ function* summary(originalView: Node) {
                     width={1700}
                     text={line}
                     fill={colors.white}
+                    fontFamily={"Mukta"}
+                    fontWeight={300}
                 />
             )}
         </Layout>;
@@ -304,12 +307,20 @@ function* acknowledgements(originalView: Node) {
         { image: "dfki", aspect: 2.5, scale: 0.75 },
     ]
     const logoHeight = 100
-    view.add(<Layout layout direction={"column"} width={1800}>
+    view.add(<Layout
+        layout
+        direction={"column"}
+        width={1800}
+        fontFamily={"Mukta"}
+        fontWeight={300}
+    >
         <Txt
             text={"Thank you:"}
             height={130}
             fill={colors.white}
             fontSize={100}
+            fontFamily={"Cormorant Garamond"}
+            fontWeight={600}
         />
         {thanks.map(thank => <Txt
             marginTop={20}
@@ -318,10 +329,15 @@ function* acknowledgements(originalView: Node) {
             fontSize={50}
             fill={colors.white}
         />)}
-        <Layout direction={"row"} marginTop={40} marginLeft={20}>
+        <Layout
+            direction={"row"}
+            marginTop={40}
+            marginLeft={20}
+            fontWeight={200}
+            fontSize={40}
+        >
             <Txt
                 text="Animated using"
-                fontSize={50}
                 fill={colors.white}
             />
             <Img
@@ -329,7 +345,7 @@ function* acknowledgements(originalView: Node) {
                 marginLeft={15}
                 marginRight={5}
                 marginTop={-6}
-                size={70} />
+                size={50} />
             <Txt text="Motion Canvas" fill={colors.white} />
         </Layout>
         <Layout direction={"row"} marginTop={30} fontSize={40}>

@@ -1,6 +1,7 @@
 import {Line, Ray, Txt, makeScene2D} from '@motion-canvas/2d'
 import { createSignal } from '@motion-canvas/core';
 import { Vector2f, vec2f, vec2f_dot, vec2f_multiply, vec2f_normalized, vec2f_polar, vec2f_reflect } from '../rt/math';
+import { colors } from '../../common';
 
 function theta_linspace(i: number, n: number) {
     return 2 * Math.PI * ((i + 0.5) / n)
@@ -121,7 +122,7 @@ export default makeScene2D(function* (view) {
     view.add(
         <Txt
             text={() => `Exponent: ${phongExp().toFixed(1)}`}
-            fill={"#fff"}
+            fill={colors.white}
             position={[0, 100]}
         />
     )

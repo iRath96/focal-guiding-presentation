@@ -17,27 +17,29 @@ function knownBeforehandLabel(cbox: CBox, view: Node) {
                 [95,-25],
                 [50,20],
             ]}
-            stroke={"#fff"}
+            stroke={colors.white}
             lineWidth={4}
             endArrow
-            arrowSize={16}
+            arrowSize={12}
         />
         <Spline
             points={[
                 [455,-75],
                 [500,-120],
             ]}
-            stroke={"#fff"}
+            stroke={colors.white}
             lineWidth={4}
             endArrow
-            arrowSize={16}
+            arrowSize={12}
         />
         <Txt
             position={[276, -44]}
             scaleX={-1}
             text={"Known beforehand"}
-            fill={"#fff"}
-            fontSize={35}
+            fill={colors.white}
+            fontSize={43}
+            fontFamily={"Mukta"}
+            fontWeight={300}
         />
     </Layout>;
     view.add(layout);
@@ -127,7 +129,7 @@ class Laser {
                     [-155,0],
                     [-10,0]
                 ]}
-                stroke={"#fff"}
+                stroke={colors.white}
                 lineWidth={4}
                 arrowSize={10}
                 endArrow
@@ -138,7 +140,7 @@ class Laser {
                 x={-155}
                 y={80}
                 width={400}
-                fill={"#fff"}
+                fill={colors.white}
                 fontSize={35}
             />
         </Layout>)
@@ -208,7 +210,7 @@ class Obstruction {
                 vec2f_add(from(),
                     vec2f_polar(angle0 - this.angle(), dist / 2))
             ]}
-            stroke={"#fff"}
+            stroke={colors.white}
             lineWidth={() => 4 + this.angle()}
             zIndex={20}
         />)
@@ -218,7 +220,7 @@ class Obstruction {
                 vec2f_add(to(),
                     vec2f_polar(-angle0 + this.angle(), dist / 2))
             ]}
-            stroke={"#fff"}
+            stroke={colors.white}
             lineWidth={() => 4 + this.angle()}
             zIndex={20}
         />)
@@ -312,7 +314,7 @@ class Obstruction {
                     [150,-150],
                     [15,-15],
                 ]}
-                stroke={"#fff"}
+                stroke={colors.white}
                 lineWidth={4}
                 arrowSize={10}
                 endArrow
@@ -322,7 +324,7 @@ class Obstruction {
                 textAlign={"left"}
                 position={[ 280, -180 ]}
                 width={400}
-                fill={"#fff"}
+                fill={colors.white}
                 fontSize={35}
             />
         </Layout>)
@@ -372,7 +374,7 @@ function apparentPosition(props: {
     >
         <Line
             points={[[-10,0], [-100,0]]}
-            stroke={"#fff"}
+            stroke={colors.white}
             lineWidth={4}
             arrowSize={10}
             endArrow
@@ -382,7 +384,7 @@ function apparentPosition(props: {
             x={215}
             y={3}
             width={400}
-            fill={"#fff"}
+            fill={colors.white}
             fontSize={35}
         />
     </Layout>

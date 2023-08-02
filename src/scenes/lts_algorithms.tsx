@@ -134,7 +134,9 @@ function* bdptSingle($: {
                 cVertex, lVertex
             ], {
                 lineDash: [ 8, 8 ],
-                stroke: isVisible ? "#fff" : "red"
+                stroke: isVisible ?
+                    colors.white :
+                    colors.red
             })
             yield* pathvis.fadeInPath(helpId, 0.25)
         }
@@ -695,7 +697,7 @@ function* guiding($: {
             to={() => vec2f_multiply(guidingSamples()[i],
                 saturate(2 * sampleT() - (1 - t)) * 150
             )}
-            stroke="#fff"
+            stroke={colors.white}
             opacity={0.7}
             position={hitpoint}
             lineWidth={4}
@@ -755,7 +757,7 @@ function* guiding($: {
             from={[0,0]}
             to={rayTo}
             position={rayPos}
-            stroke={"#fff"}
+            stroke={colors.white}
             lineWidth={3}
             arrowSize={8}
             opacity={0.8}
@@ -764,7 +766,7 @@ function* guiding($: {
         directionsView.add(<Ray
             from={rayTarget}
             to={() => vec2f_lerp(rayTarget(), parallaxPoint, parallaxCompensation())}
-            stroke={"#fff"}
+            stroke={colors.white}
             lineWidth={3}
             arrowSize={8}
             opacity={() => 0.4 * parallaxCompensation()}

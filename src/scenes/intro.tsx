@@ -95,7 +95,8 @@ function* cameraObscura(originalView: Node) {
                 text={method}
                 y={165}
                 fontSize={40}
-                fill={"#fff"}
+                fill={colors.white}
+                fontFamily={"Mukta"}
             />
         </Layout>;
         renders.add(img)
@@ -138,15 +139,25 @@ function* title(originalView: Node) {
             name: "DFKI Saarbrücken",
             image: "dfki", aspect: 2.5, scale: 0.75 },
     ]
-    const logoHeight = 100
+    const logoHeight = 90
     const authorView = createRef<Layout>();
     const affiliationView = createRef<Layout>();
-    view.add(<Layout layout direction={"column"} width={1800} fontSize={30}>
+    view.add(<Layout
+        layout
+        direction={"column"}
+        width={1800}
+        fontSize={45}
+        //fontFamily={"Noto Sans Vithkuqi"}
+        fontFamily={"Mukta"}
+        fontWeight={300}
+    >
         <Txt
+            fontFamily={"Cormorant Garamond"}
+            fontWeight={600}
             text={title}
             height={100}
             fill={colors.white}
-            fontSize={80}
+            fontSize={100}
         />
         <Layout
             ref={authorView}
@@ -159,11 +170,11 @@ function* title(originalView: Node) {
                     text={author.name}
                     fill={colors.white}
                     marginRight={10}
-                    fontSize={40}
                 />
                 <Txt
                     text={author.affiliations.join(", ")}
                     fill={colors.white}
+                    fontSize={25}
                 />
             </Layout>)}
         </Layout>
@@ -171,7 +182,9 @@ function* title(originalView: Node) {
             ref={affiliationView}
             opacity={0}
             direction={"row"}
-            marginTop={30}
+            marginTop={20}
+            fontSize={35}
+            fontWeight={300}
         >
             {affiliations.map(affiliation => <Layout marginRight={40}>
                 <Txt
@@ -188,7 +201,7 @@ function* title(originalView: Node) {
                         opacity={0.7}
                     />
                     <Img
-                        marginTop={15}
+                        marginTop={20}
                         scale={affiliation.scale}
                         src={`logos/${affiliation.image}.svg`}
                         size={[logoHeight * affiliation.aspect, logoHeight]}
@@ -229,8 +242,10 @@ function* agenda(originalView: Node) {
             y={(index - 2) * 100}
             text={point}
             fontSize={50}
-            fill={"#fff"}
+            fill={colors.white}
             opacity={0}
+            fontFamily={"Mukta"}
+            fontWeight={300}
         />
         view.add(t)
         const task = chain(
@@ -299,7 +314,7 @@ function* lts(originalView: Node) {
             />
             {/*<Txt
                 text={material.name}
-                fill={"#fff"}
+                fill={colors.white}
                 fontSize={30}
                 y={50}
             />*/}

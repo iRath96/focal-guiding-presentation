@@ -51,17 +51,21 @@ export class Captions extends Node {
         </Rect>)
 
         this.add(<Txt
+            fontFamily={"Mukta"}
+            fontWeight={300}
             text={this.chapter}
-            fill={"#fff"}
+            fill={colors.white}
             position={[0, -480]}
             width={1850}
-            fontSize={30}
+            fontSize={32}
             opacity={0.5}
         />)
 
         this.add(<Txt
+            fontFamily={"Mukta"}
+            fontWeight={400}
             text={this.title}
-            fill={"#fff"}
+            fill={colors.white}
             position={[0, -430]}
             width={1850}
         />)
@@ -69,11 +73,13 @@ export class Captions extends Node {
         this.add(<Txt
             ref={this.refText}
             text={this.references}
-            fill={"#fff"}
+            fill={colors.white}
             position={[0, 580]}
             width={1850}
             opacity={0.4}
-            fontSize={30}
+            fontSize={32}
+            fontFamily={"Mukta"}
+            fontWeight={300}
             fontStyle={"italic"}
         />)
 

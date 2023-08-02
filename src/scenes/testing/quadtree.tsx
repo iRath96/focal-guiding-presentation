@@ -3,6 +3,7 @@ import { Line2f, Ray2f, line2f_intersect, vec2f, vec2f_add, vec2f_multiply, vec2
 import { waitFor } from '@motion-canvas/core'
 import { QuadTree  } from '../rt/quadtree'
 import { QuadtreeVisualizer } from '../ui/quadtree'
+import { colors } from '../common'
 
 export default makeScene2D(function* (view) {
     const quadtree = new QuadTree({
@@ -29,7 +30,7 @@ export default makeScene2D(function* (view) {
     view.add(
         <Line
             points={[ line.from, line.to ]}
-            stroke="#ffffff"
+            stroke={colors.white}
             lineWidth={4}
         />
     )
@@ -38,7 +39,7 @@ export default makeScene2D(function* (view) {
         <Ray
             from={ray.o}
             to={vec2f_add(ray.o, vec2f_multiply(ray.d, endT))}
-            stroke="#ffffff"
+            stroke={colors.white}
             lineWidth={8}
             endArrow
         />

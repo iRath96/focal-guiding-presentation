@@ -8,6 +8,8 @@ import results from './scenes/results?scene'
 
 import audio from '../audio/focal-points.mp3'
 
+import './global.css'
+
 export default makeProject({
   audio,
   scenes: [

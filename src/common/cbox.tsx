@@ -3,6 +3,7 @@ import { Circle2f, Line2f, Ray2f, Vector2f, circle2f_intersect, circle2f_normal,
 import { Line, Node } from '@motion-canvas/2d'
 import { Vector2, createSignal } from '@motion-canvas/core'
 import { wiggle } from './animations'
+import { colors } from '../common'
 
 interface CBoxProps {
     onlyFloor: boolean
@@ -87,7 +88,7 @@ export class CBox {
         for (const wall of this.walls) {
             this.view.add(<Line
                 points={[ wall.from, wall.to ]}
-                stroke={"#ffffff"}
+                stroke={colors.white}
                 lineWidth={4}
             />)
         }
@@ -101,7 +102,7 @@ export class CBox {
             const t = createSignal(0)
             this.view.add(<Line
                 points={() => [ wall.from, vec2f_lerp(wall.from, wall.to, t()) ]}
-                stroke={"#ffffff"}
+                stroke={colors.white}
                 lineWidth={4}
             />)
             yield* t(1, 0.2);

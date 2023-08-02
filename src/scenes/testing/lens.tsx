@@ -1,6 +1,7 @@
 import { Circle, Latex, Layout, Line, Ray, Txt, View2D, makeScene2D, Node } from '@motion-canvas/2d';
 import { SimpleSignal, all, createRef, createSignal, makeRef } from '@motion-canvas/core';
 import { Curve2f, Line2f, Ray2f, Vector2f, curve2f_eval, curve2f_intersect, curve2f_normal, line2f_intersect, mat33f_multiply, ray2f_evaluate, vec2f, vec2f_add, vec2f_multiply, vec2f_normalized, vec2f_polar, vec2f_reflect, vec2f_refract, vec3f, vec3f_homogeneous_project } from '../rt/math';
+import { colors } from '../../common';
 
 function curve2f_rasterize(curve: Curve2f, segments: number) {
     const points: ([number, number])[] = []
@@ -104,26 +105,26 @@ function makeLens(view: Node, curvature: SimpleSignal<number>) {
         view.add(<Ray
             from={() => ray().ray1.o}
             to={() => ray().hit1}
-            stroke="#ffffff"
+            stroke={colors.white}
             lineWidth={3}
         />)
         view.add(<Ray
             from={() => ray().ray2.o}
             to={() => ray().hit2}
-            stroke="#ffffff"
+            stroke={colors.white}
             lineWidth={3}
         />)
         view.add(<Ray
             from={() => ray().ray3.o}
             to={() => ray().hit3}
-            stroke="#ffffff"
+            stroke={colors.white}
             lineWidth={3}
             endArrow
         />)
         view.add(<Ray
             from={() => ray().ray3.o}
             to={() => ray2f_evaluate(ray().ray3, -1000)}
-            stroke="#ffffff"
+            stroke={colors.white}
             lineWidth={2}
             opacity={0.5}
             lineDash={[5,5]}
@@ -199,20 +200,20 @@ function makeReflector(view: Node, curvature: SimpleSignal<number>) {
         view.add(<Ray
             from={() => ray().ray1.o}
             to={() => ray().hit1}
-            stroke="#ffffff"
+            stroke={colors.white}
             lineWidth={3}
         />)
         view.add(<Ray
             from={() => ray().ray2.o}
             to={() => ray().hit2}
-            stroke="#ffffff"
+            stroke={colors.white}
             lineWidth={3}
             endArrow
         />)
         view.add(<Ray
             from={() => ray().ray2.o}
             to={() => ray2f_evaluate(ray().ray2, -1000)}
-            stroke="#ffffff"
+            stroke={colors.white}
             lineWidth={2}
             opacity={0.5}
             lineDash={[5,5]}
