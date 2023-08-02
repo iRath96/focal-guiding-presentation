@@ -4,6 +4,7 @@ import { Random, waitFor } from '@motion-canvas/core'
 import { QuadTree  } from '../rt/quadtree'
 import { QuadtreeVisualizer } from '../ui/quadtree'
 import { PathVertex, PathVertexType, PathVisualizer } from '../ui/path'
+import { colors } from '../common'
 
 export class PSSMLT {
     private prng = new Random(123)
@@ -247,7 +248,7 @@ export default makeScene2D(function* (view) {
         position={cameraPos}
         size={[100,70]}
         rotation={42}
-        fill="#000"
+        fill={colors.background}
         zIndex={9}
     />)
 

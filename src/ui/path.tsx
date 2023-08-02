@@ -83,7 +83,7 @@ export class PathVisualizer {
         layout.add(<Rect
             position={lpos}
             size={[ size, 0.7 * size ]}
-            fill="000"
+            fill={colors.background}
         />)
         layout.add(<Img
             position={lpos}
@@ -101,7 +101,7 @@ export class PathVisualizer {
         />
         layout.add(<Circle
             size={2 * light.radius}
-            fill={colors.black}
+            fill={colors.background}
         />)
         layout.add(<Img
             size={3 * light.radius}

@@ -84,8 +84,8 @@ export class Captions extends Node {
                     from: [-970, 0],
                     to: [970, 0],
                     stops: [
-                        { color: "rgba(0,0,0,0)", offset: 0.6, },
-                        { color: "black", offset: 0.75, },
+                        { color: colors.backgroundA, offset: 0.6, },
+                        { color: colors.background, offset: 0.75, },
                     ],
                 })}
                 zIndex={1}

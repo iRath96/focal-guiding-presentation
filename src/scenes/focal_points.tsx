@@ -177,8 +177,8 @@ class Obstruction {
                 from: [0, -80],
                 to: [0, 100],
                 stops: [
-                    { color: "black", offset: 0, },
-                    { color: "rgba(0,0,0,0)", offset: 1, },
+                    { color: colors.background, offset: 0, },
+                    { color: colors.backgroundA, offset: 1, },
                 ],
             })}
             zIndex={1}
@@ -200,7 +200,7 @@ class Obstruction {
         view.add(<Rect
             size={[ 10, Math.abs(this.line.from.y - this.line.to.y)]}
             position={line2f_evaluate(this.line, 0.5)}
-            fill={"#000"}
+            fill={colors.background}
         />)
         view.add(<Line
             points={() => [
@@ -512,8 +512,8 @@ class VirtualImageMirror {
                 from: [0, -200],
                 to: [0, 100],
                 stops: [
-                    { color: "black", offset: 0, },
-                    { color: "rgba(0,0,0,0)", offset: 0.5, },
+                    { color: colors.background, offset: 0, },
+                    { color: colors.backgroundA, offset: 0.5, },
                 ],
             })}
             zIndex={1}

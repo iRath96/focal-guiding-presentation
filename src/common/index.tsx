@@ -1,5 +1,6 @@
 export const colors = {
-    background: "#000000",//"#262626",
+    background:  "rgba(38, 38, 38, 1)",
+    backgroundA: "rgba(38, 38, 38, 0)",
     red:        "#C92829",
     yellow:     "#FDA400",
     green:      "#95C627",
