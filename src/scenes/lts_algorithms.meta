@@ -115,43 +115,43 @@
     },
     {
       "name": "guiding/parallax",
-      "targetTime": 126.0588501753233
+      "targetTime": 127.6937319308188
     },
     {
       "name": "guiding/neighbors",
-      "targetTime": 130.5272897042764
+      "targetTime": 130.42853845730036
     },
     {
       "name": "guiding/dir1",
-      "targetTime": 133.9986078564574
+      "targetTime": 133.89985660948136
     },
     {
       "name": "guiding/dir2",
-      "targetTime": 139.9986078564574
+      "targetTime": 139.89985660948136
     },
     {
       "name": "guiding/done",
-      "targetTime": 149.3958503926625
+      "targetTime": 149.29709914568647
     },
     {
       "name": "lts/psGuiding",
-      "targetTime": 152.57207767526884
+      "targetTime": 152.4733264282928
     },
     {
       "name": "psg/dist",
-      "targetTime": 156.22207767526933
+      "targetTime": 156.1233264282933
     },
     {
       "name": "psg/correl",
-      "targetTime": 159.22207767526933
+      "targetTime": 159.1233264282933
     },
     {
       "name": "psg/done",
-      "targetTime": 168.7438658636012
+      "targetTime": 168.64511461662516
     },
     {
       "name": "lts/done",
-      "targetTime": 173.0505381669734
+      "targetTime": 172.95178691999737
     }
   ],
   "seed": 3292355136

@@ -1,8 +1,8 @@
-import { Circle, Gradient, Img, Layout, Line, makeScene2D, Node, Ray, Txt } from '@motion-canvas/2d';
-import { Random, all, chain, createRef, createSignal, delay, sequence, waitFor, waitUntil } from '@motion-canvas/core';
+import { Circle, Gradient, Img, Layout, Line, makeScene2D, Node, Ray, RayProps, Txt } from '@motion-canvas/2d';
+import { Random, SignalValue, SimpleSignal, all, chain, createRef, createSignal, delay, sequence, waitFor, waitUntil } from '@motion-canvas/core';
 import { CBox, makeCBoxView } from '../common/cbox';
 import { Path, path_length, path_segments, PathVertex, PathVertexType, PathVisualizer, shuffle } from '../ui/path';
-import { Ray2f, ray2f_evaluate, vec2f, vec2f_add, vec2f_direction, vec2f_distance, vec2f_dot, vec2f_lerp, vec2f_multiply, vec2f_normalized, vec2f_polar, vec2f_sub, Vector2f } from '../rt/math';
+import { Circle2f, circle2f_intersect, line2f_intersect, Ray2f, ray2f_evaluate, vec2f, vec2f_add, vec2f_direction, vec2f_distance, vec2f_dot, vec2f_lerp, vec2f_minus, vec2f_multiply, vec2f_normalized, vec2f_polar, vec2f_reflect, vec2f_sub, Vector2f } from '../rt/math';
 import { PSSMLT } from '../rt/pssmlt';
 import { Captions } from '../common/captions';
 import { FakeRandom, findGuidePaths, FocalHighlight, linear_lookup, linspace, polar_plot, sample, saturate, StratifiedRandom, theta_linspace } from '../common/guiding';
@@ -608,6 +608,47 @@ function* pssmlt($: {
     pathvis.removeAll()
 }
 
+function showGuidedSampling($: {
+    origin: SimpleSignal<Vector2f>
+    target: SimpleSignal<Vector2f>
+    opacity: SimpleSignal<number>
+    light: Circle2f
+    add(n: Node): void
+}) {
+    const t = createSignal(0)
+    const props: RayProps = {
+        opacity: $.opacity,
+        lineWidth: 4,
+        stroke: colors.green,
+        zIndex: 50,
+    }
+    $.add(<Ray
+        from={$.origin}
+        to={() => vec2f_lerp($.origin(), $.target(),
+            Math.min(2 * t(), 1)
+        )}
+        {...props}
+    />)
+
+    const reflect = () => vec2f_reflect(vec2f(0, -1), vec2f_minus(
+        vec2f_direction($.origin(), $.target())
+    ))
+    const ray = (): Ray2f => ({
+        o: $.target(),
+        d: reflect()
+    })
+    const hit = () => circle2f_intersect($.light, ray())
+    const end = () => ray2f_evaluate(ray(), isFinite(hit()) ? hit() : 150)
+    $.add(<Ray
+        from={$.target}
+        to={() => vec2f_lerp($.target(), end(),
+            $.target().y < -295 ? Math.max(2 * t() - 1, 0) : 0
+        )}
+        {...props}
+    />)
+    return t(1, 1)
+}
+
 let guidePaths: Path[]
 const hitpoint = createSignal<Vector2f>()
 
@@ -646,7 +687,7 @@ function* guiding($: {
     const guidingDist = createSignal<number[]>(() => {
         const targets = guidingBrokenTarget() ?
         [
-            { d: vec2f_normalized(vec2f(-1, -1.10)), exp: 10, w: 1.7 },
+            { d: vec2f_normalized(vec2f(-1, -1.10)), exp: 5, w: 1.7 },
             //{ d: vec2f_normalized(vec2f(-1,  1.60)), exp: 6 , w: 0.5 },
         ] :
         [
@@ -691,50 +732,64 @@ function* guiding($: {
         guidingPlot.opacity(1, 1),
         pathvis.opacity(0.3, 1),
     )
-    yield* guidingUniform(0, 2)
+    //yield* guidingUniform(0, 2)
 
     yield* waitUntil('guiding/sampling')
-    const sampleT = createSignal(-1)
-    const numGuidingSamples = 10 // or 6
+    const numGuidingSamples = 9
     const guidingSamples = createSignal(() => {
         const rngs = linspace(numGuidingSamples)
-        return sample(guidingDist(), rngs).map(i => vec2f_polar(
+        const newDist = guidingDist().map(x => Math.pow(x, 2))
+        return sample(newDist, rngs).map(i => vec2f_polar(
             theta_linspace(i, guidingDistRes), Math.sqrt(
-                linear_lookup(guidingDist(), i)
+                linear_lookup(newDist, i)
             )
         ))
     })
-    for (let i = 0; i < numGuidingSamples; i++) {
-        const t = i / (numGuidingSamples - 1)
-        view.add(<Ray
-            from={[0,0]}
-            to={() => vec2f_multiply(guidingSamples()[i],
-                saturate(2 * sampleT() - (1 - t)) * 150
-            )}
-            stroke={colors.white}
-            opacity={0.7}
-            position={hitpoint}
-            lineWidth={4}
-            arrowSize={8}
-            endArrow
-        />)
+    const gsView = <Layout />;
+    view.add(gsView)
+    function* showGuiding() {
+        gsView.removeChildren()
+        gsView.opacity(1)
+        yield* all(
+            pathvis.opacity(0.1, 1),
+            ...guidingSamples().map((_, i) => {
+                const ray = (): Ray2f => ({
+                    o: hitpoint(),
+                    d: guidingSamples()[i]
+                })
+                const hit = () => ray().d.y < -0.3 ? Math.min(
+                    (-ray().o.y - 300) / ray().d.y
+                    , 700
+                ) : 200
+                return showGuidedSampling({
+                    add: n => gsView.add(n),
+                    light: $.cbox.light,
+                    opacity: createSignal(i === 4 ? 1 : 0.3),
+                    origin: hitpoint,
+                    target: createSignal(() =>
+                        ray2f_evaluate(ray(), hit())
+                    )
+                })
+            })
+        )
     }
-    yield* sampleT(1, 2)
-    yield* sampleT(0, 2)
+    yield* guidingUniform(0, 2)
+    yield* showGuiding()
 
     yield* waitUntil('guiding/parallax')
     const spatialExtent = createSignal(0)
 
+    const pathsToBeHidden = shuffle([...centralPaths]).slice(2)
     yield* all(
+        ...pathsToBeHidden.map(id =>
+            pathvis.getPath(id).opacity(0, 1))
+    )
+    pathvis.removePaths(pathsToBeHidden)
+    yield* all(
+        gsView.opacity(0, 1),
         pathvis.opacity(1, 1),
         guidingPlot.opacity(0, 1),
     )
-    const pathsToBeHidden = shuffle([...centralPaths]).slice(2)
-    yield* sequence(0.02,
-        ...pathsToBeHidden.map(id =>
-            pathvis.getPath(id).opacity(0, 0.2))
-    )
-    pathvis.removePaths(pathsToBeHidden)
     const neighboringPaths: number[] = []
     const directionsView = <Layout opacity={0} />
     const directionsMerge = createSignal(0)
@@ -800,10 +855,13 @@ function* guiding($: {
     yield* all(
         guidingPlot.opacity(1, 1),
         guidingUniform(0, 1),
+        showGuiding(),
     )
-    yield* waitFor(2)
+    yield* waitFor(1)
     yield* waitUntil('guiding/dir2')
     yield* all(
+        gsView.opacity(0, 1),
+        pathvis.opacity(1, 1),
         guidingPlot.opacity(0, 1),
         directionsMerge(0, 1),
         captions().updateReference("Parallax compensation [Ruppert et al. 2020]"),
@@ -834,13 +892,17 @@ function* guiding($: {
     yield* directionsMerge(1, 2)
 
     guidingBrokenTarget(false)
-    yield* guidingPlot.opacity(1, 1)
+    yield* all(
+        guidingPlot.opacity(1, 1),
+        showGuiding()
+    )
     yield* waitFor(1)
     yield* distanceLabel.opacity(1, 1)
 
     yield* waitUntil('guiding/done')
     yield* all(
         view.opacity(0, 2),
+        pathvis.opacity(1, 1),
         //pathvis.fadeAndRemove(2),
     )
     
@@ -884,12 +946,12 @@ function* psGuiding($: {
         )
     ));
 
-    const hitpointCeiling = vec2f(100, -300)
+    const hitpointCeiling = vec2f(95, -300)
     const distributionT = createSignal(0)
     const conditionalT = createSignal(0)
     const hitpointT = createSignal(0.5)
     const hitpointConditional = createSignal<Vector2f>(() =>
-        vec2f_add(hitpointCeiling, vec2f(hitpointT() * 80 - 40, 0))
+        vec2f_add(hitpointCeiling, vec2f((hitpointT() - 0.5) * 65, 0))
     )
 
     const p0 = (x: number) => vec2f( 25 * Math.exp(-7 * Math.pow(x, 2)) + 10, 200 * x)
@@ -956,7 +1018,7 @@ function* psGuiding($: {
     yield* conditionalT(1, 1)
 
     const hitpointQuery = createSignal<Vector2f>(() =>
-        vec2f_add(hitpoint(), vec2f(0, 100 - hitpointT() * 200)))
+        vec2f_add(hitpoint(), vec2f(0, 120 - hitpointT() * 240)))
     const cameraSegment = add(<Ray
         from={$.cbox.camera.center}
         to={hitpointQuery}
@@ -967,7 +1029,20 @@ function* psGuiding($: {
     />)
 
     yield* waitUntil('psg/correl')
-    yield* hitpointT(1, 1).to(0, 2).to(0.5, 1)
+    const condPoints = linspace(9).map(x => -Math.log(1 / x - 1))
+    yield* all(
+        $.cbox.pathvis.opacity(0.1, 1),
+        ...condPoints.map(p => showGuidedSampling({
+            add,
+            light: $.cbox.light,
+            opacity: createSignal(p === 0 ? 1 : 0.3),
+            origin: hitpointQuery,
+            target: createSignal(() =>
+                vec2f_add(hitpointConditional(), vec2f(10 * p, 0))
+            )
+        }))
+    )
+    yield* hitpointT(1, 2).to(0, 4).to(0.5, 2)
 
     yield* waitUntil('psg/done')
 }
