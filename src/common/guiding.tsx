@@ -15,7 +15,6 @@ export class FocalHighlight extends Node {
 
     constructor(props: FocalHighlightProps) {
         super(props);
-        debug(props.position)
         this.add(<Rect
             size={90}
             stroke={colors.green}
