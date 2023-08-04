@@ -330,6 +330,7 @@ function* lts(originalView: Node) {
     yield* waitUntil('camera')
     yield* cbox.fadeInCamera()
 
+    yield* waitUntil('reference')
     const referenceImage = <Img
         size={[1024,1024]}
         src={"imgs/cbox.png"}
@@ -337,7 +338,7 @@ function* lts(originalView: Node) {
     />;
     view.add(referenceImage);
     yield* all(
-        referenceImage.opacity(1, 1).wait(4).to(0, 1),
+        referenceImage.opacity(1, 1).wait(5).to(0, 1),
         matview.opacity(0, 1),
     );
     matview.remove();
@@ -381,7 +382,7 @@ function* lts(originalView: Node) {
     const extIds: number[] = []
     const extProps: LineProps = {
         lineDash: [2,6],
-        opacity: 0.3,
+        opacity: 0.5,
     }
     for (const path of paths) {
         let prevP: PathVertex

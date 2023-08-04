@@ -662,7 +662,7 @@ export default makeScene2D(function* (originalView) {
     }
 
     yield* waitUntil('start')
-    yield* pathvis.fadeInPaths(cameraPaths, 1, 0.05)
+    yield* pathvis.fadeInPaths(cameraPaths, 0.6, 0.05)
 
     yield* waitUntil('end')
     yield* pathvis.fadeInPaths(lightPaths, 0.5, 0.05)
@@ -735,7 +735,7 @@ export default makeScene2D(function* (originalView) {
     view.add(viLensView)
     const viLens = new VirtualImageLens(cbox, viLensView)
     yield* viLens.draw()
-    yield* viLensView.opacity(0.5, 1)
+    //yield* viLensView.opacity(0.5, 1)
 
     const viMirrorView = <Layout />;
     view.add(viMirrorView)

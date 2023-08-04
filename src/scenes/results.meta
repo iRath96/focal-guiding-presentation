@@ -3,95 +3,87 @@
   "timeEvents": [
     {
       "name": "obs",
-      "targetTime": 5
+      "targetTime": 5.75
     },
     {
       "name": "obs/0",
-      "targetTime": 14.41364247538684
+      "targetTime": 13.831683255946462
     },
     {
       "name": "obs/1",
-      "targetTime": 20.78404318213793
+      "targetTime": 19.48837164090074
     },
     {
       "name": "obs/focal",
-      "targetTime": 23.78404318213793
+      "targetTime": 22.48837164090074
     },
     {
       "name": "obs/done",
-      "targetTime": 28.38615793813076
+      "targetTime": 27.5552293041101
     },
     {
       "name": "dr",
-      "targetTime": 29.38615793813076
+      "targetTime": 28.5552293041101
     },
     {
       "name": "dr/focal",
-      "targetTime": 36.38002554713221
+      "targetTime": 34.214810096814425
     },
     {
       "name": "dr/b-0",
-      "targetTime": 39.38002554713221
+      "targetTime": 37.214810096814425
     },
     {
       "name": "dr/b-1",
-      "targetTime": 44.03220021359939
+      "targetTime": 42.724740573758325
     },
     {
       "name": "dr/b-2",
-      "targetTime": 48.70940782955849
+      "targetTime": 50.83297143162433
     },
     {
       "name": "dr/b-3",
-      "targetTime": 55.95826403870727
-    },
-    {
-      "name": "dr/b-4",
-      "targetTime": 60.895275381830096
+      "targetTime": 55.635635144228374
     },
     {
       "name": "dr/done",
-      "targetTime": 65.96372147625976
+      "targetTime": 59.47795823983698
     },
     {
       "name": "lr",
-      "targetTime": 66.96372147625976
-    },
-    {
-      "name": "lr/0",
-      "targetTime": 71.69315807394257
+      "targetTime": 60.47795823983698
     },
     {
       "name": "lr/focal",
-      "targetTime": 74.69315807394257
+      "targetTime": 70.36766873057232
     },
     {
       "name": "lr/done",
-      "targetTime": 78.01747821838978
+      "targetTime": 73.3932255775232
     },
     {
       "name": "summary",
-      "targetTime": 79.01747821838978
+      "targetTime": 74.3932255775232
     },
     {
       "name": "summary/0",
-      "targetTime": 83.30805002598541
+      "targetTime": 78.87733961054712
     },
     {
       "name": "summary/1",
-      "targetTime": 89.23829204336874
+      "targetTime": 84.87025690190006
     },
     {
       "name": "summary/2",
-      "targetTime": 95.7241313918369
+      "targetTime": 91.35609625036822
     },
     {
       "name": "summary/done",
-      "targetTime": 101.51335621986466
+      "targetTime": 97.14532107839598
     },
     {
       "name": "done",
-      "targetTime": 112.86228160713057
+      "targetTime": 108.49424646566189
     }
   ],
   "seed": 2636205122

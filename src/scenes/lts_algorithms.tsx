@@ -337,7 +337,7 @@ function* pathtrace($: {
         )
     )
 
-    yield* waitFor(3)
+    yield* waitFor(2)
 
     yield* all(
         $.view.y(prevY, 1),
@@ -1109,10 +1109,10 @@ export default makeScene2D(function* (originalView) {
         captions().updateReference("[Reibold et al. 2018; Schüßler et al. 2022; Li et al. 2022]")
     )
     yield* psGuiding({ cbox, view })
-    yield* captions().reset()
 
     yield* waitUntil('lts/done')
     yield* all(
+        captions().reset(),
         captions().chapter("", 1),
         view.opacity(0, 1),
     );

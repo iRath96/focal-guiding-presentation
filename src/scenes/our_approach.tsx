@@ -57,7 +57,7 @@ function* hierarchical($: {
     yield* pathvis.fadeInPath(pathvis.showPath([
         { p: circle2f_towards($.cbox.camera, wallHit) },
         { p: wallHit, type: PathVertexType.Diffuse }
-    ]), 1)
+    ]), 0.75)
 
     yield* waitUntil('warping')
     yield* all(

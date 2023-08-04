@@ -3,47 +3,47 @@
   "timeEvents": [
     {
       "name": "spatial",
-      "targetTime": 7
+      "targetTime": 7.829712808833006
     },
     {
       "name": "spatial/done",
-      "targetTime": 10.687360762222491
+      "targetTime": 11.517073571055496
     },
     {
       "name": "show grid",
-      "targetTime": 13.71572964274809
+      "targetTime": 14.311593142869532
     },
     {
       "name": "splatting",
-      "targetTime": 16.951204136948228
+      "targetTime": 17.54706763706967
     },
     {
       "name": "highlight",
-      "targetTime": 28.149954058690806
+      "targetTime": 28.33282402043457
     },
     {
       "name": "training",
-      "targetTime": 32.14995405869081
+      "targetTime": 32.33282402043457
     },
     {
       "name": "hierarchical",
-      "targetTime": 47.022154010569174
+      "targetTime": 48.586907518572964
     },
     {
       "name": "warping",
-      "targetTime": 50.411745226517105
+      "targetTime": 51.53895251280162
     },
     {
       "name": "shoot ray",
-      "targetTime": 58.011745226517085
+      "targetTime": 59.1389525128016
     },
     {
       "name": "pdf",
-      "targetTime": 66.4995768829292
+      "targetTime": 71.93253177539182
     },
     {
       "name": "ours/done",
-      "targetTime": 76.51276528691002
+      "targetTime": 82.72582434505753
     }
   ],
   "seed": 2128447463

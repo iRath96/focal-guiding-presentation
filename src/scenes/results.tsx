@@ -8,7 +8,7 @@ import { linspace } from "../common/guiding";
 const captions = createRef<Captions>()
 
 function* title(view: Node) {
-    yield* captions().showTransition("Results", 1)
+    yield* captions().showTransition("Results", 0.75)
 }
 
 interface ShowSceneProps {
@@ -147,7 +147,7 @@ function* showScene(originalView: Node, $: ShowSceneProps) {
                     ref.zIndex(10);
                     yield* all(
                         ref.scale(1.2, 1),
-                        ref.y(y - 24, 1),
+                        ref.y(y - 20.7, 1),
                     );
                     yield* waitFor(1);
                     yield* all(
@@ -210,7 +210,10 @@ function* showScene(originalView: Node, $: ShowSceneProps) {
     yield* highlights('b-', $.highlightsB)
 
     yield* waitUntil(`${$.name}/done`)
-    yield* view.opacity(0, 1)
+    yield* all(
+        view.opacity(0, 1),
+        $.name === 'lr' ? captions().chapter("", 1) : all(),
+    )
     view.remove()
 }
 
@@ -240,7 +243,7 @@ function* diningRoom(originalView: Node) {
         name: 'dr',
         path: 'dining-room',
         highlights: [],
-        highlightsB: [['MCVCM', 'MEMLT'], ['MEMLT'], ['MCVCM'], ['Ours'], ['PAVMM']],
+        highlightsB: [['MCVCM', 'MEMLT'], ['MEMLT'], ['Ours'], ['PAVMM']],
         crop: vec2f(610, 375),
         focalPoints: [{
             point: vec2f(-169, -80),
@@ -270,7 +273,7 @@ function* livingRoom(originalView: Node) {
     yield* showScene(originalView, {
         name: 'lr',
         path: 'modern-living-room',
-        highlights: [['Ours']],
+        highlights: [],
         highlightsB: [],
         crop: vec2f(617, 53),
         focalPoints: []
@@ -434,7 +437,6 @@ export default makeScene2D(function* (view) {
     yield* livingRoom(resultsView)
 
     yield* waitUntil('summary')
-    yield* captions().chapter("", 1)
     yield* captions().chapter("Summary", 1)
     yield* summary(view);
 

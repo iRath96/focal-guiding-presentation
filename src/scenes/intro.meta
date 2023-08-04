@@ -11,91 +11,95 @@
     },
     {
       "name": "h/pinhole",
-      "targetTime": 9.21520106911036
+      "targetTime": 9.85520289941347
     },
     {
       "name": "h/canvas",
-      "targetTime": 12.084912063221857
+      "targetTime": 12.120467720460917
     },
     {
       "name": "h/end",
-      "targetTime": 15.177363617248437
+      "targetTime": 15.212919274487497
     },
     {
       "name": "show crops",
-      "targetTime": 20.19598407137731
+      "targetTime": 20.23153972861637
     },
     {
       "name": "ours",
-      "targetTime": 27.379178763676894
+      "targetTime": 27.414734420915952
     },
     {
       "name": "title",
-      "targetTime": 30.801372409586712
+      "targetTime": 30.425210800985063
     },
     {
       "name": "title/done",
-      "targetTime": 36.88857369703532
+      "targetTime": 37.04522266775694
     },
     {
       "name": "agenda/0",
-      "targetTime": 38.88857369703532
+      "targetTime": 39.04522266775694
     },
     {
       "name": "agenda/1",
-      "targetTime": 42.43728640984737
+      "targetTime": 43.6111192138225
     },
     {
       "name": "agenda/2",
-      "targetTime": 45.42041458229427
+      "targetTime": 46.91165144951082
     },
     {
       "name": "agenda/3",
-      "targetTime": 50.0921640842646
+      "targetTime": 51.19904626154968
     },
     {
       "name": "agenda/4",
-      "targetTime": 52.84293205871404
+      "targetTime": 56.42011783104336
     },
     {
       "name": "agenda/5",
-      "targetTime": 55.836862251837005
+      "targetTime": 58.59061349248491
     },
     {
       "name": "lts",
-      "targetTime": 56.836862251837005
+      "targetTime": 60.92263994079308
     },
     {
       "name": "geometry",
-      "targetTime": 62.98322201628802
+      "targetTime": 67.94087156231853
     },
     {
       "name": "materials",
-      "targetTime": 64.18322201628803
+      "targetTime": 69.14087156231855
     },
     {
       "name": "lights",
-      "targetTime": 65.68322201628803
+      "targetTime": 70.64087156231855
     },
     {
       "name": "camera",
-      "targetTime": 68.22777517230939
+      "targetTime": 71.5627743176736
+    },
+    {
+      "name": "reference",
+      "targetTime": 76.13150965068765
     },
     {
       "name": "paths",
-      "targetTime": 75.28530936168572
+      "targetTime": 85.22181802845414
     },
     {
       "name": "extensions",
-      "targetTime": 80.83530936168552
+      "targetTime": 96.9581186241585
     },
     {
       "name": "focal",
-      "targetTime": 86.6353093616853
+      "targetTime": 100.25811862415843
     },
     {
       "name": "intro/done",
-      "targetTime": 92.90670929748079
+      "targetTime": 105.19749211164574
     }
   ],
   "seed": 2604439895
