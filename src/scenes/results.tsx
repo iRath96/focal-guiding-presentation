@@ -64,10 +64,12 @@ function* showScene(originalView: Node, $: ShowSceneProps) {
             name: "path tracing",
             from: 0,
             to: 2,
+            color: colors.yellow,
         }, {
             name: "bi-directional",
             from: 3,
             to: 4,
+            color: colors.green,
         }
     ]
     const cropSize = 200
@@ -112,24 +114,23 @@ function* showScene(originalView: Node, $: ShowSceneProps) {
             <Ray
                 fromX={-cropStride * 0.4}
                 toX={mid - textWidth / 2}
-                stroke={colors.white}
+                stroke={label.color}
                 lineWidth={1}
             />
             <Txt
-                x={mid}
+                x={mid+3}
                 y={4}
                 text={label.name.toUpperCase()}
-                fill={colors.white}
+                fill={label.color}
                 fontFamily={"Mukta"}
                 fontWeight={200}
-                opacity={2}
                 fontSize={30}
                 letterSpacing={4}
             />
             <Ray
                 fromX={cropStride * (label.to - label.from + 0.4)}
                 toX={mid + textWidth / 2}
-                stroke={colors.white}
+                stroke={label.color}
                 lineWidth={1}
             />
         </Layout>
