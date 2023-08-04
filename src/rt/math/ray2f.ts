@@ -172,6 +172,14 @@ export function curve2f_eval(curve: Curve2f, x: number) {
     return curve.c0 + curve.c2 * x2 + curve.c4 * x4
 }
 
+export function curve2f_evaluate(curve: Curve2f, t: number) {
+    const x = 2 * t - 1
+    const x2 = x*x
+    const x4 = x2*x2
+    const y = curve.c0 + curve.c2 * x2 + curve.c4 * x4
+    return vec3f_homogeneous_project(mat33f_multiply(curve.t, vec3f(x, y, 1)))
+}
+
 export function curve2f_normal(curve: Curve2f, x: number): Vector2f {
     const dy = 4 * curve.c4 * Math.pow(x, 3) + 2 * curve.c2 * x
     return vec2f_normalized(vec2f(-dy, 1))

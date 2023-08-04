@@ -1,7 +1,7 @@
 import { Circle, Img, Layout, Node, Ray, Rect, Txt, makeScene2D } from "@motion-canvas/2d";
 import { Reference, Vector2, all, chain, createRef, createSignal, sequence, waitFor, waitUntil } from "@motion-canvas/core";
 import { Captions } from "../common/captions";
-import { Bounds2f, Line2f, Vector2f, line2f_evaluate, line2f_intersect, ray2f_evaluate, ray2f_targeting, vec2f } from "../rt/math";
+import { Bounds2f, Curve2f, Line2f, Vector2f, curve2f_eval, curve2f_evaluate, curve2f_normal, line2f_evaluate, line2f_intersect, ray2f_evaluate, ray2f_targeting, vec2f, vec2f_reflect, vec3f } from "../rt/math";
 import { colors, isSIGGRAPH } from "../common";
 import { linspace } from "../common/guiding";
 
@@ -19,7 +19,8 @@ interface ShowSceneProps {
     highlightsB: string[][]
     focalPoints: {
         point: Vector2f
-        startLine: Line2f
+        startLine?: Line2f
+        startCurve?: Curve2f
         endLine: Line2f
     }[]
 }
@@ -189,12 +190,27 @@ function* showScene(originalView: Node, $: ShowSceneProps) {
         ...$.focalPoints.map(focal => {
             const fadeIn = createSignal(0)
             for (const t of linspace(10)) {
+                const origin = focal.startCurve ?
+                    curve2f_evaluate(focal.startCurve, t) :
+                    line2f_evaluate(focal.startLine, t);
                 const ray = ray2f_targeting(
-                    line2f_evaluate(focal.startLine, t),
+                    origin,
                     focal.point
                 );
                 const hit = line2f_intersect(focal.endLine, ray);
                 if (!isFinite(hit)) continue;
+                if (focal.startCurve) {
+                    const cN = curve2f_normal(focal.startCurve, 2 * t - 1);
+                    const r = vec2f_reflect(cN, ray.d);
+                    reference.add(<Ray
+                        from={ray2f_evaluate({ o: origin, d: r }, 55)}
+                        to={origin}
+                        lineWidth={2}
+                        stroke={colors.yellow}
+                        lineDash={[4,4]}
+                        zIndex={0}
+                    />)
+                }
                 reference.add(<Ray
                     from={ray.o}
                     to={() => ray2f_evaluate(ray, fadeIn() * hit)}
@@ -248,6 +264,16 @@ function* diningRoom(originalView: Node) {
         crop: vec2f(610, 375),
         focalPoints: [{
             point: vec2f(-169, -80),
+            /*startCurve: {
+                t: {
+                    x: vec3f(58, 1, -169),
+                    y: vec3f(1, 58, -155),
+                    z: vec3f(0, 0, 1),
+                },
+                c0: -0.75,
+                c2: 0.42,
+                c4: 0.12,
+            },*/
             startLine: {
                 from: vec2f(-219, -155),
                 to: vec2f(-119, -155),
