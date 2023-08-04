@@ -47,6 +47,7 @@ function* cameraObscura(originalView: Node) {
     yield* all(
         reference.scale(1, 5),
         reference.opacity(1, 5),
+
     );
     
     function* showHighlight(name: string, bounds: Bounds2f, time = 1) {
@@ -306,8 +307,8 @@ function* lts(originalView: Node) {
                 src={`imgs/materials/${material.name}.png`}
                 size={[181, 194]}
                 scale={[-0.7,0.7]}
-                stroke={"#000"}
-                lineWidth={10}
+                stroke={colors.olive}
+                lineWidth={5}
             />
             {/*<Txt
                 text={material.name}
@@ -339,6 +340,7 @@ function* lts(originalView: Node) {
     view.add(referenceImage);
     yield* all(
         referenceImage.opacity(1, 1).wait(5).to(0, 1),
+        cbox.cameraNode.opacity(0, 1).wait(5).to(1, 1),
         matview.opacity(0, 1),
     );
     matview.remove();

@@ -55,10 +55,10 @@ export class Captions extends Node {
             fontWeight={300}
             text={this.chapter}
             fill={colors.white}
-            position={[0, -480]}
+            position={[0, -482]}
             width={1850}
             fontSize={32}
-            opacity={0.5}
+            opacity={0.42}
         />)
 
         this.add(<Txt

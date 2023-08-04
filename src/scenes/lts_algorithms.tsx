@@ -195,7 +195,7 @@ function* vertexMerging($: {
 
     yield* waitUntil('vm/merge')
     yield* all(
-        captions().updateTitle("Photon Mapping"),
+        captions().updateTitle("Photon mapping"),
         captions().updateReference("[Shirley et al. 1995; Jensen 1996; Walter et al. 1997]"),
     )
     const mergeHighlight = <Circle
