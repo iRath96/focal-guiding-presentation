@@ -18,13 +18,13 @@
   },
   "rendering": {
     "fps": 60,
-    "resolutionScale": 1,
+    "resolutionScale": 2,
     "colorSpace": "srgb",
     "exporter": {
       "name": "@motion-canvas/core/image-sequence",
       "options": {
-        "fileType": "image/png",
-        "quality": 100,
+        "fileType": "image/jpeg",
+        "quality": 96,
         "groupByScene": false
       }
     }

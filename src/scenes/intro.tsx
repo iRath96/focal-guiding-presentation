@@ -5,7 +5,7 @@ import { CBox, makeCBoxView } from "../common/cbox";
 import { findGuidePaths } from "../common/guiding";
 import { PathVertex, PathVertexType, PathVisualizer, path_segments, shuffle } from "../ui/path";
 import { Bounds2f, bounds2f_center, bounds2f_diagonal, ray2f_evaluate, ray2f_targeting, vec2f, vec2f_direction, vec2f_lerp, vec2f_multiply, vec2f_pmultiply, vec2f_sub } from "../rt/math";
-import { colors } from "../common";
+import { colors, isSIGGRAPH } from "../common";
 
 const captions = createRef<Captions>()
 
@@ -336,6 +336,7 @@ function* lts(originalView: Node) {
         size={[1024,1024]}
         src={"imgs/cbox.png"}
         opacity={0}
+        x={isSIGGRAPH ? 0 : -210}
     />;
     view.add(referenceImage);
     yield* all(

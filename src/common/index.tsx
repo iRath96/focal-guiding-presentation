@@ -21,7 +21,7 @@ export function alpha(color: string, alpha: Number) {
     return color
 }
 
-export const isSIGGRAPH = true
+export const isSIGGRAPH = false
 
 export const colors = {
     background:  "rgba(38, 38, 38, 1)",
